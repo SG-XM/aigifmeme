@@ -252,7 +252,7 @@ function AuthPromptDialog({ request }: { request: StoredRequest }) {
                     type="button"
                     disabled={pending}
                     onClick={() => void continueWith('google')}
-                    className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-[#f45b00] text-base font-semibold text-white transition-colors hover:bg-[#ff6a12] disabled:opacity-60"
+                    className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-[#e6b325] text-base font-semibold text-[#1a1206] transition-colors hover:bg-[#f0c44a] disabled:opacity-60"
                   >
                     <GoogleMark />
                     {m['common.sign.google_sign_in']()}
@@ -298,7 +298,7 @@ function AuthPromptDialog({ request }: { request: StoredRequest }) {
                         value={email}
                         onChange={(event) => setEmail(event.target.value)}
                         placeholder={m['common.sign.email_placeholder']()}
-                        className="h-11 w-full rounded-lg border border-zinc-200 bg-white px-3 text-zinc-900 outline-none focus-visible:ring-2 focus-visible:ring-[#f45b00]"
+                        className="h-11 w-full rounded-lg border border-zinc-200 bg-white px-3 text-zinc-900 outline-none focus-visible:ring-2 focus-visible:ring-[#c8962c]"
                       />
                     </label>
                     <label className="block space-y-1 text-sm">
@@ -321,7 +321,7 @@ function AuthPromptDialog({ request }: { request: StoredRequest }) {
                         value={password}
                         onChange={(event) => setPassword(event.target.value)}
                         placeholder={m['common.sign.password_placeholder']()}
-                        className="h-11 w-full rounded-lg border border-zinc-200 bg-white px-3 text-zinc-900 outline-none focus-visible:ring-2 focus-visible:ring-[#f45b00]"
+                        className="h-11 w-full rounded-lg border border-zinc-200 bg-white px-3 text-zinc-900 outline-none focus-visible:ring-2 focus-visible:ring-[#c8962c]"
                       />
                     </label>
                     <button

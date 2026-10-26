@@ -124,12 +124,12 @@ function DuoUpgradeDialog({
           type="button"
           onClick={onClose}
           aria-label={m['duo_upgrade.close']()}
-          className="absolute top-3 right-3 z-10 flex size-11 items-center justify-center rounded-xl bg-white/80 hover:bg-[#f7f7f8] focus-visible:outline-2 focus-visible:outline-[#ff4f00]"
+          className="absolute top-3 right-3 z-10 flex size-11 items-center justify-center rounded-xl bg-white/80 hover:bg-[#f7f7f8] focus-visible:outline-2 focus-visible:outline-[#c8962c]"
         >
           <X className="size-5" />
         </button>
         <DialogHeader className="border-b border-[#e2e5ea] p-6 pr-16">
-          <p className="text-xs font-semibold tracking-wide text-[#ff4f00] uppercase">
+          <p className="text-xs font-semibold tracking-wide text-[#7c5408] uppercase">
             {m['duo_upgrade.eyebrow']()}
           </p>
           <DialogTitle className="text-3xl font-bold tracking-tight">
@@ -159,7 +159,7 @@ function DuoUpgradeDialog({
               className="aspect-[3/4] w-full rounded-xl object-cover"
             />
           </div>
-          <div className="rounded-xl border-2 border-[#ff4f00] bg-[#fff6f1] px-4 py-3">
+          <div className="rounded-xl border-2 border-[#c8962c] bg-[#fff6dc] px-4 py-3">
             <p className="text-sm leading-relaxed font-medium">
               {m['proof.quality']({
                 videos: formatProofNumber(QUALITY_PROOF_VIDEOS, locale),
@@ -192,14 +192,14 @@ function DuoUpgradeDialog({
               <span className="font-semibold">
                 {m['duo_upgrade.due_today']()}
               </span>
-              <span className="font-bold text-[#ff4f00]">
+              <span className="font-bold text-[#7c5408]">
                 {money(offer.differenceInCents)}
               </span>
             </p>
           </div>
           <PayActionRow>
             <Button
-              className="h-12 w-full bg-[#ff4f00] text-base text-white hover:bg-[#e44700]"
+              className="h-12 w-full bg-[#e6b325] text-base text-[#1a1206] hover:bg-[#c49212]"
               disabled={checkout.isPending}
               onClick={() => checkout.mutate(undefined)}
             >
@@ -225,7 +225,7 @@ function DuoUpgradeDialog({
           <button
             type="button"
             onClick={onClose}
-            className="min-h-11 w-full rounded-xl text-sm text-[#555d6b] underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-[#ff4f00]"
+            className="min-h-11 w-full rounded-xl text-sm text-[#555d6b] underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-[#c8962c]"
           >
             {m['duo_upgrade.later']()}
           </button>

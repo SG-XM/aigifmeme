@@ -17,10 +17,13 @@ import { SiteHeader, type NavLink } from '@/components/site-header';
 export function Header({
   campaign = 'bulin',
   brandMark,
+  nav = 'effects',
 }: {
   campaign?: EffectCampaign;
   /** Trend wordmark on campaign landings. Nav links stay the same either way. */
   brandMark?: string;
+  /** Homepage hides the other trend chips. Effect pages keep them. */
+  nav?: 'effects' | 'uptown';
 }) {
   const { data: session } = useSession();
   const queryClient = useQueryClient();
@@ -36,22 +39,33 @@ export function Header({
     return () => window.removeEventListener(CREDITS_CHANGED_EVENT, refresh);
   }, [queryClient]);
 
-  const navLinks: NavLink[] = [
-    ...liveEffectNav().map((effect) => ({
-      href: effect.href,
-      label: effect.title,
-      shortLabel: effect.shortTitle,
-      chipLabel: effect.chipLabel,
-      isCurrent: effect.isCurrent,
-    })),
-    {
-      href: '/pricing',
-      label: m['landing.nav.pricing'](),
-    },
-    ...(session?.user
-      ? [{ href: '/library', label: m['agent.nav.library']() }]
-      : []),
-  ];
+  const uptownNav = nav === 'uptown';
+  const navLinks: NavLink[] = uptownNav
+    ? [
+        { href: '/#usage', label: m['home.nav.how']() },
+        { href: '/#beats', label: m['home.nav.beats']() },
+        { href: '/pricing', label: m['landing.nav.pricing']() },
+        { href: '/#faq', label: m['home.nav.faq']() },
+        ...(session?.user
+          ? [{ href: '/library', label: m['agent.nav.library']() }]
+          : []),
+      ]
+    : [
+        ...liveEffectNav().map((effect) => ({
+          href: effect.href,
+          label: effect.title,
+          shortLabel: effect.shortTitle,
+          chipLabel: effect.chipLabel,
+          isCurrent: effect.isCurrent,
+        })),
+        {
+          href: '/pricing',
+          label: m['landing.nav.pricing'](),
+        },
+        ...(session?.user
+          ? [{ href: '/library', label: m['agent.nav.library']() }]
+          : []),
+      ];
 
   return (
     <SiteHeader
@@ -64,22 +78,26 @@ export function Header({
       effectsLabel={m['landing.nav.effects']()}
       brandMark={brandMark}
       primaryAction={{
-        href: effectHash(campaign, 'create'),
-        label: m['landing.nav.create'](),
+        href: uptownNav ? '/#create' : effectHash(campaign, 'create'),
+        label: uptownNav ? m['home.nav.create']() : m['landing.nav.create'](),
       }}
-      trending={{
-        button: m['trending.button'](),
-        buttonLabel: m['trending.button_label'](),
-        chip: m['trending.chip'](),
-        title: m['trending.title'](),
-        lede: m['trending.lede'](),
-        closeLabel: m['announce.effects.close'](),
-        newLabel: m['trending.new'](),
-        cards: trendingEffects().map((effect) => ({
-          ...effect,
-          ...trendingCardCopy(effect.id),
-        })),
-      }}
+      trending={
+        uptownNav
+          ? undefined
+          : {
+              button: m['trending.button'](),
+              buttonLabel: m['trending.button_label'](),
+              chip: m['trending.chip'](),
+              title: m['trending.title'](),
+              lede: m['trending.lede'](),
+              closeLabel: m['announce.effects.close'](),
+              newLabel: m['trending.new'](),
+              cards: trendingEffects().map((effect) => ({
+                ...effect,
+                ...trendingCardCopy(effect.id),
+              })),
+            }
+      }
     />
   );
 }

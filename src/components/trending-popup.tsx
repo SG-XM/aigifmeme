@@ -64,7 +64,7 @@ export function TrendingPopup({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
         showCloseButton={false}
-        className="trending-popup max-h-[calc(100dvh-1rem)] w-[calc(100%-1.25rem)] max-w-5xl overflow-x-hidden overflow-y-auto border-0 bg-white p-3.5 pb-[max(0.875rem,env(safe-area-inset-bottom))] text-[#171b27] shadow-[0_24px_70px_rgba(9,15,28,0.42),0_0_0_1px_rgba(244,91,0,0.16)] sm:max-h-[calc(100dvh-2rem)] sm:max-w-5xl sm:p-6"
+        className="trending-popup max-h-[calc(100dvh-1rem)] w-[calc(100%-1.25rem)] max-w-5xl overflow-x-hidden overflow-y-auto border-0 bg-white p-3.5 pb-[max(0.875rem,env(safe-area-inset-bottom))] text-[#171b27] shadow-[0_24px_70px_rgba(9,15,28,0.42),0_0_0_1px_rgba(200,150,44,0.16)] sm:max-h-[calc(100dvh-2rem)] sm:max-w-5xl sm:p-6"
       >
         <button
           type="button"
@@ -75,7 +75,7 @@ export function TrendingPopup({
           <X className="size-5" />
         </button>
         <DialogHeader className="pe-12">
-          <p className="w-fit rounded-full bg-[#f45b00]/10 px-3 py-1 text-xs font-semibold tracking-wide text-[#f45b00] uppercase">
+          <p className="w-fit rounded-full bg-[#e6b325]/10 px-3 py-1 text-xs font-semibold tracking-wide text-[#7c5408] uppercase">
             {chip}
           </p>
           <DialogTitle className="text-xl leading-snug font-semibold text-[#171b27]">
@@ -94,7 +94,7 @@ export function TrendingPopup({
               <Link
                 href={card.href}
                 onClick={follow}
-                className="trending-card group flex h-full flex-col overflow-hidden rounded-2xl border border-[#f0e4da] bg-white shadow-[0_14px_36px_-20px_rgba(244,91,0,0.55)] ring-1 ring-[#f45b00]/10 transition hover:-translate-y-0.5 hover:shadow-[0_18px_40px_-16px_rgba(244,91,0,0.62)] focus-visible:ring-3 focus-visible:ring-[#f45b00]/40 focus-visible:outline-none"
+                className="trending-card group flex h-full flex-col overflow-hidden rounded-2xl border border-[#ead9a8] bg-white shadow-[0_14px_36px_-20px_rgba(200,150,44,0.55)] ring-1 ring-[#c8962c]/10 transition hover:-translate-y-0.5 hover:shadow-[0_18px_40px_-16px_rgba(200,150,44,0.62)] focus-visible:ring-3 focus-visible:ring-[#c8962c]/40 focus-visible:outline-none"
               >
                 <div className="trending-card-frame relative aspect-[9/16] overflow-hidden bg-[#17130f]">
                   <CardMedia media={card.media} active={open} />
@@ -103,7 +103,7 @@ export function TrendingPopup({
                     className="pointer-events-none absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-black/50 to-transparent"
                   />
                   {card.fresh && (
-                    <span className="absolute start-2 top-2 rounded-md bg-[#f45b00] px-1.5 py-0.5 text-[11px] font-bold tracking-wide text-[#171b27] uppercase shadow-[0_0_16px_rgba(244,91,0,0.65)]">
+                    <span className="absolute start-2 top-2 rounded-md bg-[#e6b325] px-1.5 py-0.5 text-[11px] font-bold tracking-wide text-[#171b27] uppercase shadow-[0_0_16px_rgba(200,150,44,0.65)]">
                       {newLabel}
                     </span>
                   )}
@@ -118,7 +118,7 @@ export function TrendingPopup({
                   <span
                     className={cn(
                       buttonVariants({ size: 'sm' }),
-                      'mt-auto h-auto min-h-9 w-full bg-[#f45b00] px-2 py-1.5 text-center text-xs leading-tight whitespace-normal text-[#171b27] group-hover:bg-[#ff7a2e]'
+                      'mt-auto h-auto min-h-9 w-full bg-[#e6b325] px-2 py-1.5 text-center text-xs leading-tight whitespace-normal text-[#171b27] group-hover:bg-[#f0c44a]'
                     )}
                   >
                     {card.cta}
@@ -158,7 +158,7 @@ function CardMedia({
   return (
     <div
       aria-hidden="true"
-      className="absolute inset-0 bg-gradient-to-b from-[#3a2418] via-[#17130f] to-[#f45b00]/30"
+      className="absolute inset-0 bg-gradient-to-b from-[#3a2418] via-[#17130f] to-[#c8962c]/30"
     />
   );
 }

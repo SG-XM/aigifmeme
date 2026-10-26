@@ -5,21 +5,33 @@ import type { BlogPost } from '@/content/posts';
 
 export function Footer({
   posts = [],
+  focus,
 }: {
   posts?: Pick<BlogPost, 'slug' | 'title'>[];
+  /** Homepage product column. Effect pages keep the scene list. */
+  focus?: 'uptown';
 }) {
+  const uptown = focus === 'uptown';
   const columns: FooterColumn[] = [
     {
       title: m['landing.footer.product'](),
-      links: [
-        { label: m['landing.nav.create'](), href: '/#create' },
-        { label: m['home.brand_name'](), href: '/' },
-        { label: m['ai_video.kicker'](), href: AI_VIDEO_INDEX_PATH },
-        { label: m['trend.bridges.title'](), href: '/burning-bridges-ai' },
-        { label: m['trend.peeper.title'](), href: WINDOW_PEEPER_PATH },
-        { label: m['sorry.nav'](), href: '/im-so-sorry' },
-        { label: m['landing.nav.pricing'](), href: '/pricing' },
-      ],
+      links: uptown
+        ? [
+            { label: m['home.nav.create'](), href: '/#create' },
+            { label: m['home.brand_name'](), href: '/' },
+            { label: m['home.nav.how'](), href: '/#usage' },
+            { label: m['home.nav.beats'](), href: '/#beats' },
+            { label: m['landing.nav.pricing'](), href: '/pricing' },
+          ]
+        : [
+            { label: m['landing.nav.create'](), href: '/#create' },
+            { label: m['home.brand_name'](), href: '/' },
+            { label: m['ai_video.kicker'](), href: AI_VIDEO_INDEX_PATH },
+            { label: m['trend.bridges.title'](), href: '/burning-bridges-ai' },
+            { label: m['trend.peeper.title'](), href: WINDOW_PEEPER_PATH },
+            { label: m['sorry.nav'](), href: '/im-so-sorry' },
+            { label: m['landing.nav.pricing'](), href: '/pricing' },
+          ],
       // Posts for this page, directly under Pricing. Effect pages pass
       // the tag-matched list; an empty list simply renders no section.
       sections: posts.length
@@ -57,6 +69,11 @@ export function Footer({
   ];
 
   return (
-    <SiteFooter tagline={m['landing.footer.tagline']()} columns={columns} />
+    <SiteFooter
+      tagline={
+        uptown ? m['home.footer_tagline']() : m['landing.footer.tagline']()
+      }
+      columns={columns}
+    />
   );
 }

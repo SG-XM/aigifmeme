@@ -110,7 +110,7 @@ export const Route = createRootRoute({
       : (alternateLocales[0] ?? baseLocale);
     // Social-card defaults. A route's own head() overrides the ones it repeats
     // (title/description), so pages only restate what differs.
-    const ogImage = `${appUrl}/logo.png`;
+    const ogImage = `${appUrl}/og.png`;
     const appName = loaderData?.appName || envConfigs.app_name;
     const siteDescription =
       loaderData?.appDescription || envConfigs.app_description;
@@ -132,8 +132,21 @@ export const Route = createRootRoute({
         { name: 'twitter:image', content: ogImage },
       ],
       links: [
-        { rel: 'icon', type: 'image/png', href: '/logo.png' },
-        { rel: 'apple-touch-icon', href: '/logo.png' },
+        { rel: 'icon', href: '/favicon.ico', sizes: 'any' },
+        {
+          rel: 'icon',
+          type: 'image/png',
+          sizes: '32x32',
+          href: '/favicon-32.png',
+        },
+        {
+          rel: 'icon',
+          type: 'image/png',
+          sizes: '192x192',
+          href: '/icon-192.png',
+        },
+        { rel: 'apple-touch-icon', href: '/apple-touch-icon.png' },
+        { rel: 'manifest', href: '/site.webmanifest' },
         ...alternateLocales.map((loc) => ({
           rel: 'alternate',
           hrefLang: loc,

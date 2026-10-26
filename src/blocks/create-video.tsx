@@ -131,11 +131,14 @@ export function CreateVideo({
   campaign = 'bulin',
   embedded = false,
   generatedCount = null,
+  voice,
 }: {
   campaign?: EffectCampaign;
   embedded?: boolean;
   /** Live `(users × 6) + 3` figure from `getGeneratedVideoCount`. */
   generatedCount?: number | null;
+  /** Homepage labels. Effect pages keep the campaign copy. */
+  voice?: 'uptown';
 } = {}) {
   const queryClient = useQueryClient();
   const { data: session, isPending: sessionPending } = useSession();
@@ -144,6 +147,7 @@ export function CreateVideo({
   const signedIn = hydrated && !!session?.user;
   const returnPath = effectHash(campaign, 'create');
   const peeper = campaign === 'peeper';
+  const uptown = voice === 'uptown';
   const { setContent } = useAgentHeader();
   const [effect, setEffect] = useState<'solo' | 'trio'>('solo');
   const isTrio = campaign === 'bulin' && effect === 'trio';
@@ -746,12 +750,26 @@ export function CreateVideo({
             <div
               className="trend-effect-selector flex w-full gap-2"
               role="radiogroup"
-              aria-label={m['effect.selector_label']()}
+              aria-label={
+                uptown
+                  ? m['home.generator.selector']()
+                  : m['effect.selector_label']()
+              }
             >
               {(
                 [
-                  { value: 'solo', label: m['effect.solo.title']() },
-                  { value: 'trio', label: m['effect.trio.title']() },
+                  {
+                    value: 'solo',
+                    label: uptown
+                      ? m['home.generator.solo']()
+                      : m['effect.solo.title'](),
+                  },
+                  {
+                    value: 'trio',
+                    label: uptown
+                      ? m['home.generator.trio']()
+                      : m['effect.trio.title'](),
+                  },
                 ] as const
               ).map((option) => (
                 <button
@@ -792,15 +810,23 @@ export function CreateVideo({
                     poster={isTrio ? TRIO_DEMO.poster : SOLO_DEMO.poster}
                     trio={isTrio}
                     label={
-                      isTrio
-                        ? m['effect.trio.demo_caption']()
-                        : m['effect.solo.demo_caption']()
+                      uptown
+                        ? isTrio
+                          ? m['home.generator.trio_demo']()
+                          : m['home.generator.solo_demo']()
+                        : isTrio
+                          ? m['effect.trio.demo_caption']()
+                          : m['effect.solo.demo_caption']()
                     }
                   />
                   <figcaption className="text-muted-foreground shrink-0 px-3 py-2 text-xs">
-                    {isTrio
-                      ? m['effect.trio.demo_caption']()
-                      : m['effect.solo.demo_caption']()}
+                    {uptown
+                      ? isTrio
+                        ? m['home.generator.trio_demo']()
+                        : m['home.generator.solo_demo']()
+                      : isTrio
+                        ? m['effect.trio.demo_caption']()
+                        : m['effect.solo.demo_caption']()}
                   </figcaption>
                 </figure>
               )}
@@ -954,13 +980,17 @@ export function CreateVideo({
               }}
             />
             <p className="text-muted-foreground text-sm leading-relaxed">
-              {peeper
-                ? m['effect.peeper.photo_hint']()
-                : campaign === 'bridges'
-                  ? m['effect.bridges.photo_hint']()
-                  : isTrio
-                    ? m['effect.trio.photo_hint']()
-                    : m['effect.bulin.photo_hint']()}
+              {uptown
+                ? isTrio
+                  ? m['home.generator.trio_hint']()
+                  : m['home.generator.photo_hint']()
+                : peeper
+                  ? m['effect.peeper.photo_hint']()
+                  : campaign === 'bridges'
+                    ? m['effect.bridges.photo_hint']()
+                    : isTrio
+                      ? m['effect.trio.photo_hint']()
+                      : m['effect.bulin.photo_hint']()}
             </p>
             {hasPhoto && (
               <p
@@ -981,22 +1011,30 @@ export function CreateVideo({
             <div className="trend-preset rounded-xl border px-4 py-3 text-sm leading-6">
               <p className="flex items-center gap-2 font-medium">
                 <Check className="size-4 shrink-0" />
-                {peeper
-                  ? m['effect.peeper.source_ready']()
-                  : campaign === 'bridges'
-                    ? m['effect.bridges.source_ready']()
-                    : isTrio
-                      ? m['effect.trio.source_ready']()
-                      : m['effect.bulin.source_ready']()}
+                {uptown
+                  ? isTrio
+                    ? m['home.generator.trio_ready']()
+                    : m['home.generator.source']()
+                  : peeper
+                    ? m['effect.peeper.source_ready']()
+                    : campaign === 'bridges'
+                      ? m['effect.bridges.source_ready']()
+                      : isTrio
+                        ? m['effect.trio.source_ready']()
+                        : m['effect.bulin.source_ready']()}
               </p>
               <p className="text-muted-foreground mt-1 text-xs leading-6">
-                {peeper
-                  ? m['effect.peeper.scene']()
-                  : campaign === 'bridges'
-                    ? m['effect.bridges.scene']()
-                    : isTrio
-                      ? m['effect.trio.scene']()
-                      : m['effect.bulin.scene']()}
+                {uptown
+                  ? isTrio
+                    ? m['home.generator.trio_scene']()
+                    : m['home.generator.scene']()
+                  : peeper
+                    ? m['effect.peeper.scene']()
+                    : campaign === 'bridges'
+                      ? m['effect.bridges.scene']()
+                      : isTrio
+                        ? m['effect.trio.scene']()
+                        : m['effect.bulin.scene']()}
               </p>
             </div>
             <fieldset disabled={busy}>
@@ -1080,7 +1118,10 @@ export function CreateVideo({
                         </span>
                         <span className="text-muted-foreground">
                           {' '}
-                          · {m['effect.trio.fixed_output']()}
+                          ·{' '}
+                          {uptown
+                            ? m['home.generator.trio_output']()
+                            : m['effect.trio.fixed_output']()}
                         </span>
                       </div>
                     </>
@@ -1206,10 +1247,15 @@ export function CreateVideo({
             </Button>
             <div className="mx-auto flex max-w-2xl flex-col items-center gap-2 text-center">
               <p className="text-muted-foreground text-sm leading-relaxed text-pretty">
-                {m['proof.quality']({
-                  videos: formatProofNumber(QUALITY_PROOF_VIDEOS, locale),
-                  rounds: formatProofNumber(QUALITY_PROOF_ROUNDS, locale),
-                })}
+                {uptown
+                  ? m['home.proof']({
+                      videos: formatProofNumber(QUALITY_PROOF_VIDEOS, locale),
+                      rounds: formatProofNumber(QUALITY_PROOF_ROUNDS, locale),
+                    })
+                  : m['proof.quality']({
+                      videos: formatProofNumber(QUALITY_PROOF_VIDEOS, locale),
+                      rounds: formatProofNumber(QUALITY_PROOF_ROUNDS, locale),
+                    })}
               </p>
               {typeof generatedCount === 'number' && (
                 <p className="text-primary text-lg leading-snug font-bold tracking-tight text-balance">

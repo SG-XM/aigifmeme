@@ -73,8 +73,12 @@ type LandingClip = {
   cite?: string;
 };
 
+const LEGACY_TREND_COPY =
+  /bulin|burning bridges|freestyle|dame hombro|recast|free\s*rap|window peeper|peeper|i['’]?m so sorry/i;
+
 export function HomeLanding({
   campaign = 'bulin',
+  voice,
   posts = [],
   heroVideos = [],
   galleryVideos = [],
@@ -82,6 +86,8 @@ export function HomeLanding({
   updatedAt = TREND_PAGE_UPDATED_AT,
 }: {
   campaign?: EffectCampaign;
+  /** Public homepage voice. Effect pages leave this unset. */
+  voice?: 'uptown';
   /** Guides already matched for this page. Home is not filtered as an effect. */
   posts?: BlogPost[];
   heroVideos?: HomeDemoClip[];
@@ -90,10 +96,16 @@ export function HomeLanding({
   updatedAt?: string;
 } = {}) {
   const bridges = campaign === 'bridges';
-  const relatedPosts = posts;
+  const uptown = voice === 'uptown';
+  const relatedPosts = uptown
+    ? posts.filter(
+        (post) =>
+          !LEGACY_TREND_COPY.test(`${post.title} ${post.description ?? ''}`)
+      )
+    : posts;
   const peeper = campaign === 'peeper';
   const locale = getLocale();
-  const content = peeper
+  const effectContent = peeper
     ? {
         title: m['effect.peeper.title'](),
         description: m['effect.peeper.description'](),
@@ -171,6 +183,45 @@ export function HomeLanding({
           source:
             'https://deultimominuto.com/entretenimiento/video-de-freestyle-de-bulin-47/',
         };
+  const content = uptown
+    ? {
+        title: m['home.title'](),
+        description: m['home.description'](),
+        eyebrow: m['home.eyebrow'](),
+        definitionTitle: m['home.definition_title'](),
+        summary: m['home.summary'](),
+        definition: m['home.definition'](),
+        origin: m['home.about'](),
+        scene: m['home.generator.scene'](),
+        photoHint: m['home.generator.photo_hint'](),
+        faqSourceQuestion: m['home.faq_q5'](),
+        faqSourceAnswer: m['home.faq_a5'](),
+        previewTitle: m['home.title'](),
+        previewReference: m['home.clip_1'](),
+        factSourceTitle: m['home.stat_crew_title'](),
+        stepsDescription: m['home.steps_description'](),
+        featuresTitle: m['home.features_title'](),
+        featureSourceTitle: m['home.feature_photo_title'](),
+        featureSourceBody: m['home.feature_photo_body'](),
+        motionTitle: m['home.tip_review_title'](),
+        motionBody: m['home.tip_review_body'](),
+        ctaTitle: m['home.cta_title'](),
+        ctaDescription: m['home.cta_description'](),
+        source: '',
+      }
+    : effectContent;
+  const clipTitle = (index: number, fallback: string) => {
+    if (!uptown) return fallback;
+    const titles = [
+      m['home.clip_1'](),
+      m['home.clip_2'](),
+      m['home.clip_3'](),
+      m['home.clip_4'](),
+      m['home.clip_5'](),
+      m['home.clip_6'](),
+    ];
+    return titles[index] ?? m['home.clip_fallback']();
+  };
   // Bridges keeps these clips. The default homepage receives HOME_HERO_DEMOS.
   const bridgesDemos: LandingClip[] = [
     {
@@ -207,118 +258,245 @@ export function HomeLanding({
     : bridges
       ? bridgesDemos
       : galleryVideos;
-  const facts = [
-    { title: m['recast.fact_photo_title'](), body: content.photoHint },
-    { title: content.factSourceTitle, body: content.scene },
-    {
-      title: m['recast.fact_download_title'](),
-      body: m['recast.fact_download_body'](),
-    },
-    {
-      title: m['recast.fact_cost_title'](),
-      body: m['recast.fact_cost_body'](),
-    },
-  ];
-  const steps = [
-    { title: m['effect.upload_title'](), body: content.photoHint },
-    {
-      title: peeper
-        ? m['effect.peeper.generate_title']()
-        : bridges
-          ? m['effect.generate_title']()
-          : m['trend.bulin.generator_title'](),
-      body: peeper
-        ? m['effect.peeper.generate_body']()
-        : bridges
-          ? m['effect.generate_body']()
-          : m['trend.bulin.generator_description'](),
-    },
-    { title: m['effect.download_title'](), body: m['effect.download_body']() },
-  ];
-  const features = [
-    {
-      icon: ImagePlus,
-      title: content.featureSourceTitle,
-      body: content.featureSourceBody,
-    },
-    {
-      icon: Coins,
-      title: m['recast.feature_cost_title'](),
-      body: m['recast.feature_cost_body'](),
-    },
-    {
-      icon: SlidersHorizontal,
-      title: m['recast.feature_quality_title'](),
-      body: m['recast.feature_quality_body'](),
-    },
-    {
-      icon: RotateCcw,
-      title: m['recast.feature_refund_title'](),
-      body: m['recast.feature_refund_body'](),
-    },
-    {
-      icon: Download,
-      title: m['recast.feature_library_title'](),
-      body: m['recast.feature_library_body'](),
-    },
-    {
-      icon: Smartphone,
-      title: m['recast.feature_browser_title'](),
-      body: m['recast.feature_browser_body'](),
-    },
-  ];
-  const tips = [
-    {
-      title: m['recast.tip_person_title'](),
-      body: m['recast.tip_person_body'](),
-    },
-    {
-      title: m['recast.tip_light_title'](),
-      body: m['recast.tip_light_body'](),
-    },
-    { title: m['recast.tip_face_title'](), body: m['recast.tip_face_body']() },
-    { title: m['recast.tip_body_title'](), body: m['recast.tip_body_body']() },
-    {
-      title: content.motionTitle,
-      body: content.motionBody,
-    },
-    {
-      title: m['recast.tip_review_title'](),
-      body: m['recast.tip_review_body'](),
-    },
-  ];
-  const questions = [
-    ...(peeper
-      ? [
-          {
-            question: m['effect.peeper.faq_price_q'](),
-            answer: (
-              <>
-                {m['effect.peeper.price_heading']()} <PeeperPriceCite compare />
-              </>
-            ),
-          },
-        ]
-      : []),
-    { question: m['effect.faq_photo_q'](), answer: m['effect.faq_photo_a']() },
-    { question: m['effect.faq_prompt_q'](), answer: content.scene },
-    { question: m['effect.faq_cost_q'](), answer: m['effect.faq_cost_a']() },
-    {
-      question: content.faqSourceQuestion,
-      answer: content.faqSourceAnswer,
-    },
-    {
-      question: m['effect.faq_download_q'](),
-      answer: m['effect.faq_download_a'](),
-    },
-    {
-      question: m['effect.faq_failure_q'](),
-      answer: m['effect.faq_failure_a'](),
-    },
-  ];
+  const shownHero = heroClips.map((clip, index) => ({
+    ...clip,
+    title: clipTitle(index, clip.title),
+  }));
+  const facts = uptown
+    ? [
+        {
+          title: m['home.stat_photo_title'](),
+          body: m['home.stat_photo_body'](),
+        },
+        {
+          title: m['home.stat_length_title'](),
+          body: m['home.stat_length_body'](),
+        },
+        {
+          title: m['home.stat_refund_title'](),
+          body: m['home.stat_refund_body'](),
+        },
+        {
+          title: m['home.stat_crew_title'](),
+          body: m['home.stat_crew_body'](),
+        },
+      ]
+    : [
+        { title: m['recast.fact_photo_title'](), body: content.photoHint },
+        { title: content.factSourceTitle, body: content.scene },
+        {
+          title: m['recast.fact_download_title'](),
+          body: m['recast.fact_download_body'](),
+        },
+        {
+          title: m['recast.fact_cost_title'](),
+          body: m['recast.fact_cost_body'](),
+        },
+      ];
+  const steps = uptown
+    ? [
+        {
+          title: m['home.step_upload_title'](),
+          body: m['home.step_upload_body'](),
+        },
+        {
+          title: m['home.step_generate_title'](),
+          body: m['home.step_generate_body'](),
+        },
+        {
+          title: m['home.step_download_title'](),
+          body: m['home.step_download_body'](),
+        },
+      ]
+    : [
+        { title: m['effect.upload_title'](), body: content.photoHint },
+        {
+          title: peeper
+            ? m['effect.peeper.generate_title']()
+            : bridges
+              ? m['effect.generate_title']()
+              : m['trend.bulin.generator_title'](),
+          body: peeper
+            ? m['effect.peeper.generate_body']()
+            : bridges
+              ? m['effect.generate_body']()
+              : m['trend.bulin.generator_description'](),
+        },
+        {
+          title: m['effect.download_title'](),
+          body: m['effect.download_body'](),
+        },
+      ];
+  const features = uptown
+    ? [
+        {
+          icon: ImagePlus,
+          title: m['home.feature_photo_title'](),
+          body: m['home.feature_photo_body'](),
+        },
+        {
+          icon: Coins,
+          title: m['home.feature_credits_title'](),
+          body: m['home.feature_credits_body'](),
+        },
+        {
+          icon: SlidersHorizontal,
+          title: m['home.feature_clothes_title'](),
+          body: m['home.feature_clothes_body'](),
+        },
+        {
+          icon: RotateCcw,
+          title: m['home.feature_refund_title'](),
+          body: m['home.feature_refund_body'](),
+        },
+        {
+          icon: Download,
+          title: m['home.feature_crew_title'](),
+          body: m['home.feature_crew_body'](),
+        },
+        {
+          icon: Smartphone,
+          title: m['home.feature_browser_title'](),
+          body: m['home.feature_browser_body'](),
+        },
+      ]
+    : [
+        {
+          icon: ImagePlus,
+          title: content.featureSourceTitle,
+          body: content.featureSourceBody,
+        },
+        {
+          icon: Coins,
+          title: m['recast.feature_cost_title'](),
+          body: m['recast.feature_cost_body'](),
+        },
+        {
+          icon: SlidersHorizontal,
+          title: m['recast.feature_quality_title'](),
+          body: m['recast.feature_quality_body'](),
+        },
+        {
+          icon: RotateCcw,
+          title: m['recast.feature_refund_title'](),
+          body: m['recast.feature_refund_body'](),
+        },
+        {
+          icon: Download,
+          title: m['recast.feature_library_title'](),
+          body: m['recast.feature_library_body'](),
+        },
+        {
+          icon: Smartphone,
+          title: m['recast.feature_browser_title'](),
+          body: m['recast.feature_browser_body'](),
+        },
+      ];
+  const tips = uptown
+    ? [
+        {
+          title: m['home.tip_full_title'](),
+          body: m['home.tip_full_body'](),
+        },
+        {
+          title: m['home.tip_face_title'](),
+          body: m['home.tip_face_body'](),
+        },
+        {
+          title: m['home.tip_light_title'](),
+          body: m['home.tip_light_body'](),
+        },
+        {
+          title: m['home.tip_one_title'](),
+          body: m['home.tip_one_body'](),
+        },
+        {
+          title: m['home.tip_clothes_title'](),
+          body: m['home.tip_clothes_body'](),
+        },
+        {
+          title: m['home.tip_review_title'](),
+          body: m['home.tip_review_body'](),
+        },
+      ]
+    : [
+        {
+          title: m['recast.tip_person_title'](),
+          body: m['recast.tip_person_body'](),
+        },
+        {
+          title: m['recast.tip_light_title'](),
+          body: m['recast.tip_light_body'](),
+        },
+        {
+          title: m['recast.tip_face_title'](),
+          body: m['recast.tip_face_body'](),
+        },
+        {
+          title: m['recast.tip_body_title'](),
+          body: m['recast.tip_body_body'](),
+        },
+        {
+          title: content.motionTitle,
+          body: content.motionBody,
+        },
+        {
+          title: m['recast.tip_review_title'](),
+          body: m['recast.tip_review_body'](),
+        },
+      ];
+  const questions = uptown
+    ? [
+        { question: m['home.faq_q1'](), answer: m['home.faq_a1']() },
+        { question: m['home.faq_q2'](), answer: m['home.faq_a2']() },
+        { question: m['home.faq_q3'](), answer: m['home.faq_a3']() },
+        { question: m['home.faq_q4'](), answer: m['home.faq_a4']() },
+        { question: m['home.faq_q5'](), answer: m['home.faq_a5']() },
+        { question: m['home.faq_q6'](), answer: m['home.faq_a6']() },
+      ]
+    : [
+        ...(peeper
+          ? [
+              {
+                question: m['effect.peeper.faq_price_q'](),
+                answer: (
+                  <>
+                    {m['effect.peeper.price_heading']()}{' '}
+                    <PeeperPriceCite compare />
+                  </>
+                ),
+              },
+            ]
+          : []),
+        {
+          question: m['effect.faq_photo_q'](),
+          answer: m['effect.faq_photo_a'](),
+        },
+        { question: m['effect.faq_prompt_q'](), answer: content.scene },
+        {
+          question: m['effect.faq_cost_q'](),
+          answer: m['effect.faq_cost_a'](),
+        },
+        {
+          question: content.faqSourceQuestion,
+          answer: content.faqSourceAnswer,
+        },
+        {
+          question: m['effect.faq_download_q'](),
+          answer: m['effect.faq_download_a'](),
+        },
+        {
+          question: m['effect.faq_failure_q'](),
+          answer: m['effect.faq_failure_a'](),
+        },
+      ];
   return (
     <div className="trend-site min-h-screen" lang={locale}>
-      <Header brandMark="trend" campaign={campaign} />
+      <Header
+        brandMark="trend"
+        campaign={campaign}
+        nav={uptown ? 'uptown' : 'effects'}
+      />
       <ScrollReveal>
         <main>
           <section className="trend-stage trend-hero" id="hero">
@@ -348,27 +526,29 @@ export function HomeLanding({
                   })}
                 </time>
                 <span aria-hidden="true"> · </span>
-                {peeper
-                  ? m['recast.peeper.update_note']()
-                  : bridges
-                    ? m['recast.bridges.update_note']()
-                    : m['recast.update_note']()}
+                {uptown
+                  ? m['home.update_note']()
+                  : peeper
+                    ? m['recast.peeper.update_note']()
+                    : bridges
+                      ? m['recast.bridges.update_note']()
+                      : m['recast.update_note']()}
               </p>
               <a
                 href="#create"
                 className="trend-button trend-button-secondary trend-hero-link"
               >
-                {m['effect.create_cta']()}
+                {uptown ? m['home.cta']() : m['effect.create_cta']()}
                 <ArrowRight className="size-4" />
               </a>
               <div className="trend-hero-workspace">
-                {bridges && heroClips.length > 0 && (
+                {bridges && shownHero.length > 0 && (
                   <>
                     <div
                       className="trend-compare"
                       aria-label={content.previewTitle}
                     >
-                      {heroClips.map((preview, index) => (
+                      {shownHero.map((preview, index) => (
                         <figure
                           key={preview.id ?? preview.src}
                           className="trend-compare-clip"
@@ -404,14 +584,15 @@ export function HomeLanding({
                       campaign={campaign}
                       embedded
                       generatedCount={generatedCount}
+                      voice={uptown ? 'uptown' : undefined}
                     />
                   </AgentHeaderProvider>
                 </div>
                 {!bridges &&
-                  heroClips.length > 0 &&
+                  shownHero.length > 0 &&
                   (peeper ? (
                     <div className="trend-hero-showcase trend-peeper-showcase trend-showcase-grid">
-                      {heroClips.map((demo) => (
+                      {shownHero.map((demo) => (
                         <figure
                           data-reveal
                           key={demo.id ?? demo.src}
@@ -435,7 +616,7 @@ export function HomeLanding({
                     </div>
                   ) : (
                     <div className="trend-hero-showcase trend-showcase-grid">
-                      {heroClips.map((demo) => (
+                      {shownHero.map((demo) => (
                         <figure
                           data-reveal
                           key={demo.id ?? demo.src}
@@ -490,21 +671,30 @@ export function HomeLanding({
           <section id="about" className="trend-section trend-introduce">
             <div className="trend-container">
               <SectionHeading
-                eyebrow={m['recast.short_answer']()}
+                eyebrow={
+                  uptown
+                    ? m['home.about_eyebrow']()
+                    : m['recast.short_answer']()
+                }
                 title={content.definitionTitle}
               />
               <p className="trend-summary">{content.summary}</p>
               <p className="trend-section-description">{content.definition}</p>
               <p className="trend-section-description">
-                {content.origin}{' '}
-                <a
-                  href={content.source}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="trend-source"
-                >
-                  {m['effect.origin_link']()}
-                </a>
+                {content.origin}
+                {content.source ? (
+                  <>
+                    {' '}
+                    <a
+                      href={content.source}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="trend-source"
+                    >
+                      {m['effect.origin_link']()}
+                    </a>
+                  </>
+                ) : null}
               </p>
               <div className="trend-intro-grid">
                 {facts.map((fact) => (
@@ -520,8 +710,14 @@ export function HomeLanding({
           <section id="usage" className="trend-section trend-stage">
             <div className="trend-container">
               <SectionHeading
-                eyebrow={m['effect.steps_eyebrow']()}
-                title={m['effect.steps_title']()}
+                eyebrow={
+                  uptown
+                    ? m['home.steps_eyebrow']()
+                    : m['effect.steps_eyebrow']()
+                }
+                title={
+                  uptown ? m['home.steps_title']() : m['effect.steps_title']()
+                }
                 description={content.stepsDescription}
               />
               <ol className="trend-steps">
@@ -550,11 +746,13 @@ export function HomeLanding({
                   eyebrow={m['trend.examples_eyebrow']()}
                   title={m['effect.examples_title']()}
                   description={
-                    peeper
-                      ? m['effect.peeper.examples_description']()
-                      : bridges
-                        ? m['effect.examples_description']()
-                        : m['trend.bulin_examples_description']()
+                    uptown
+                      ? m['home.examples_description']()
+                      : peeper
+                        ? m['effect.peeper.examples_description']()
+                        : bridges
+                          ? m['effect.examples_description']()
+                          : m['trend.bulin_examples_description']()
                   }
                 />
                 <div
@@ -594,9 +792,17 @@ export function HomeLanding({
           <section className="trend-section trend-features" id="features">
             <div className="trend-container">
               <SectionHeading
-                eyebrow={m['recast.features_eyebrow']()}
+                eyebrow={
+                  uptown
+                    ? m['home.features_eyebrow']()
+                    : m['recast.features_eyebrow']()
+                }
                 title={content.featuresTitle}
-                description={m['recast.features_description']()}
+                description={
+                  uptown
+                    ? m['home.features_description']()
+                    : m['recast.features_description']()
+                }
               />
               <div className="trend-feature-grid">
                 {features.map((feature, index) => (
@@ -624,9 +830,17 @@ export function HomeLanding({
           <section className="trend-section trend-tips" id="tips">
             <div className="trend-container">
               <SectionHeading
-                eyebrow={m['recast.tips_eyebrow']()}
-                title={m['recast.tips_title']()}
-                description={m['recast.tips_description']()}
+                eyebrow={
+                  uptown ? m['home.tips_eyebrow']() : m['recast.tips_eyebrow']()
+                }
+                title={
+                  uptown ? m['home.tips_title']() : m['recast.tips_title']()
+                }
+                description={
+                  uptown
+                    ? m['home.tips_description']()
+                    : m['recast.tips_description']()
+                }
               />
               <div className="trend-feature-grid">
                 {tips.map((tip, index) => (
@@ -656,44 +870,83 @@ export function HomeLanding({
             viewAllLabel={m['landing.blog.view_all']()}
           />
 
-          <section className="trend-section trend-next" id="more-effects">
-            <div className="trend-container">
-              <SectionHeading
-                eyebrow={m['recast.next_eyebrow']()}
-                title={m['recast.next_title']()}
-                description={m['recast.next_description']()}
-              />
-              <div className="trend-next-grid trend-next-grid--three">
-                {liveEffectNav().map((effect) => (
-                  <Link
-                    key={effect.id}
-                    href={effect.createHref}
-                    className="trend-guide-card"
-                  >
-                    <h3>{effect.title}</h3>
-                    <p>
-                      {effect.id === 'bridges'
-                        ? m['recast.bridges.card_description']()
-                        : effect.id === 'peeper'
-                          ? m['recast.peeper.card_description']()
-                          : effect.id === 'sorry'
-                            ? m['ai_video.sorry_body']()
-                            : m['recast.bulin.card_description']()}
-                    </p>
-                    <span>
-                      {m['effect.create_cta']()}{' '}
-                      <ArrowRight className="size-4" />
-                    </span>
-                  </Link>
-                ))}
+          {uptown ? (
+            <section className="trend-section trend-next" id="beats">
+              <div className="trend-container">
+                <SectionHeading
+                  eyebrow={m['home.beats_eyebrow']()}
+                  title={m['home.beats_title']()}
+                  description={m['home.beats_description']()}
+                />
+                <div className="trend-next-grid trend-next-grid--three">
+                  {(
+                    [
+                      [
+                        m['home.beat_strut_title'](),
+                        m['home.beat_strut_body'](),
+                      ],
+                      [
+                        m['home.beat_serenade_title'](),
+                        m['home.beat_serenade_body'](),
+                      ],
+                      [
+                        m['home.beat_dance_title'](),
+                        m['home.beat_dance_body'](),
+                      ],
+                    ] as const
+                  ).map(([title, body]) => (
+                    <article key={title} className="trend-guide-card">
+                      <h3>{title}</h3>
+                      <p>{body}</p>
+                    </article>
+                  ))}
+                </div>
               </div>
-            </div>
-          </section>
+            </section>
+          ) : (
+            <section className="trend-section trend-next" id="more-effects">
+              <div className="trend-container">
+                <SectionHeading
+                  eyebrow={m['recast.next_eyebrow']()}
+                  title={m['recast.next_title']()}
+                  description={m['recast.next_description']()}
+                />
+                <div className="trend-next-grid trend-next-grid--three">
+                  {liveEffectNav().map((effect) => (
+                    <Link
+                      key={effect.id}
+                      href={effect.createHref}
+                      className="trend-guide-card"
+                    >
+                      <h3>{effect.title}</h3>
+                      <p>
+                        {effect.id === 'bridges'
+                          ? m['recast.bridges.card_description']()
+                          : effect.id === 'peeper'
+                            ? m['recast.peeper.card_description']()
+                            : effect.id === 'sorry'
+                              ? m['ai_video.sorry_body']()
+                              : m['recast.bulin.card_description']()}
+                      </p>
+                      <span>
+                        {m['effect.create_cta']()}{' '}
+                        <ArrowRight className="size-4" />
+                      </span>
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            </section>
+          )}
 
           <section className="trend-section trend-pricing">
             <div className="trend-container">
               <Pricing
-                title={m['effect.pricing_title']()}
+                title={
+                  uptown
+                    ? m['home.pricing_title']()
+                    : m['effect.pricing_title']()
+                }
                 headingLevel={2}
                 tone="cinematic"
                 defaultGroup="yearly"
@@ -709,9 +962,15 @@ export function HomeLanding({
           >
             <div className="trend-container">
               <SectionHeading
-                eyebrow={m['recast.faq_eyebrow']()}
-                title={m['effect.faq_title']()}
-                description={m['recast.faq_description']()}
+                eyebrow={
+                  uptown ? m['home.faq_eyebrow']() : m['recast.faq_eyebrow']()
+                }
+                title={uptown ? m['home.faq_title']() : m['effect.faq_title']()}
+                description={
+                  uptown
+                    ? m['home.faq_description']()
+                    : m['recast.faq_description']()
+                }
               />
               <div className="trend-faq-list">
                 {questions.map((item, index) => (
@@ -739,7 +998,7 @@ export function HomeLanding({
               <p>{content.ctaDescription}</p>
               <div className="trend-cta-actions">
                 <a href="#create" className="trend-button trend-button-primary">
-                  {m['effect.create_cta']()}
+                  {uptown ? m['home.cta']() : m['effect.create_cta']()}
                   <ArrowRight className="size-4" />
                 </a>
                 <a
@@ -753,7 +1012,7 @@ export function HomeLanding({
           </section>
         </main>
       </ScrollReveal>
-      <Footer posts={relatedPosts} />
+      <Footer posts={relatedPosts} focus={uptown ? 'uptown' : undefined} />
       <SupportWidget />
     </div>
   );

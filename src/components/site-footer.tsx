@@ -114,17 +114,6 @@ const directoryBadges: {
     title: 'Powered by Startup Fast',
   },
   {
-    href: 'https://startupfa.st/projects/bulin-ai',
-    src: 'https://startupfa.st/badge-light.png',
-    alt: 'Featured on Startup Fast',
-    title: 'Featured on Startup Fast',
-  },
-  {
-    href: 'https://startupfa.me/s/bulin-47-ai-1?utm_source=uptownfunkai.video',
-    src: 'https://startupfa.me/badges/featured-badge-small.webp',
-    alt: 'Uptown - Featured on Startup Fame',
-  },
-  {
     href: 'https://www.showmysites.com',
     src: 'https://www.showmysites.com/static/backlink/logo.webp',
     alt: 'ShowMySites Badge',
@@ -148,12 +137,6 @@ const directoryBadges: {
     href: 'https://deeplaunch.io',
     src: 'https://deeplaunch.io/badge/badge_dark.svg',
     alt: 'Featured on DeepLaunch.io',
-  },
-  {
-    href: 'https://aiagentsdirectory.com/agent/bulin-ai',
-    src: 'https://aiagentsdirectory.com/featured-badge.svg?v=2024',
-    alt: 'Uptown - Featured on AI Agents Directory',
-    title: 'Discover Uptown on AI Agents Directory',
   },
   {
     href: 'https://www.justsimple.tools',

@@ -62,20 +62,20 @@ export function EffectsAnnounce() {
     >
       <DialogContent
         showCloseButton={false}
-        className="flex max-h-[calc(100dvh-1rem)] w-[calc(100%-1rem)] max-w-[960px] flex-col gap-0 overflow-hidden border-[3px] border-[#171b27] bg-[#fff6f1] p-0 text-[#171b27] ring-0 sm:max-h-[calc(100dvh-2rem)] sm:max-w-[960px] sm:rounded-3xl"
+        className="flex max-h-[calc(100dvh-1rem)] w-[calc(100%-1rem)] max-w-[960px] flex-col gap-0 overflow-hidden border-[3px] border-[#171b27] bg-[#fff6dc] p-0 text-[#171b27] ring-0 sm:max-h-[calc(100dvh-2rem)] sm:max-w-[960px] sm:rounded-3xl"
       >
         <button
           type="button"
           onClick={dismiss}
           aria-label={m['announce.effects.close']()}
-          className="absolute end-3 top-3 z-20 flex size-11 items-center justify-center rounded-full border-2 border-[#171b27] bg-white text-[#171b27] shadow-[2px_2px_0_#171b27] hover:bg-[#fff6f1] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#171b27]"
+          className="absolute end-3 top-3 z-20 flex size-11 items-center justify-center rounded-full border-2 border-[#171b27] bg-white text-[#171b27] shadow-[2px_2px_0_#171b27] hover:bg-[#fff6dc] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#171b27]"
         >
           <X className="size-5" />
         </button>
         <div className="min-h-0 flex-1 overflow-y-auto">
-          <header className="bg-[#ff4f00] px-5 pe-16 pt-5 pb-6 sm:px-7 sm:pt-6 sm:pb-7">
+          <header className="bg-[#e6b325] px-5 pe-16 pt-5 pb-6 sm:px-7 sm:pt-6 sm:pb-7">
             <p className="inline-flex items-center gap-1.5 rounded-full bg-[#171b27] px-3 py-1 text-xs font-semibold text-white">
-              <Flame className="size-3.5 text-[#ff4f00]" aria-hidden="true" />
+              <Flame className="size-3.5 text-[#e6b325]" aria-hidden="true" />
               {m['announce.effects.badge']()}
             </p>
             <p className="mt-4 text-sm font-semibold">
@@ -115,7 +115,7 @@ export function EffectsAnnounce() {
                     key={item.id}
                     href={item.href}
                     onClick={follow(item.href)}
-                    className="inline-flex min-h-10 items-center rounded-full border-2 border-[#171b27] bg-white px-3 text-sm font-semibold text-[#171b27] hover:bg-[#fff6f1] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#ff4f00]"
+                    className="inline-flex min-h-10 items-center rounded-full border-2 border-[#171b27] bg-white px-3 text-sm font-semibold text-[#171b27] hover:bg-[#fff6dc] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#c8962c]"
                   >
                     {moreLabel(item.id)}
                   </Link>
@@ -124,7 +124,7 @@ export function EffectsAnnounce() {
               <button
                 type="button"
                 onClick={dismiss}
-                className="min-h-11 self-end px-1 text-sm font-medium underline underline-offset-4 hover:text-[#ff4f00] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#ff4f00] sm:self-auto"
+                className="min-h-11 self-end px-1 text-sm font-medium underline underline-offset-4 hover:text-[#7c5408] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#c8962c] sm:self-auto"
               >
                 {m['announce.effects.keep']()}
               </button>
@@ -161,7 +161,7 @@ function AnnounceCard({
       </div>
       <div className="flex min-w-0 flex-1 flex-col gap-2 p-3 sm:p-4">
         {card.isNew ? (
-          <span className="w-fit rounded-full bg-[#ff4f00] px-2 py-0.5 text-[11px] font-bold text-white">
+          <span className="w-fit rounded-full bg-[#e6b325] px-2 py-0.5 text-[11px] font-bold text-[#1a1206]">
             {m['announce.effects.new']()}
           </span>
         ) : (
@@ -180,7 +180,7 @@ function AnnounceCard({
         <Link
           href={card.href}
           onClick={onFollow}
-          className="mt-auto inline-flex min-h-11 w-full items-center justify-center gap-1.5 rounded-full bg-[#ff4f00] px-3 text-sm font-semibold text-white shadow-[0_2px_8px_rgba(255,79,0,0.35)] hover:bg-[#e44700] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#171b27]"
+          className="mt-auto inline-flex min-h-11 w-full items-center justify-center gap-1.5 rounded-full bg-[#e6b325] px-3 text-sm font-semibold text-[#1a1206] shadow-[0_2px_8px_rgba(200,150,44,0.35)] hover:bg-[#c49212] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#171b27]"
         >
           {copy.cta}
           <ArrowRight className="size-4 rtl:rotate-180" aria-hidden="true" />

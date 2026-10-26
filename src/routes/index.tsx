@@ -1,22 +1,14 @@
-import { lazy, Suspense, useEffect, useState } from 'react';
 import { createFileRoute } from '@tanstack/react-router';
 
 import { getGeneratedVideoCountFn } from '@/modules/social-proof/server';
 import { homeDemoClips } from '@/lib/home-demos';
 import { HOME_RELATED_SLUG, presentRelatedPosts } from '@/lib/related-posts';
-import { scheduleThirdParty } from '@/lib/schedule-third-party';
 import { getSiteNameFn } from '@/lib/site-name-server';
 import { trendPageMeta } from '@/lib/trend-page-meta';
 import { m } from '@/paraglide/messages.js';
 import { getLocale } from '@/paraglide/runtime.js';
 import { HomeLanding } from '@/blocks/home-landing';
 import { getBlogPostsFn } from '@/content/posts/server';
-
-const EffectsAnnounce = lazy(() =>
-  import('@/blocks/effects-announce').then((mod) => ({
-    default: mod.EffectsAnnounce,
-  }))
-);
 
 export const Route = createFileRoute('/')({
   loader: async () => {
@@ -29,14 +21,25 @@ export const Route = createFileRoute('/')({
     ]);
     return {
       locale,
-      posts: presentRelatedPosts(articles, { slug: HOME_RELATED_SLUG }),
+      posts: presentRelatedPosts(articles, { slug: HOME_RELATED_SLUG }).filter(
+        (post) =>
+          !/bulin|burning bridges|freestyle|dame hombro|recast|free\s*rap|window peeper|peeper|i['’]?m so sorry/i.test(
+            `${post.title} ${post.description ?? ''}`
+          )
+      ),
       generatedCount,
       siteName,
-      heroVideos: videos.hero,
-      galleryVideos: videos.gallery,
+      heroVideos: videos.hero.map((clip, index) => ({
+        ...clip,
+        title: homeClipTitle(index),
+      })),
+      galleryVideos: videos.gallery.map((clip, index) => ({
+        ...clip,
+        title: homeClipTitle(index),
+      })),
       title: m['home.meta_title']({}, { locale }),
       description: m['home.meta_description']({}, { locale }),
-      summary: m['recast.bulin.summary']({}, { locale }),
+      summary: m['home.summary']({}, { locale }),
     };
   },
   head: ({ loaderData }) => {
@@ -52,42 +55,34 @@ export const Route = createFileRoute('/')({
           href: '/videos/showcase/home/werewolf-dance-poster.jpg',
           fetchPriority: 'high',
         },
-        {
-          rel: 'preload',
-          as: 'image',
-          href: '/videos/showcase/window-peeper/announce-result.jpg',
-        },
-        {
-          rel: 'preload',
-          as: 'image',
-          href: '/videos/showcase/burning-bridges/announce-man.jpg',
-        },
       ],
     };
   },
   component: HomePage,
 });
 
+function homeClipTitle(index: number) {
+  const titles = [
+    m['home.clip_1'](),
+    m['home.clip_2'](),
+    m['home.clip_3'](),
+    m['home.clip_4'](),
+    m['home.clip_5'](),
+    m['home.clip_6'](),
+  ];
+  return titles[index] ?? m['home.clip_fallback']();
+}
+
 function HomePage() {
   const { posts, heroVideos, galleryVideos, generatedCount } =
     Route.useLoaderData();
-  // The first-visit dialog is not part of first paint. Load it on the same
-  // idle/interact schedule as analytics so its chunk does not race the hero.
-  const [showAnnounce, setShowAnnounce] = useState(false);
-  useEffect(() => scheduleThirdParty(() => setShowAnnounce(true)), []);
   return (
-    <>
-      <HomeLanding
-        posts={posts}
-        heroVideos={heroVideos}
-        galleryVideos={galleryVideos}
-        generatedCount={generatedCount}
-      />
-      {showAnnounce ? (
-        <Suspense fallback={null}>
-          <EffectsAnnounce />
-        </Suspense>
-      ) : null}
-    </>
+    <HomeLanding
+      voice="uptown"
+      posts={posts}
+      heroVideos={heroVideos}
+      galleryVideos={galleryVideos}
+      generatedCount={generatedCount}
+    />
   );
 }
