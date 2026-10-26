@@ -19,6 +19,7 @@ import { usePathname } from '@/core/i18n/navigation';
 import { isMessagesShellOnlyPath } from '@/core/i18n/shell-path';
 import { envConfigs } from '@/config';
 import { apiPost } from '@/lib/api-client';
+import { sanitizeGoogleAnalyticsId } from '@/lib/google-analytics-id';
 import { getQueryClient } from '@/lib/query-client';
 import { canonicalOrigin } from '@/lib/trend-page-meta';
 import { m } from '@/paraglide/messages.js';
@@ -62,7 +63,7 @@ const getAnalyticsConfigs = createServerFn().handler(async () => {
     appDescription:
       configs.app_description?.trim() || envConfigs.app_description,
     clarityId: clarityProjectId(configs.clarity_project_id),
-    gaId: configs.google_analytics_id?.trim() || '',
+    gaId: sanitizeGoogleAnalyticsId(configs.google_analytics_id),
     plausibleDomain: configs.plausible_domain?.trim() || '',
     plausibleSrc: configs.plausible_src?.trim() || '',
     adsenseCode: configs.adsense_code?.trim() || '',

@@ -233,8 +233,10 @@ describe('retention checkout guards', () => {
     expect(mocks.checkout).toHaveBeenCalledWith(
       expect.objectContaining({
         credits: 10,
+        productName: 'Uptown Funk AI video · $5.99',
         paymentOrder: expect.objectContaining({
           price: { amount: 599, currency: 'usd' },
+          productName: 'Uptown Funk AI video · $5.99',
         }),
       })
     );

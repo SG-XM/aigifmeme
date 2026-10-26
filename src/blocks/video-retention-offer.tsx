@@ -7,7 +7,7 @@ import { useSession } from '@/core/auth/client';
 import type { EffectCampaign } from '@/lib/ai-video-paths';
 import { apiGet, apiPost } from '@/lib/api-client';
 import { settleCheckout, type CheckoutRedirect } from '@/lib/apple-pay';
-import { WEREWOLF_OFFER_MEDIA } from '@/lib/bulin-reference';
+import { HOME_HERO_DEMOS } from '@/lib/home-demos';
 import {
   formatProofNumber,
   QUALITY_PROOF_ROUNDS,
@@ -26,10 +26,6 @@ import {
   type VideoRetentionOffer as RetentionOffer,
   type VideoRetentionResponse,
 } from '@/lib/video-retention-offer';
-import {
-  WINDOW_PEEPER_CASE,
-  WINDOW_PEEPER_RESULT,
-} from '@/lib/window-peeper-reference';
 import { m } from '@/paraglide/messages.js';
 import { getLocale } from '@/paraglide/runtime.js';
 import { usePublicConfig } from '@/hooks/use-public-config';
@@ -45,9 +41,10 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 
-const RETENTION_VIDEO_URL = WEREWOLF_OFFER_MEDIA.src;
-const RETENTION_VIDEO_POSTER_URL = WEREWOLF_OFFER_MEDIA.poster;
-const RETENTION_IMAGE_URL = WEREWOLF_OFFER_MEDIA.image;
+const RETENTION_DEMO = HOME_HERO_DEMOS[0];
+const RETENTION_VIDEO_URL = RETENTION_DEMO.src;
+const RETENTION_VIDEO_POSTER_URL = RETENTION_DEMO.poster ?? RETENTION_DEMO.src;
+const RETENTION_IMAGE_URL = RETENTION_DEMO.poster ?? RETENTION_DEMO.src;
 
 interface OfferRequest {
   campaign: EffectCampaign;
@@ -193,15 +190,7 @@ function RetentionLauncher({
   );
 }
 
-function retentionPreview(campaign: EffectCampaign | undefined) {
-  if (campaign === 'peeper') {
-    return {
-      image: WINDOW_PEEPER_CASE.input,
-      video: WINDOW_PEEPER_RESULT.src,
-      poster: WINDOW_PEEPER_RESULT.poster,
-      videoLabel: m['retention.name_price.video_peeper'](),
-    };
-  }
+function retentionPreview() {
   return {
     image: RETENTION_IMAGE_URL,
     video: RETENTION_VIDEO_URL,
@@ -294,7 +283,7 @@ function ControlRetentionOffer({
     currency: offer.currency.toUpperCase(),
     currencyDisplay: 'code',
   }).format(offer.priceInCents / 100);
-  const preview = retentionPreview(offer.campaign);
+  const preview = retentionPreview();
 
   return (
     <>
@@ -543,7 +532,7 @@ function NamePriceRetentionOffer(props: OfferViewProps) {
     ? nearestRetentionNamePriceCents(Math.round(parsedDraft * 100))
     : cents;
   const price = formatUsd(liveCents, locale);
-  const preview = retentionPreview(props.offer.campaign);
+  const preview = retentionPreview();
   const commitDraft = () => {
     const parsed = Number(draft.trim());
     if (!Number.isFinite(parsed)) {

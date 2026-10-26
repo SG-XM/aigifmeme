@@ -9,7 +9,12 @@ import { LocaleSelector } from '@/components/locale-selector';
 export interface FooterColumn {
   title: string;
   /** external: open in a new tab. Off-site (http) hrefs always open in a new tab. */
-  links: { label: string; href: string; external?: boolean }[];
+  links: {
+    label: string;
+    href: string;
+    external?: boolean;
+    literal?: boolean;
+  }[];
   /** Extra headed link groups rendered below `links` in the same column. */
   sections?: { title: string; links: FooterColumn['links'] }[];
 }
@@ -63,12 +68,19 @@ export function SiteFooter({
                 </p>
                 <ul className="space-y-2">
                   {col.links.map((link) => (
-                    <li key={link.label}>
+                    <li key={`${link.href}-${link.label}`}>
                       {isExternalHref(link.href) ? (
                         <a
                           href={withUtmSource(link.href)}
                           target="_blank"
                           rel="noopener noreferrer"
+                          className="text-sm text-neutral-400 transition-colors hover:text-neutral-100"
+                        >
+                          {link.label}
+                        </a>
+                      ) : link.literal ? (
+                        <a
+                          href={link.href}
                           className="text-sm text-neutral-400 transition-colors hover:text-neutral-100"
                         >
                           {link.label}

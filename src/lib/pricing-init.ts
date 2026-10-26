@@ -78,12 +78,12 @@ export function buildTopUpProductRows(): TopUpProductRow[] {
 export function buildRetentionProductRow(): TopUpProductRow {
   return {
     productId: VIDEO_RETENTION_PRODUCT_ID,
-    name: '30-minute single video offer',
+    name: 'Uptown Funk AI video',
     description:
-      'One-time offer: 10 credits for one Standard video. Initiate checkout within 30 minutes. No subscription.',
-    nameEs: 'Oferta de un vídeo por 30 minutos',
+      'One-time offer: 10 credits for one Uptown Funk AI video. Start checkout within 30 minutes. No subscription.',
+    nameEs: 'Video de Uptown Funk AI',
     descriptionEs:
-      'Oferta única: 10 créditos para un vídeo Standard. Inicia el pago en 30 minutos. Sin suscripción.',
+      'Oferta única: 10 créditos para un video de IA de Uptown Funk. Inicia el pago en 30 minutos. Sin suscripción.',
     priceInCents: 799,
     currency: 'usd',
     credits: 10,
@@ -97,12 +97,12 @@ export function buildRetentionProductRow(): TopUpProductRow {
 export function buildRetentionNamePriceRows(): TopUpProductRow[] {
   return RETENTION_NAME_PRICE_CENTS.map((cents, index) => ({
     productId: retentionNamePriceProductId(cents),
-    name: `Name your price · $${(cents / 100).toFixed(2)}`,
+    name: `Uptown Funk AI video · $${(cents / 100).toFixed(2)}`,
     description:
-      'One-time name-your-price offer: 10 credits for one Standard video. Choose this price in the 30-minute retention offer. No subscription.',
-    nameEs: `Ponle precio · $${(cents / 100).toFixed(2)}`,
+      'One-time offer: 10 credits for one Uptown Funk AI video. Choose this price in the 30-minute offer. No subscription.',
+    nameEs: `Video de Uptown Funk AI · $${(cents / 100).toFixed(2)}`,
     descriptionEs:
-      'Oferta única: 10 créditos para un vídeo Standard. Elige este precio en la oferta de 30 minutos. Sin suscripción.',
+      'Oferta única: 10 créditos para un video de IA de Uptown Funk. Elige este precio en la oferta de 30 minutos. Sin suscripción.',
     priceInCents: cents,
     currency: 'usd',
     credits: 10,

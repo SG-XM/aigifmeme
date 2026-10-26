@@ -46,6 +46,7 @@ import { respData, respErr } from '@/lib/resp';
 import {
   isRetentionOfferProduct,
   RETENTION_NAME_PRICE_SCENE,
+  retentionCheckoutLabel,
   retentionNamePriceCents,
 } from '@/lib/video-retention-offer';
 import { getLocale, localizeUrl } from '@/paraglide/runtime.js';
@@ -276,6 +277,10 @@ export async function POST({ request }: { request: Request }) {
             creditsValidDays: topUpProduct.creditsValidDays,
           }
         : null;
+    const catalogProduct =
+      product && isRetentionOfferProduct(product.productId)
+        ? { ...product, ...retentionCheckoutLabel(product.productId, locale) }
+        : product;
     const upgradeProduct = duoUpgrade
       ? {
           productId: DUO_UPGRADE_PRODUCT_ID,
@@ -289,7 +294,7 @@ export async function POST({ request }: { request: Request }) {
           creditsValidDays: duoUpgrade.duo.creditsValidDays,
         }
       : null;
-    const resolvedProduct = upgradeProduct ?? product;
+    const resolvedProduct = upgradeProduct ?? catalogProduct;
     if (!resolvedProduct) {
       return failCheckout('unknown_product', 'Unknown product');
     }

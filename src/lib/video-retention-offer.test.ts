@@ -6,6 +6,7 @@ import {
   RETENTION_NAME_PRICE_EXPERIMENT_KEY,
   RETENTION_NAME_PRICE_PRODUCT_IDS,
   RETENTION_NAME_PRICE_SCENE,
+  retentionCheckoutLabel,
   retentionCreateRedirect,
   retentionNamePriceCents,
 } from './video-retention-offer';
@@ -33,6 +34,19 @@ describe('retention name-your-price chips', () => {
     expect(retentionNamePriceCents('single_retention_name_599')).toBe(599);
     expect(retentionNamePriceCents('single_retention_v2')).toBeNull();
     expect(retentionNamePriceCents('single_retention_name_450')).toBeNull();
+  });
+
+  it('names the Stripe line item as an Uptown Funk AI video', () => {
+    for (const locale of ['en', 'zh', 'es', 'ar']) {
+      const fixed = retentionCheckoutLabel('single_retention_v2', locale);
+      const named = retentionCheckoutLabel('single_retention_name_599', locale);
+      const text = `${fixed.productName} ${fixed.description} ${named.productName} ${named.description}`;
+      expect(text.toLowerCase()).toContain('uptown funk ai');
+      expect(text).not.toMatch(
+        /werewolf|bulin|seedance|window peeper|换脸|face swap|face-replace/i
+      );
+      expect(named.productName).toContain('5.99');
+    }
   });
 
   it('returns each campaign to its own create anchor', () => {

@@ -44,6 +44,46 @@ export function isRetentionNamePriceProduct(productId: string) {
   return retentionNamePriceCents(productId) != null;
 }
 
+/** Stripe line-item copy for a retention checkout. Catalog rows stay as stored. */
+export function retentionCheckoutLabel(productId: string, locale: string) {
+  const cents = retentionNamePriceCents(productId);
+  const price = cents ? `$${(cents / 100).toFixed(2)}` : '';
+  if (locale === 'zh') {
+    return {
+      productName: price
+        ? `Uptown Funk AI 视频 · ${price}`
+        : 'Uptown Funk AI 视频',
+      description:
+        '一次购买：10 积分，用于生成一条 Uptown Funk AI 视频。请在 30 分钟内开始付款。没有订阅。',
+    };
+  }
+  if (locale === 'es') {
+    return {
+      productName: price
+        ? `Video de Uptown Funk AI · ${price}`
+        : 'Video de Uptown Funk AI',
+      description:
+        'Oferta única: 10 créditos para un video de IA de Uptown Funk. Inicia el pago en 30 minutos. Sin suscripción.',
+    };
+  }
+  if (locale === 'ar') {
+    return {
+      productName: price
+        ? `فيديو Uptown Funk AI · ${price}`
+        : 'فيديو Uptown Funk AI',
+      description:
+        'شراء لمرة واحدة: 10 أرصدة لفيديو Uptown Funk AI واحد. ابدأ الدفع خلال 30 دقيقة. بدون اشتراك.',
+    };
+  }
+  return {
+    productName: price
+      ? `Uptown Funk AI video · ${price}`
+      : 'Uptown Funk AI video',
+    description:
+      'One-time offer: 10 credits for one Uptown Funk AI video. Start checkout within 30 minutes. No subscription.',
+  };
+}
+
 /** Snap a typed cent amount onto a chip. Values outside $4.99–$9.99 clamp first. */
 export function nearestRetentionNamePriceCents(
   cents: number
@@ -70,7 +110,7 @@ export interface VideoRetentionOffer {
   expiresAt: number;
   serverNow: number;
   redirect: string;
-  /** Absent on offers issued before campaigns were stored. Those stay werewolf. */
+  /** Absent on offers issued before campaigns were stored. */
   campaign?: VideoRetentionCampaign;
   priceInCents: number;
   currency: string;
