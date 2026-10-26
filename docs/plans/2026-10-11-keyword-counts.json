@@ -1,0 +1,151 @@
+[
+  {
+    "page": "home",
+    "metrics": {
+      "latin_word_units": 1145,
+      "cjk_characters": 0,
+      "non_whitespace_characters": 5559
+    },
+    "keywords": [
+      {
+        "keyword_original": "Bulin 47 AI",
+        "title_occurrences": 1,
+        "description_occurrences": 1,
+        "h1_occurrences": 1,
+        "h2_occurrences": 0,
+        "lead_occurrences": 3,
+        "content_occurrences": 3,
+        "matched_blocks": [
+          {
+            "block": 2,
+            "occurrences": 1
+          },
+          {
+            "block": 3,
+            "occurrences": 1
+          },
+          {
+            "block": 19,
+            "occurrences": 1
+          }
+        ],
+        "phrase_occurrences_per_100_latin_word_units": 0.262,
+        "matched_character_share_percent": 0.486
+      },
+      {
+        "keyword_original": "bulin47ai",
+        "title_occurrences": 0,
+        "description_occurrences": 0,
+        "h1_occurrences": 0,
+        "h2_occurrences": 0,
+        "lead_occurrences": 1,
+        "content_occurrences": 1,
+        "matched_blocks": [
+          {
+            "block": 20,
+            "occurrences": 1
+          }
+        ],
+        "phrase_occurrences_per_100_latin_word_units": 0.087,
+        "matched_character_share_percent": 0.162
+      }
+    ],
+    "canonical": ["http://localhost:3000/"],
+    "h1": ["Bulin 47 AI video from one photo"]
+  },
+  {
+    "page": "bridges",
+    "metrics": {
+      "latin_word_units": 1173,
+      "cjk_characters": 0,
+      "non_whitespace_characters": 5687
+    },
+    "keywords": [
+      {
+        "keyword_original": "Burning Bridges AI",
+        "title_occurrences": 1,
+        "description_occurrences": 1,
+        "h1_occurrences": 1,
+        "h2_occurrences": 0,
+        "lead_occurrences": 4,
+        "content_occurrences": 4,
+        "matched_blocks": [
+          {
+            "block": 2,
+            "occurrences": 1
+          },
+          {
+            "block": 3,
+            "occurrences": 1
+          },
+          {
+            "block": 19,
+            "occurrences": 1
+          },
+          {
+            "block": 20,
+            "occurrences": 1
+          }
+        ],
+        "phrase_occurrences_per_100_latin_word_units": 0.341,
+        "matched_character_share_percent": 1.125
+      }
+    ],
+    "canonical": ["http://localhost:3000/burning-bridges-ai"],
+    "h1": ["Burning Bridges AI video from one photo"]
+  },
+  {
+    "page": "home-zh",
+    "metrics": {
+      "latin_word_units": 231,
+      "cjk_characters": 1637,
+      "non_whitespace_characters": 2605
+    },
+    "keywords": [
+      {
+        "keyword_original": "Bulin 47 AI",
+        "title_occurrences": 1,
+        "description_occurrences": 1,
+        "h1_occurrences": 1,
+        "h2_occurrences": 0,
+        "lead_occurrences": 3,
+        "content_occurrences": 3,
+        "matched_blocks": [
+          {
+            "block": 2,
+            "occurrences": 1
+          },
+          {
+            "block": 3,
+            "occurrences": 1
+          },
+          {
+            "block": 19,
+            "occurrences": 1
+          }
+        ],
+        "phrase_occurrences_per_100_latin_word_units": null,
+        "matched_character_share_percent": 1.036
+      },
+      {
+        "keyword_original": "bulin47ai",
+        "title_occurrences": 0,
+        "description_occurrences": 0,
+        "h1_occurrences": 0,
+        "h2_occurrences": 0,
+        "lead_occurrences": 1,
+        "content_occurrences": 1,
+        "matched_blocks": [
+          {
+            "block": 20,
+            "occurrences": 1
+          }
+        ],
+        "phrase_occurrences_per_100_latin_word_units": null,
+        "matched_character_share_percent": 0.345
+      }
+    ],
+    "canonical": ["http://localhost:3000/zh"],
+    "h1": ["Bulin 47 AI：一张照片，制作街头表演视频"]
+  }
+]

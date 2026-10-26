@@ -1,0 +1,52 @@
+// Cloudflare Workers deploy config for Uptown.
+// wrangler.jsonc is committed with a placeholder D1 id only. After
+// `npx wrangler d1 create uptown-db`, put the real id in a local copy and
+// do not commit it. Required secrets (never commit):
+//   wrangler secret put AUTH_SECRET
+//   wrangler secret put CONFIG_ENCRYPTION_KEY
+// .env.production (gitignored): VITE_APP_URL, VITE_APP_NAME, DATABASE_PROVIDER
+// Media host placeholder: https://media.uptownfunkai.video
+// `pnpm cf:build` merges wrangler.jsonc into the generated worker config.
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "uptown",
+  "workers_dev": true,
+  // Pinned rather than left to the build, which stamps today's date — the
+  // API rejects a date it considers to be in the future, so a machine
+  // running ahead of Cloudflare's clock fails to deploy.
+  "compatibility_date": "2026-07-25",
+  "compatibility_flags": ["nodejs_compat"],
+  "observability": {
+    "enabled": true,
+  },
+  "vars": {
+    "DATABASE_PROVIDER": "d1",
+    // Server-side runtime fallbacks for the build-time VITE_* values — keep in
+    // sync with .env.production (better-auth trustedOrigins, payment callbacks).
+    "VITE_APP_URL": "https://uptownfunkai.video",
+    "VITE_APP_NAME": "Uptown",
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "uptown-db",
+      "database_id": "00000000-0000-4000-8000-000000000000",
+      "migrations_dir": "drizzle",
+    },
+  ],
+  "routes": [
+    { "pattern": "uptownfunkai.video/*", "zone_name": "uptownfunkai.video" },
+  ],
+  // ── Postgres via Hyperdrive (instead of D1) ────────────────────────────────
+  // 1. npx wrangler hyperdrive create <name> --connection-string="postgres://..." (your direct PG url)
+  // 2. Set vars.DATABASE_PROVIDER to "postgresql" and remove the d1_databases block
+  // 3. Uncomment and fill the binding (the build keeps the postgres driver in
+  //    the bundle when DATABASE_PROVIDER=postgresql — see vite.config.ts):
+  // "hyperdrive": [
+  //   { "binding": "HYPERDRIVE", "id": "REPLACE_WITH_OUTPUT_OF_WRANGLER_HYPERDRIVE_CREATE" }
+  // ]
+  //
+  // Other optional bindings — uncomment when needed:
+  // "kv_namespaces":  [{ "binding": "CACHE",  "id": "..." }],
+  // "r2_buckets":     [{ "binding": "BUCKET", "bucket_name": "..." }]
+}

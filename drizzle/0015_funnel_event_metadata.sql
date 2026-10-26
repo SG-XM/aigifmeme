@@ -1,0 +1,1 @@
+ALTER TABLE `funnel_event` ADD `metadata` text;

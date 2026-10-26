@@ -1,0 +1,125 @@
+{
+  "version": "7",
+  "dialect": "sqlite",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "6",
+      "when": 1791497121773,
+      "tag": "0000_top_up_products",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1791499676213,
+      "tag": "0001_complex_vindicator",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1791501434758,
+      "tag": "0002_lean_black_widow",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "6",
+      "when": 1791612874181,
+      "tag": "0003_video_pricing_v2",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "6",
+      "when": 1791780789114,
+      "tag": "0004_spanish_localization",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "6",
+      "when": 1791871074940,
+      "tag": "0005_awesome_zemo",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "6",
+      "when": 1791878734776,
+      "tag": "0006_add_user_last_login_at",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "6",
+      "when": 1791879154914,
+      "tag": "0007_rename_user_login_to_visit",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "6",
+      "when": 1791919422715,
+      "tag": "0008_high_wiccan",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "6",
+      "when": 1791926260716,
+      "tag": "0009_next_proteus",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "6",
+      "when": 1791935348808,
+      "tag": "0010_chunky_paper_doll",
+      "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "6",
+      "when": 1791937138085,
+      "tag": "0011_exotic_the_executioner",
+      "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "6",
+      "when": 1792128799853,
+      "tag": "0012_email_recall",
+      "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "6",
+      "when": 1792185783347,
+      "tag": "0013_post_locale_columns",
+      "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "6",
+      "when": 1792189416998,
+      "tag": "0014_home_demo_video",
+      "breakpoints": true
+    },
+    {
+      "idx": 15,
+      "version": "6",
+      "when": 1792189846271,
+      "tag": "0015_funnel_event_metadata",
+      "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "6",
+      "when": 1792454400000,
+      "tag": "0016_retention_name_price",
+      "breakpoints": true
+    }
+  ]
+}

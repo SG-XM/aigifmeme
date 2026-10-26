@@ -1,0 +1,29 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "uptown",
+  "workers_dev": true,
+  "compatibility_date": "2026-07-25",
+  "compatibility_flags": ["nodejs_compat"],
+  "observability": {
+    "enabled": true
+  },
+  "vars": {
+    "DATABASE_PROVIDER": "d1",
+    "VITE_APP_URL": "https://uptownfunkai.video",
+    "VITE_APP_NAME": "Uptown"
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "uptown-db",
+      "database_id": "00000000-0000-4000-8000-000000000000",
+      "migrations_dir": "drizzle"
+    }
+  ],
+  "routes": [
+    {
+      "pattern": "uptownfunkai.video/*",
+      "zone_name": "uptownfunkai.video"
+    }
+  ]
+}

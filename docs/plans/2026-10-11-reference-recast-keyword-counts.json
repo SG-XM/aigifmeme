@@ -1,0 +1,51 @@
+{
+  "scope": "English main DOM text; includes FAQ answers, blog summaries and loaded pricing. Navigation and footer excluded. Phrase frequency is descriptive, not a universal SEO target.",
+  "pages": [
+    {
+      "h1": "Bulin 47 AI: make a freestyle video from one photo",
+      "h1Count": 1,
+      "keywords": [
+        {
+          "keyword": "Bulin 47 AI",
+          "mainOccurrences": 5,
+          "phraseOccurrencesPer100LatinWords": 0.334
+        },
+        {
+          "keyword": "Bulin47AI",
+          "mainOccurrences": 1,
+          "phraseOccurrencesPer100LatinWords": 0.067
+        },
+        {
+          "keyword": "Burning Bridges AI",
+          "mainOccurrences": 3,
+          "phraseOccurrencesPer100LatinWords": 0.2
+        }
+      ],
+      "latinWords": 1498,
+      "path": "/"
+    },
+    {
+      "h1": "Burning Bridges AI: make a party video from one photo",
+      "h1Count": 1,
+      "keywords": [
+        {
+          "keyword": "Bulin 47 AI",
+          "mainOccurrences": 3,
+          "phraseOccurrencesPer100LatinWords": 0.196
+        },
+        {
+          "keyword": "Bulin47AI",
+          "mainOccurrences": 0,
+          "phraseOccurrencesPer100LatinWords": 0
+        },
+        {
+          "keyword": "Burning Bridges AI",
+          "mainOccurrences": 6,
+          "phraseOccurrencesPer100LatinWords": 0.391
+        }
+      ],
+      "latinWords": 1534,
+      "path": "/burning-bridges-ai"
+    }
+  ]
+}

@@ -1,0 +1,71 @@
+# dependencies
+/node_modules
+/.pnp
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/versions
+
+# tanstack start / vite / nitro
+/.next/
+/.output/
+/.nitro/
+/.tanstack/
+/dist/
+src/routeTree.gen.ts
+src/paraglide/
+
+# cloudflare local state. wrangler.jsonc is committed with placeholder
+# database_id 00000000-0000-4000-8000-000000000000 for Worker uptown /
+# D1 uptown-db. Do not commit a real database_id.
+/.wrangler/
+
+# claude code local state
+.claude/scheduled_tasks.lock
+
+# production
+/build
+
+# deploy
+.vercel
+
+# editors (keep .cursor/skills — cross-agent symlink to .claude/skills)
+.idea
+.vscode
+.cursor/*
+!.cursor/skills
+
+# misc
+.DS_Store
+*.pem
+
+# debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+.playwright-mcp/
+
+# env — local files hold secrets, never commit (keep .env.example tracked)
+.env
+.env.*
+!.env.example
+
+# typescript
+*.tsbuildinfo
+
+# database
+/data/
+/drizzle/*
+!/drizzle/*.sql
+!/drizzle/meta/
+!/drizzle/meta/*.json
+src/config/db/schema.ts
+
+# npm (project uses pnpm)
+package-lock.json
+
+# Runtime image uploads (no-storage local fallback)
+/public/uploads/
