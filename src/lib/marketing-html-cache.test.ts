@@ -2,9 +2,12 @@ import { describe, expect, it } from 'vitest';
 
 import {
   hasSessionCookie,
+  MARKETING_HTML_CACHE_EPOCH,
   MARKETING_HTML_CACHE_STORE_CONTROL,
   marketingHtmlCacheableResponse,
   marketingHtmlCacheDecision,
+  marketingHtmlCacheStorageKey,
+  marketingHtmlCacheToken,
   marketingHtmlStoreHeaders,
   scheduleEdgeCacheWrite,
 } from './marketing-html-cache';
@@ -32,10 +35,40 @@ describe('marketing homepage cache', () => {
       if (decision.cache) {
         const cached = new URL(decision.key);
         expect(cached.pathname).toBe(path === '/zh/' ? '/zh' : path);
-        expect(cached.hash).toMatch(/^#v=/);
-        expect(decision.key.startsWith('https://uptownfunkai.video')).toBe(true);
+        expect(cached.hash).toBe('');
+        expect(cached.searchParams.get('v')).toBe(marketingHtmlCacheToken());
+        expect(cached.searchParams.get('v')).toContain(
+          MARKETING_HTML_CACHE_EPOCH
+        );
+        expect(decision.key.startsWith('https://uptownfunkai.video')).toBe(
+          true
+        );
       }
     }
+  });
+
+  it('moves the storage key when the build id changes', () => {
+    const origin = 'https://uptownfunkai.video';
+    const current = marketingHtmlCacheToken();
+    const next = marketingHtmlCacheToken('build-b');
+    expect(current).not.toBe(next);
+    expect(marketingHtmlCacheStorageKey(origin, '/', current)).not.toBe(
+      marketingHtmlCacheStorageKey(origin, '/', next)
+    );
+    expect(marketingHtmlCacheToken('build-b')).toBe(
+      `${MARKETING_HTML_CACHE_EPOCH}.build-b`
+    );
+    expect(marketingHtmlCacheToken('')).toBe(MARKETING_HTML_CACHE_EPOCH);
+    expect(marketingHtmlCacheToken('has space')).toBe(
+      MARKETING_HTML_CACHE_EPOCH
+    );
+    expect(marketingHtmlCacheToken('a#b')).toBe(MARKETING_HTML_CACHE_EPOCH);
+    const keyed = new URL(marketingHtmlCacheStorageKey(origin, '/zh/', next));
+    expect(keyed.pathname).toBe('/zh');
+    expect(keyed.searchParams.get('v')).toBe(
+      `${MARKETING_HTML_CACHE_EPOCH}.build-b`
+    );
+    expect(keyed.hash).toBe('');
   });
 
   it('shares one entry across attribution queries', () => {

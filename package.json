@@ -13,7 +13,7 @@
     "test:watch": "vitest",
     "start": "node .output/server/index.mjs",
     "precf:build": "node scripts/db-setup.mjs && pnpm i18n:compile",
-    "cf:build": "NODE_ENV=production NITRO_PRESET=cloudflare_module vite build",
+    "cf:build": "sh scripts/cf-build.sh",
     "postcf:build": "pnpm i18n:check",
     "cf:deploy": "sh scripts/cf-deploy.sh",
     "i18n:compile": "paraglide-js compile --project ./project.inlang --outdir ./src/paraglide --strategy url cookie baseLocale --output-structure message-modules --silent",

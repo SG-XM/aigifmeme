@@ -1,3 +1,5 @@
+import { MARKETING_HTML_CACHE_BUILD_ID } from './marketing-html-cache-build-id';
+
 /**
  * Anonymous marketing homepages are the same HTML for every visitor.
  * Session state is hydrated in the browser, so these documents can sit in
@@ -17,12 +19,51 @@ export const MARKETING_HTML_CACHE_STORE_CONTROL =
 export const MARKETING_HTML_PRIVATE_CONTROL = 'private, no-store';
 
 /**
- * Workers `caches.default` keeps marketing HTML for up to a day. Asset hashes
- * rotate every deploy, so bump this when the HTML document shape changes (or
- * after any deploy that would 404 stale modulepreload targets). The ship token
- * cannot Zone.Cache Purge, so the key must move.
+ * Workers `caches.default` keeps marketing HTML for up to a day and survives
+ * deploys. Vite asset hashes rotate every build. The ship token cannot
+ * Zone.Cache Purge, so a stale document keeps modulepreloading CSS/JS that
+ * 404 until this key changes.
+ *
+ * `MARKETING_HTML_CACHE_EPOCH` is the manual floor (bump it to drop every
+ * colo at once). `pnpm cf:build` / `pnpm cf:deploy` also append a build id
+ * (`scripts/cf-build.sh`, `scripts/cf-deploy.sh`) so the next asset-hash
+ * rotation misses this entry without another hand edit.
+ *
+ * The token is the `v` query param. Fragments are not a stable Cache API
+ * key: workerd still forwards them, and cache.c++ calls that out as a bug
+ * that would drop them. Query strings are part of the key (`ignoreSearch`
+ * is unsupported).
  */
-export const MARKETING_HTML_CACHE_EPOCH = '9813a73';
+export const MARKETING_HTML_CACHE_EPOCH = '20261026a';
+
+const CACHE_KEY_PART = /^[A-Za-z0-9._-]{1,80}$/;
+
+/** Epoch, plus the cf:build id when this bundle was produced for Workers. */
+export function marketingHtmlCacheToken(
+  buildId = MARKETING_HTML_CACHE_BUILD_ID
+): string {
+  if (!CACHE_KEY_PART.test(buildId)) return MARKETING_HTML_CACHE_EPOCH;
+  return `${MARKETING_HTML_CACHE_EPOCH}.${buildId}`;
+}
+
+/**
+ * Synthetic `caches.default` key. This is not the visitor URL. String keys
+ * stay stable across requests; a Request object picks up per-request `cf`
+ * metadata in workerd, so put and the next match miss.
+ */
+export function marketingHtmlCacheStorageKey(
+  origin: string,
+  pathname: string,
+  token = marketingHtmlCacheToken()
+): string {
+  const path =
+    pathname.length > 1 && pathname.endsWith('/')
+      ? pathname.slice(0, -1)
+      : pathname || '/';
+  const cacheUrl = new URL(path, origin);
+  cacheUrl.searchParams.set('v', token);
+  return cacheUrl.href;
+}
 
 const LOCALES = ['zh', 'es', 'ar'] as const;
 
@@ -95,19 +136,11 @@ export function marketingHtmlCacheDecision(
   if (!acceptsHtml(request.headers.get('accept'))) {
     return { cache: false, home: true, session: false };
   }
-  const path =
-    url.pathname.length > 1 && url.pathname.endsWith('/')
-      ? url.pathname.slice(0, -1)
-      : url.pathname;
-  // String keys stay stable across requests. A Request object picks up
-  // per-request `cf` metadata in workerd, so put and the next match miss.
-  const cacheUrl = new URL(path, url.origin);
-  cacheUrl.hash = `v=${MARKETING_HTML_CACHE_EPOCH}`;
   return {
     cache: true,
     home: true,
     session: false,
-    key: cacheUrl.href,
+    key: marketingHtmlCacheStorageKey(url.origin, url.pathname),
   };
 }
 

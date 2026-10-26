@@ -61,5 +61,15 @@ NODE
 # line in that file cannot reintroduce the development runtime.
 export NODE_ENV=production
 
+# caches.default survives deploys and this token cannot Zone.Cache Purge.
+# A new id on every production build moves the marketing HTML cache key
+# (src/lib/marketing-html-cache.ts) after Vite rotates asset hashes.
+# Set it after sourcing .env.production so a pinned value there cannot
+# reuse the previous document. `pnpm cf:build` still generates an id when
+# this is unset.
+GIT_SHA=$(git rev-parse --short=12 HEAD 2>/dev/null || printf '%s' nogit)
+export MARKETING_HTML_CACHE_BUILD_ID="${GIT_SHA}-$(date -u +%Y%m%dT%H%M%SZ)"
+echo "marketing html cache build id: ${MARKETING_HTML_CACHE_BUILD_ID}"
+
 pnpm cf:build
 exec wrangler deploy
