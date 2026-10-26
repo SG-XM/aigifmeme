@@ -23,6 +23,7 @@ import {
   BURNING_BRIDGES_REFERENCE,
   type BurningBridgesMediaVersion,
 } from '@/lib/burning-bridges-reference';
+import { CREW_SLOT_KEYS, type CrewSlotKey } from '@/lib/crew-slots';
 import {
   requireWindowPeeperReference,
   WINDOW_PEEPER_MEDIA_VERSION,
@@ -39,18 +40,21 @@ const publicImageUrl = z.url().refine((url) => {
 
 export const trioSlotsSchema = z
   .object({
+    farLeft: publicImageUrl.optional(),
     left: publicImageUrl.optional(),
     center: publicImageUrl,
     right: publicImageUrl.optional(),
+    farRight: publicImageUrl.optional(),
   })
   .strict();
 export type TrioSlots = z.infer<typeof trioSlotsSchema>;
 
-/** Ordered reference images for a trio job: [left?, center, right?]. */
+/** Ordered reference images: far left, left, center, right, far right. */
 export function trioOrderedImages(slots: TrioSlots): string[] {
-  return [slots.left, slots.center, slots.right].filter(
-    (url): url is string => !!url
-  );
+  return CREW_SLOT_KEYS.flatMap((key) => {
+    const url = slots[key];
+    return url ? [url] : [];
+  });
 }
 
 export const createVideoSchema = z
@@ -59,7 +63,7 @@ export const createVideoSchema = z
     take: z.number().int().min(0).max(2),
     effect: z.enum(['solo', 'trio']).optional(),
     slots: trioSlotsSchema.optional(),
-    images: z.array(publicImageUrl).min(1).max(3),
+    images: z.array(publicImageUrl).min(1).max(5),
     settings: z
       .object({
         modelName: z.string().refine(isSelectableModelOption),
@@ -126,7 +130,7 @@ export const createVideoSchema = z
       ) {
         ctx.addIssue({
           code: 'custom',
-          message: 'Trio images must match the left/center/right slots.',
+          message: 'Photos must match the crew slots in order.',
           path: ['images'],
         });
       }
@@ -245,7 +249,45 @@ export function parseCreateVideoInput(input: unknown) {
  * Missing side dancers are invented with the center dancer's broad ethnic
  * appearance. Solo prompt above stays untouched.
  */
+const WIDE_CREW_ORDER: { slot: CrewSlotKey; label: string }[] = [
+  { slot: 'farLeft', label: 'FAR LEFT' },
+  { slot: 'left', label: 'LEFT' },
+  { slot: 'center', label: 'CENTER' },
+  { slot: 'right', label: 'RIGHT' },
+  { slot: 'farRight', label: 'FAR RIGHT' },
+];
+
+/** Five-across lineup used when an outer photo is included. */
+function buildWideCrewPrompt(slots: TrioSlots): string {
+  const present = WIDE_CREW_ORDER.filter((entry) => slots[entry.slot]);
+  const mapping = present
+    .map((entry, index) => {
+      const who =
+        entry.slot === 'center'
+          ? ' — the lead in the middle of the formation'
+          : `, who stays on the viewer's ${entry.label.toLowerCase()} for the entire clip`;
+      return `@Image${index + 1} is the ${entry.label} dancer${who}.`;
+    })
+    .join(' ');
+  const invented = WIDE_CREW_ORDER.filter(
+    (entry) => entry.slot !== 'center' && !slots[entry.slot]
+  ).map(
+    (entry) =>
+      `No photo is provided for the ${entry.label} dancer: invent one original fictional adult companion with the same broad ethnic appearance and skin tone as the CENTER dancer, a clearly different face, hairstyle and outfit from the other dancers, and a similar age range; keep this invented person identical in every frame.`
+  );
+  return [
+    'Replace the source performers in @Video1 with the people defined below. Up to five dancers stand in one line from the viewer’s far left to far right. Each replacement person’s face, skin tone, hair, body shape, complete outfit, clothing, shoes, jewelry, glasses and every accessory come entirely from their assigned reference image and must match that image in every frame.',
+    `Position mapping is fixed for the whole clip and must never change: ${mapping}`,
+    'The CENTER dancer is the lead: keep the center choreography exactly as in @Video1, including the walk toward the camera and the return to the line. The other dancers keep their side positions and never trade places with the center.',
+    'Identity isolation is absolute: each face, hairstyle and outfit belongs to one dancer only. Never blend two reference people and never make two dancers look like the same person.',
+    ...invented,
+    '@Video1 is the sole authority for performance and scene: preserve the background, lighting, camera, framing, timing, and the center dancer’s actions from the first frame to the last. Every replacement must already be present in the first frame. No extra people beyond this line, no duplicates, no identity drift, no flicker, no wardrobe changes, no text or logos.',
+    'The soundtrack is background audio, not dialogue: no performer speaks, sings or lip-syncs to it. Realistic skin texture, scene-matched motion blur. Generate no audio; the selected original soundtrack will be added after rendering.',
+  ].join(' ');
+}
+
 export function buildTrioPrompt(slots: TrioSlots): string {
+  if (slots.farLeft || slots.farRight) return buildWideCrewPrompt(slots);
   const entries: { slot: 'left' | 'center' | 'right'; label: string }[] = [];
   if (slots.left) entries.push({ slot: 'left', label: 'LEFT' });
   entries.push({ slot: 'center', label: 'CENTER' });

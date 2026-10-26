@@ -63,6 +63,7 @@ import {
   isBurningBridgesMediaVersion,
   type BurningBridgesMediaVersion,
 } from '@/lib/burning-bridges-reference';
+import { capReferenceImageUrls } from '@/lib/crew-slots';
 import { mergeVideoAudio } from '@/lib/merge-video-audio';
 import {
   isWindowPeeperMediaVersion,
@@ -925,11 +926,12 @@ function normalizeGenerationOptions(
   if (Array.isArray(normalized.image_input)) {
     normalized.image_input = normalized.image_input.slice(0, model.maxImages);
   }
-  for (const key of [
-    'reference_image_urls',
-    'reference_audio_urls',
-    'reference_video_urls',
-  ]) {
+  if (Array.isArray(normalized.reference_image_urls)) {
+    normalized.reference_image_urls = capReferenceImageUrls(
+      normalized.reference_image_urls
+    );
+  }
+  for (const key of ['reference_audio_urls', 'reference_video_urls']) {
     if (Array.isArray(normalized[key])) {
       normalized[key] = normalized[key].slice(0, 4);
     }

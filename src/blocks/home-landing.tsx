@@ -24,6 +24,7 @@ import { getLocale } from '@/paraglide/runtime.js';
 import { CreateVideo } from '@/blocks/create-video';
 import { Footer } from '@/blocks/footer';
 import { Header } from '@/blocks/header';
+import { HomeHeroDemos } from '@/blocks/home-hero-demos';
 import { Pricing } from '@/blocks/pricing';
 import { SupportWidget } from '@/blocks/support-widget';
 import { AgentHeaderProvider } from '@/components/agent/agent-header-context';
@@ -504,6 +505,9 @@ export function HomeLanding({
               {uptown ? (
                 <p className="trend-hero-subtitle">{m['home.subtitle']()}</p>
               ) : null}
+              {uptown && shownHero.length > 0 ? (
+                <HomeHeroDemos clips={shownHero} />
+              ) : null}
               {peeper ? (
                 <>
                   <h2 className="trend-price-line">
@@ -600,6 +604,7 @@ export function HomeLanding({
                   </AgentHeaderProvider>
                 </div>
                 {!bridges &&
+                  !uptown &&
                   shownHero.length > 0 &&
                   (peeper ? (
                     <div className="trend-hero-showcase trend-peeper-showcase trend-showcase-grid">

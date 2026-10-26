@@ -1,6 +1,12 @@
 import { isFreshTimestamp } from '@/lib/auth-return';
 
-export type CreateDraftSlot = 'solo' | 'left' | 'center' | 'right';
+export type CreateDraftSlot =
+  | 'solo'
+  | 'farLeft'
+  | 'left'
+  | 'center'
+  | 'right'
+  | 'farRight';
 
 export interface CreateDraftPhoto {
   slot: CreateDraftSlot;

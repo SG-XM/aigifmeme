@@ -216,6 +216,64 @@ describe('Trio effect input', () => {
     expect(result.prompt).not.toContain('No photo is provided');
   });
 
+  it('accepts five crew photos at 15 seconds and keeps the center lead', () => {
+    const farLeft = 'https://media.example.com/far-left.png';
+    const farRight = 'https://media.example.com/far-right.png';
+    const result = parseCreateVideoInput({
+      campaign: 'bulin',
+      take: 0,
+      effect: 'trio',
+      slots: { farLeft, left, center, right, farRight },
+      images: [farLeft, left, center, right, farRight],
+      settings: { ...trioSettings, duration: 15 },
+    });
+    expect(result.referenceVideoVersion).toBe('trio15');
+    expect(result.settings.duration).toBe(15);
+    expect(result.settings.creditCost).toBe(13);
+    expect(result.prompt).toContain('@Image1 is the FAR LEFT dancer');
+    expect(result.prompt).toContain(
+      '@Image3 is the CENTER dancer — the lead in the middle of the formation'
+    );
+    expect(result.prompt).toContain('@Image5 is the FAR RIGHT dancer');
+    expect(result.prompt).not.toContain('No photo is provided');
+  });
+
+  it('keeps a 12-second crew job on the 12-second reference when an outer photo is set', () => {
+    const farLeft = 'https://media.example.com/far-left.png';
+    const result = parseCreateVideoInput({
+      campaign: 'bulin',
+      take: 0,
+      effect: 'trio',
+      slots: { farLeft, center },
+      images: [farLeft, center],
+      settings: { ...trioSettings, modelName: 'seedance-2-5', duration: 12 },
+    });
+    expect(result.referenceVideoVersion).toBe('trio12');
+    expect(result.settings.duration).toBe(12);
+    expect(result.prompt).toContain('@Image1 is the FAR LEFT dancer');
+    expect(result.prompt).toContain('@Image2 is the CENTER dancer');
+    expect(result.prompt).toContain('No photo is provided for the LEFT dancer');
+    expect(result.prompt).toContain(
+      'No photo is provided for the RIGHT dancer'
+    );
+    expect(result.prompt).toContain(
+      'No photo is provided for the FAR RIGHT dancer'
+    );
+  });
+
+  it('rejects a sixth crew photo', () => {
+    expect(() =>
+      parseCreateVideoInput({
+        campaign: 'bulin',
+        take: 0,
+        effect: 'trio',
+        slots: { center },
+        images: Array.from({ length: 6 }, () => center),
+        settings: trioSettings,
+      })
+    ).toThrow();
+  });
+
   it('renumbers a center+right pair and only invents the left dancer', () => {
     const prompt = buildTrioPrompt({ center, right });
     expect(prompt).toContain('@Image1 is the CENTER dancer');

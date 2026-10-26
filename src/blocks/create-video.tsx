@@ -42,6 +42,13 @@ import type { CreateVideoTask } from '@/lib/create-video';
 import { CREDIT_PAYWALL_SCENE } from '@/lib/credit-paywall';
 import { notifyCreditsChanged } from '@/lib/credits-changed';
 import {
+  CREW_SLOT_KEYS,
+  crewSlotRecord,
+  homepageClipSeconds,
+  placeCrewPhotos,
+  type CrewSlotKey,
+} from '@/lib/crew-slots';
+import {
   formatProofNumber,
   QUALITY_PROOF_ROUNDS,
   QUALITY_PROOF_VIDEOS,
@@ -49,6 +56,7 @@ import {
 import { VIDEO_RETENTION_EVENT } from '@/lib/video-retention-offer';
 import { m } from '@/paraglide/messages.js';
 import { getLocale } from '@/paraglide/runtime.js';
+import { UptownCreateCard } from '@/blocks/uptown-create-card';
 import { useAgentHeader } from '@/components/agent/agent-header-context';
 import { CreateTaskCard } from '@/components/agent/create-task-card';
 import { openAuthPrompt } from '@/components/auth-prompt';
@@ -149,12 +157,18 @@ export function CreateVideo({
   const peeper = campaign === 'peeper';
   const uptown = voice === 'uptown';
   const { setContent } = useAgentHeader();
-  const [effect, setEffect] = useState<'solo' | 'trio'>('solo');
+  const [effect, setEffect] = useState<'solo' | 'trio'>(
+    voice === 'uptown' ? 'trio' : 'solo'
+  );
+  const [lineup, setLineup] = useState<'single' | 'multi'>('single');
   const isTrio = campaign === 'bulin' && effect === 'trio';
   const [settings, setSettings] = useState(() => ({
     ...defaultComposerSettings(),
     aspectRatio: campaign === 'bridges' ? '16:9' : '9:16',
-    duration: campaign === 'bridges' ? 15 : defaultComposerSettings().duration,
+    duration:
+      voice === 'uptown' || campaign === 'bridges'
+        ? 15
+        : defaultComposerSettings().duration,
   }));
   const needsSeedance = campaign === 'bridges' || peeper || isTrio;
   const availableModels = needsSeedance
@@ -179,12 +193,15 @@ export function CreateVideo({
     }
   }, [needsSeedance, settings.modelOption]);
   const [references, setReferences] = useState<Reference[]>([]);
-  const [trioSlots, setTrioSlots] = useState<{
-    left?: Reference;
-    center?: Reference;
-    right?: Reference;
-  }>({});
-  const uploadTarget = useRef<'solo' | 'left' | 'center' | 'right'>('solo');
+  const [trioSlots, setTrioSlots] = useState<
+    Partial<Record<CrewSlotKey, Reference>>
+  >({});
+  const uploadTarget = useRef<'solo' | CrewSlotKey>('solo');
+  const crewBrowse = useRef<{
+    mode: 'single' | 'multi';
+    target?: CrewSlotKey;
+  }>({ mode: 'single' });
+  const crewUpload = useRef<{ target?: CrewSlotKey } | null>(null);
   const trioOrdered: Reference[] = [
     trioSlots.left,
     trioSlots.center,
@@ -208,8 +225,28 @@ export function CreateVideo({
   }, []);
   const retentionTrigger = useRef(false);
   const [uploadError, setUploadError] = useState('');
-  const fileRef = useRef<HTMLInputElement>(null);
   const formRef = useRef<HTMLFormElement>(null);
+  const fileRef = useRef<HTMLInputElement>(null);
+  const [dockGenerate, setDockGenerate] = useState(false);
+  useEffect(() => {
+    if (!uptown) return;
+    const form = formRef.current;
+    if (!form) return;
+    const update = () => {
+      const box = form.getBoundingClientRect();
+      const narrow = window.matchMedia('(max-width: 767px)').matches;
+      setDockGenerate(
+        narrow && box.top < window.innerHeight * 0.78 && box.bottom > 160
+      );
+    };
+    update();
+    window.addEventListener('scroll', update, { passive: true });
+    window.addEventListener('resize', update);
+    return () => {
+      window.removeEventListener('scroll', update);
+      window.removeEventListener('resize', update);
+    };
+  }, [uptown]);
   const lastStatuses = useRef('');
   const locale = getLocale();
   // This screen always generates from a reference clip. Seedance 2.5 follows
@@ -302,6 +339,21 @@ export function CreateVideo({
       }));
     },
     onSuccess: (items) => {
+      if (uptown && crewUpload.current) {
+        const target = crewUpload.current.target;
+        crewUpload.current = null;
+        setTrioSlots((current) => {
+          const placed = placeCrewPhotos(current, items, target);
+          for (const key of CREW_SLOT_KEYS) {
+            const previous = current[key];
+            if (previous && previous !== placed.slots[key])
+              releasePreview(previous);
+          }
+          return placed.slots;
+        });
+        setUploadError('');
+        return;
+      }
       const target = uploadTarget.current;
       if (target === 'solo') {
         setReferences(items.slice(0, 1));
@@ -310,13 +362,23 @@ export function CreateVideo({
       }
       setUploadError('');
     },
-    onError: (error) => setUploadError(error.message),
+    onError: (error) => {
+      crewUpload.current = null;
+      setUploadError(error.message);
+      if (uptown) toast.error(error.message);
+    },
   });
   const generate = useMutation({
     mutationFn: (body: {
       images: string[];
       effect: 'solo' | 'trio';
-      slots?: { left?: string; center: string; right?: string };
+      slots?: {
+        farLeft?: string;
+        left?: string;
+        center: string;
+        right?: string;
+        farRight?: string;
+      };
     }) =>
       apiPost('/api/agent/create', {
         campaign,
@@ -363,6 +425,7 @@ export function CreateVideo({
     trioSlots,
     isTrio,
     effect,
+    lineup,
     settings,
     campaign,
     cost,
@@ -373,6 +436,7 @@ export function CreateVideo({
     trioSlots,
     isTrio,
     effect,
+    lineup,
     settings,
     campaign,
     cost,
@@ -399,9 +463,11 @@ export function CreateVideo({
       });
     };
     if (snap.isTrio) {
-      push('left', snap.trioSlots.left);
-      push('center', snap.trioSlots.center);
-      push('right', snap.trioSlots.right);
+      const keys =
+        uptown && snap.lineup === 'single'
+          ? (['center'] as const)
+          : CREW_SLOT_KEYS;
+      for (const key of keys) push(key, snap.trioSlots[key]);
     } else {
       for (const item of snap.references) push('solo', item);
     }
@@ -436,20 +502,34 @@ export function CreateVideo({
     }
     if (snap.isTrio) {
       const next = { ...snap.trioSlots };
-      for (const slot of ['left', 'center', 'right'] as const) {
-        if (next[slot]) next[slot] = await uploaded(next[slot]);
+      const keys =
+        uptown && snap.lineup === 'single'
+          ? (['center'] as const)
+          : CREW_SLOT_KEYS;
+      for (const slot of keys) {
+        const photo = next[slot];
+        if (photo) next[slot] = await uploaded(photo);
+      }
+      if (uptown && snap.lineup === 'single') {
+        for (const slot of CREW_SLOT_KEYS) {
+          if (slot !== 'center') delete next[slot];
+        }
       }
       setTrioSlots(next);
       const center = next.center;
       if (!center) throw new Error(m['create.image_required']());
+      const kept = crewSlotRecord(next, uptown ? snap.lineup : 'multi');
       return {
-        images: [next.left, next.center, next.right]
-          .filter((item): item is Reference => !!item)
-          .map((item) => item.url),
+        images: CREW_SLOT_KEYS.flatMap((key) => {
+          const item = kept[key];
+          return item ? [item.url] : [];
+        }),
         slots: {
-          ...(next.left ? { left: next.left.url } : {}),
+          ...(kept.farLeft ? { farLeft: kept.farLeft.url } : {}),
+          ...(kept.left ? { left: kept.left.url } : {}),
           center: center.url,
-          ...(next.right ? { right: next.right.url } : {}),
+          ...(kept.right ? { right: kept.right.url } : {}),
+          ...(kept.farRight ? { farRight: kept.farRight.url } : {}),
         },
       };
     }
@@ -465,7 +545,8 @@ export function CreateVideo({
     if (generate.isPending || preparingRef.current) return;
     const snap = stateRef.current;
     if (!snap.hasPhoto) {
-      openFilePicker(snap.isTrio ? 'center' : 'solo');
+      if (uptown) openCrewPicker(snap.lineup);
+      else openFilePicker(snap.isTrio ? 'center' : 'solo');
       return;
     }
     preparingRef.current = true;
@@ -517,11 +598,7 @@ export function CreateVideo({
       }
       if (draft && draft.campaign === campaign) {
         const solo: Reference[] = [];
-        const slots: {
-          left?: Reference;
-          center?: Reference;
-          right?: Reference;
-        } = {};
+        const slots: Partial<Record<CrewSlotKey, Reference>> = {};
         for (const photo of draft.photos) {
           const file = new File([photo.blob], photo.name, {
             type: photo.type || photo.blob.type,
@@ -531,11 +608,21 @@ export function CreateVideo({
             name: photo.name,
             file,
           };
-          if (photo.slot === 'solo') solo.push(item);
-          else slots[photo.slot] = item;
+          if (photo.slot === 'solo') {
+            if (uptown) slots.center = item;
+            else solo.push(item);
+          } else slots[photo.slot] = item;
         }
-        if (draft.effect === 'solo' || draft.effect === 'trio')
+        if (!uptown && (draft.effect === 'solo' || draft.effect === 'trio'))
           setEffect(draft.effect);
+        if (uptown) {
+          setEffect('trio');
+          setLineup(
+            slots.farLeft || slots.left || slots.right || slots.farRight
+              ? 'multi'
+              : 'single'
+          );
+        }
         const modelOption = draft.settings.modelOption;
         if (isSelectableModelOption(modelOption)) {
           setSettings((current) =>
@@ -544,7 +631,9 @@ export function CreateVideo({
                 ...current,
                 modelOption,
                 resolution: draft.settings.resolution,
-                duration: draft.settings.duration,
+                duration: uptown
+                  ? homepageClipSeconds(draft.settings.duration)
+                  : draft.settings.duration,
                 aspectRatio: draft.settings.aspectRatio,
               },
               modelOption
@@ -552,7 +641,7 @@ export function CreateVideo({
           );
         }
         if (solo.length) setReferences(solo.slice(0, 1));
-        if (slots.left || slots.center || slots.right) setTrioSlots(slots);
+        if (CREW_SLOT_KEYS.some((key) => slots[key])) setTrioSlots(slots);
       }
       if (!cancelled) setDraftReady(true);
     })();
@@ -569,7 +658,16 @@ export function CreateVideo({
       return;
     }
     void saveCreateDraft(draft);
-  }, [draftReady, signedIn, references, trioSlots, effect, settings, campaign]);
+  }, [
+    draftReady,
+    signedIn,
+    references,
+    trioSlots,
+    effect,
+    lineup,
+    settings,
+    campaign,
+  ]);
 
   useEffect(() => {
     if (!hydrated || sessionPending || !signedIn || !draftReady) return;
@@ -585,8 +683,11 @@ export function CreateVideo({
 
   function previewUrls() {
     const snap = stateRef.current;
-    const items = snap.isTrio
-      ? [snap.trioSlots.left, snap.trioSlots.center, snap.trioSlots.right]
+    const kept = snap.isTrio
+      ? crewSlotRecord(snap.trioSlots, uptown ? snap.lineup : 'multi')
+      : null;
+    const items = kept
+      ? CREW_SLOT_KEYS.map((key) => kept[key])
       : snap.references;
     return items
       .filter((item): item is Reference => !!item)
@@ -619,7 +720,8 @@ export function CreateVideo({
   async function submit() {
     if (busy) return;
     if (!hasPhoto) {
-      openFilePicker(isTrio ? 'center' : 'solo');
+      if (uptown) openCrewPicker(lineup);
+      else openFilePicker(isTrio ? 'center' : 'solo');
       return;
     }
     if (!signedIn) {
@@ -635,9 +737,114 @@ export function CreateVideo({
     await runGenerateRef.current();
   }
 
-  function openFilePicker(target: 'solo' | 'left' | 'center' | 'right') {
+  function openFilePicker(target: 'solo' | CrewSlotKey) {
     uploadTarget.current = target;
-    fileRef.current?.click();
+    const input = fileRef.current;
+    if (!input) return;
+    input.multiple = false;
+    input.click();
+  }
+
+  function openCrewPicker(mode: 'single' | 'multi', target?: CrewSlotKey) {
+    if (mode === 'single') {
+      setLineup('single');
+      setTrioSlots((current) => {
+        const next = { ...current };
+        for (const key of CREW_SLOT_KEYS) {
+          if (key === 'center') continue;
+          releasePreview(next[key]);
+          delete next[key];
+        }
+        stateRef.current = {
+          ...stateRef.current,
+          lineup: 'single',
+          trioSlots: next,
+          hasPhoto: !!next.center,
+        };
+        return next;
+      });
+    } else {
+      setLineup('multi');
+      stateRef.current = { ...stateRef.current, lineup: 'multi' };
+    }
+    crewBrowse.current = {
+      mode,
+      target: mode === 'single' ? 'center' : target,
+    };
+    const input = fileRef.current;
+    if (!input) return;
+    input.multiple = mode === 'multi';
+    input.click();
+  }
+
+  function acceptCrewFiles(files: File[]) {
+    if (busy || !files.length) return;
+    photosTouched.current = true;
+    const allowed = ['image/jpeg', 'image/png', 'image/webp'];
+    if (
+      files.some(
+        (file) => !allowed.includes(file.type) || file.size > 10 * 1024 * 1024
+      )
+    ) {
+      toast.error(m['create.image_format']());
+      return;
+    }
+    const browse = crewBrowse.current;
+    const target = browse.mode === 'single' ? 'center' : browse.target;
+    const filled: Partial<Record<CrewSlotKey, true>> = {};
+    for (const key of CREW_SLOT_KEYS) {
+      if (stateRef.current.trioSlots[key]) filled[key] = true;
+    }
+    const { dropped } = placeCrewPhotos(
+      filled,
+      files.map(() => true as const),
+      target
+    );
+    if (dropped > 0) toast.error(m['home.create.too_many']());
+    const accepted = files.slice(0, files.length - dropped);
+    if (!accepted.length) return;
+    if (signedIn) {
+      crewUpload.current = { target };
+      upload.mutate(accepted);
+      return;
+    }
+    stageCrew(accepted, target);
+  }
+
+  function stageCrew(files: File[], target?: CrewSlotKey) {
+    const items: Reference[] = files.map((file) => ({
+      url: URL.createObjectURL(file),
+      name: file.name,
+      file,
+    }));
+    const placed = placeCrewPhotos(stateRef.current.trioSlots, items, target);
+    for (const key of CREW_SLOT_KEYS) {
+      const previous = stateRef.current.trioSlots[key];
+      if (previous && previous !== placed.slots[key]) releasePreview(previous);
+    }
+    stateRef.current = {
+      ...stateRef.current,
+      trioSlots: placed.slots,
+      hasPhoto: !!placed.slots.center,
+    };
+    setTrioSlots(placed.slots);
+    const draft = currentDraft();
+    if (draft.photos.length) void saveCreateDraft(draft);
+  }
+
+  function removeCrewSlot(slot: CrewSlotKey) {
+    photosTouched.current = true;
+    setTrioSlots((current) => {
+      releasePreview(current[slot]);
+      const next = { ...current };
+      delete next[slot];
+      stateRef.current = {
+        ...stateRef.current,
+        trioSlots: next,
+        hasPhoto: !!next.center,
+      };
+      return next;
+    });
   }
 
   function selectEffect(next: 'solo' | 'trio') {
@@ -741,12 +948,21 @@ export function CreateVideo({
             void submit();
           }}
           className={
-            embedded
-              ? 'trend-console scroll-mt-24'
-              : 'bg-card border-border mx-auto mt-8 max-w-2xl scroll-mt-24 space-y-6 rounded-2xl border p-5 sm:p-8'
+            uptown
+              ? [
+                  'uptown-create-card',
+                  'trend-console',
+                  'scroll-mt-24',
+                  dockGenerate ? 'is-docked' : '',
+                ]
+                  .filter(Boolean)
+                  .join(' ')
+              : embedded
+                ? 'trend-console scroll-mt-24'
+                : 'bg-card border-border mx-auto mt-8 max-w-2xl scroll-mt-24 space-y-6 rounded-2xl border p-5 sm:p-8'
           }
         >
-          {campaign === 'bulin' && (
+          {campaign === 'bulin' && !uptown && (
             <div
               className="trend-effect-selector flex w-full gap-2"
               role="radiogroup"
@@ -789,354 +1005,330 @@ export function CreateVideo({
               ))}
             </div>
           )}
-          <fieldset disabled={busy} className="trend-upload-step space-y-3">
-            <legend className="mb-3 flex items-center gap-3 font-medium">
-              <Step number={1} />
-              {m['trend.upload_step']()}
-            </legend>
-            <div
-              className={
-                campaign === 'bulin'
-                  ? isTrio
-                    ? 'trend-demo-row trend-demo-row--trio'
-                    : 'trend-demo-row trend-demo-row--solo'
-                  : undefined
+          {uptown ? (
+            <UptownCreateCard
+              lineup={lineup}
+              slots={trioSlots}
+              duration={homepageClipSeconds(settings.duration)}
+              busy={busy}
+              uploading={upload.isPending}
+              inputRef={fileRef}
+              onBrowse={openCrewPicker}
+              onFiles={acceptCrewFiles}
+              onRemove={removeCrewSlot}
+              onDuration={(seconds) =>
+                setSettings((current) => ({ ...current, duration: seconds }))
               }
-            >
-              {campaign === 'bulin' && (
-                <figure className="overflow-hidden rounded-xl border">
-                  <EffectDemoPreview
-                    src={isTrio ? TRIO_DEMO.src : SOLO_DEMO.src}
-                    poster={isTrio ? TRIO_DEMO.poster : SOLO_DEMO.poster}
-                    trio={isTrio}
-                    label={
-                      uptown
+            />
+          ) : (
+            <fieldset disabled={busy} className="trend-upload-step space-y-3">
+              <legend className="mb-3 flex items-center gap-3 font-medium">
+                <Step number={1} />
+                {m['trend.upload_step']()}
+              </legend>
+              <div
+                className={
+                  campaign === 'bulin'
+                    ? isTrio
+                      ? 'trend-demo-row trend-demo-row--trio'
+                      : 'trend-demo-row trend-demo-row--solo'
+                    : undefined
+                }
+              >
+                {campaign === 'bulin' && (
+                  <figure className="overflow-hidden rounded-xl border">
+                    <EffectDemoPreview
+                      src={isTrio ? TRIO_DEMO.src : SOLO_DEMO.src}
+                      poster={isTrio ? TRIO_DEMO.poster : SOLO_DEMO.poster}
+                      trio={isTrio}
+                      label={
+                        uptown
+                          ? isTrio
+                            ? m['home.generator.trio_demo']()
+                            : m['home.generator.solo_demo']()
+                          : isTrio
+                            ? m['effect.trio.demo_caption']()
+                            : m['effect.solo.demo_caption']()
+                      }
+                    />
+                    <figcaption className="text-muted-foreground shrink-0 px-3 py-2 text-xs">
+                      {uptown
                         ? isTrio
                           ? m['home.generator.trio_demo']()
                           : m['home.generator.solo_demo']()
                         : isTrio
                           ? m['effect.trio.demo_caption']()
-                          : m['effect.solo.demo_caption']()
-                    }
-                  />
-                  <figcaption className="text-muted-foreground shrink-0 px-3 py-2 text-xs">
-                    {uptown
-                      ? isTrio
-                        ? m['home.generator.trio_demo']()
-                        : m['home.generator.solo_demo']()
-                      : isTrio
-                        ? m['effect.trio.demo_caption']()
-                        : m['effect.solo.demo_caption']()}
-                  </figcaption>
-                </figure>
-              )}
-              <div
-                className={
-                  campaign === 'bulin' ? 'trend-upload-pane' : undefined
-                }
-              >
-                {isTrio ? (
-                  <div className="grid w-full grid-cols-3 gap-3">
-                    {(
-                      [
-                        {
-                          slot: 'left',
-                          label: m['effect.trio.left'](),
-                          required: false,
-                        },
-                        {
-                          slot: 'center',
-                          label: m['effect.trio.center'](),
-                          required: true,
-                        },
-                        {
-                          slot: 'right',
-                          label: m['effect.trio.right'](),
-                          required: false,
-                        },
-                      ] as const
-                    ).map(({ slot, label, required }) => {
-                      const item = trioSlots[slot];
-                      return (
-                        <div key={slot} className="space-y-2">
-                          <p className="text-center text-xs font-medium">
-                            {label}{' '}
-                            <span className="text-muted-foreground">
-                              {required
-                                ? m['effect.trio.required']()
-                                : m['effect.trio.optional']()}
-                            </span>
-                          </p>
-                          {item ? (
-                            <div className="bg-muted relative aspect-[3/4] overflow-hidden rounded-xl border">
-                              <img
-                                src={item.url}
-                                alt={item.name}
-                                className="size-full object-cover"
-                              />
+                          : m['effect.solo.demo_caption']()}
+                    </figcaption>
+                  </figure>
+                )}
+                <div
+                  className={
+                    campaign === 'bulin' ? 'trend-upload-pane' : undefined
+                  }
+                >
+                  {isTrio ? (
+                    <div className="grid w-full grid-cols-3 gap-3">
+                      {(
+                        [
+                          {
+                            slot: 'left',
+                            label: m['effect.trio.left'](),
+                            required: false,
+                          },
+                          {
+                            slot: 'center',
+                            label: m['effect.trio.center'](),
+                            required: true,
+                          },
+                          {
+                            slot: 'right',
+                            label: m['effect.trio.right'](),
+                            required: false,
+                          },
+                        ] as const
+                      ).map(({ slot, label, required }) => {
+                        const item = trioSlots[slot];
+                        return (
+                          <div key={slot} className="space-y-2">
+                            <p className="text-center text-xs font-medium">
+                              {label}{' '}
+                              <span className="text-muted-foreground">
+                                {required
+                                  ? m['effect.trio.required']()
+                                  : m['effect.trio.optional']()}
+                              </span>
+                            </p>
+                            {item ? (
+                              <div className="bg-muted relative aspect-[3/4] overflow-hidden rounded-xl border">
+                                <img
+                                  src={item.url}
+                                  alt={item.name}
+                                  className="size-full object-cover"
+                                />
+                                <button
+                                  type="button"
+                                  aria-label={m['create.remove_image']()}
+                                  onClick={() => {
+                                    photosTouched.current = true;
+                                    setTrioSlots((current) => {
+                                      releasePreview(current[slot]);
+                                      const next = { ...current };
+                                      delete next[slot];
+                                      return next;
+                                    });
+                                  }}
+                                  className="absolute top-2 right-2 flex size-9 items-center justify-center rounded-full bg-black/65 text-white focus-visible:ring-2"
+                                >
+                                  <X className="size-4" />
+                                </button>
+                              </div>
+                            ) : (
                               <button
                                 type="button"
-                                aria-label={m['create.remove_image']()}
-                                onClick={() => {
-                                  photosTouched.current = true;
-                                  setTrioSlots((current) => {
-                                    releasePreview(current[slot]);
-                                    const next = { ...current };
-                                    delete next[slot];
-                                    return next;
-                                  });
-                                }}
-                                className="absolute top-2 right-2 flex size-9 items-center justify-center rounded-full bg-black/65 text-white focus-visible:ring-2"
+                                onClick={() => openFilePicker(slot)}
+                                className="bg-muted/30 hover:bg-muted/60 flex aspect-[3/4] w-full flex-col items-center justify-center gap-2 rounded-xl border border-dashed p-2 transition-colors"
                               >
-                                <X className="size-4" />
+                                {upload.isPending &&
+                                uploadTarget.current === slot ? (
+                                  <Loader2 className="text-primary size-6 animate-spin" />
+                                ) : (
+                                  <ImagePlus className="text-primary size-6" />
+                                )}
+                                <span className="text-xs font-medium">
+                                  {m['create.upload_action']()}
+                                </span>
                               </button>
-                            </div>
-                          ) : (
-                            <button
-                              type="button"
-                              onClick={() => openFilePicker(slot)}
-                              className="bg-muted/30 hover:bg-muted/60 flex aspect-[3/4] w-full flex-col items-center justify-center gap-2 rounded-xl border border-dashed p-2 transition-colors"
-                            >
-                              {upload.isPending &&
-                              uploadTarget.current === slot ? (
-                                <Loader2 className="text-primary size-6 animate-spin" />
-                              ) : (
-                                <ImagePlus className="text-primary size-6" />
-                              )}
-                              <span className="text-xs font-medium">
-                                {m['create.upload_action']()}
-                              </span>
-                            </button>
-                          )}
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <div className="grid w-full grid-cols-1 gap-3">
+                      {references.map((item, index) => (
+                        <div
+                          key={item.url}
+                          className={`bg-muted relative overflow-hidden rounded-xl border ${embedded ? 'trend-upload-box h-full' : 'aspect-[4/3]'}`}
+                        >
+                          <img
+                            src={item.url}
+                            alt={item.name}
+                            className="size-full object-contain"
+                          />
+                          <button
+                            type="button"
+                            aria-label={m['create.remove_image']()}
+                            onClick={() => {
+                              photosTouched.current = true;
+                              setReferences((current) => {
+                                releasePreview(current[index]);
+                                return current.filter(
+                                  (_, position) => position !== index
+                                );
+                              });
+                            }}
+                            className="absolute top-2 right-2 flex size-11 items-center justify-center rounded-full bg-black/65 text-white focus-visible:ring-2"
+                          >
+                            <X className="size-4" />
+                          </button>
                         </div>
-                      );
-                    })}
-                  </div>
-                ) : (
-                  <div className="grid w-full grid-cols-1 gap-3">
-                    {references.map((item, index) => (
-                      <div
-                        key={item.url}
-                        className={`bg-muted relative overflow-hidden rounded-xl border ${embedded ? 'trend-upload-box h-full' : 'aspect-[4/3]'}`}
-                      >
-                        <img
-                          src={item.url}
-                          alt={item.name}
-                          className="size-full object-contain"
-                        />
+                      ))}
+                      {references.length < 1 && (
                         <button
                           type="button"
-                          aria-label={m['create.remove_image']()}
-                          onClick={() => {
-                            photosTouched.current = true;
-                            setReferences((current) => {
-                              releasePreview(current[index]);
-                              return current.filter(
-                                (_, position) => position !== index
-                              );
-                            });
-                          }}
-                          className="absolute top-2 right-2 flex size-11 items-center justify-center rounded-full bg-black/65 text-white focus-visible:ring-2"
+                          onClick={() => openFilePicker('solo')}
+                          className={`bg-muted/30 hover:bg-muted/60 flex h-full min-h-44 w-full flex-col items-center justify-center gap-2 rounded-xl border border-dashed p-4 transition-colors ${embedded ? 'trend-upload-box' : ''}`}
                         >
-                          <X className="size-4" />
+                          {upload.isPending ? (
+                            <Loader2 className="text-primary size-7 animate-spin" />
+                          ) : (
+                            <ImagePlus className="text-primary size-7" />
+                          )}
+                          <span className="text-sm font-medium">
+                            {upload.isPending
+                              ? m['agent.composer.uploading']()
+                              : m['create.upload_action']()}
+                          </span>
+                          <span className="text-muted-foreground text-xs">
+                            {m['create.upload_formats']()}
+                          </span>
                         </button>
-                      </div>
-                    ))}
-                    {references.length < 1 && (
-                      <button
-                        type="button"
-                        onClick={() => openFilePicker('solo')}
-                        className={`bg-muted/30 hover:bg-muted/60 flex h-full min-h-44 w-full flex-col items-center justify-center gap-2 rounded-xl border border-dashed p-4 transition-colors ${embedded ? 'trend-upload-box' : ''}`}
-                      >
-                        {upload.isPending ? (
-                          <Loader2 className="text-primary size-7 animate-spin" />
-                        ) : (
-                          <ImagePlus className="text-primary size-7" />
-                        )}
-                        <span className="text-sm font-medium">
-                          {upload.isPending
-                            ? m['agent.composer.uploading']()
-                            : m['create.upload_action']()}
-                        </span>
-                        <span className="text-muted-foreground text-xs">
-                          {m['create.upload_formats']()}
-                        </span>
-                      </button>
-                    )}
-                  </div>
-                )}
+                      )}
+                    </div>
+                  )}
+                </div>
               </div>
-            </div>
-            <input
-              ref={fileRef}
-              type="file"
-              accept="image/jpeg,image/png,image/webp"
-              className="sr-only"
-              aria-label={m['create.upload_action']()}
-              onChange={(event) => {
-                const file = event.target.files?.[0];
-                if (file) selectFiles([file]);
-                event.target.value = '';
-              }}
-            />
-            <p className="text-muted-foreground text-sm leading-relaxed">
-              {uptown
-                ? isTrio
-                  ? m['home.generator.trio_hint']()
-                  : m['home.generator.photo_hint']()
-                : peeper
-                  ? m['effect.peeper.photo_hint']()
-                  : campaign === 'bridges'
-                    ? m['effect.bridges.photo_hint']()
-                    : isTrio
-                      ? m['effect.trio.photo_hint']()
-                      : m['effect.bulin.photo_hint']()}
-            </p>
-            {hasPhoto && (
-              <p
-                role="status"
-                className="trend-cyan flex items-center gap-2 text-xs"
-              >
-                <Check className="size-3.5" />
-                {m['effect.photo_ready']()}
-              </p>
-            )}
-            {uploadError && (
-              <p role="alert" className="text-destructive text-sm">
-                {uploadError}
-              </p>
-            )}
-          </fieldset>
-          <div className="trend-settings-step space-y-4">
-            <div className="trend-preset rounded-xl border px-4 py-3 text-sm leading-6">
-              <p className="flex items-center gap-2 font-medium">
-                <Check className="size-4 shrink-0" />
+              <input
+                ref={fileRef}
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                className="sr-only"
+                aria-label={m['create.upload_action']()}
+                onChange={(event) => {
+                  const file = event.target.files?.[0];
+                  if (file) selectFiles([file]);
+                  event.target.value = '';
+                }}
+              />
+              <p className="text-muted-foreground text-sm leading-relaxed">
                 {uptown
                   ? isTrio
-                    ? m['home.generator.trio_ready']()
-                    : m['home.generator.source']()
+                    ? m['home.generator.trio_hint']()
+                    : m['home.generator.photo_hint']()
                   : peeper
-                    ? m['effect.peeper.source_ready']()
+                    ? m['effect.peeper.photo_hint']()
                     : campaign === 'bridges'
-                      ? m['effect.bridges.source_ready']()
+                      ? m['effect.bridges.photo_hint']()
                       : isTrio
-                        ? m['effect.trio.source_ready']()
-                        : m['effect.bulin.source_ready']()}
+                        ? m['effect.trio.photo_hint']()
+                        : m['effect.bulin.photo_hint']()}
               </p>
-              <p className="text-muted-foreground mt-1 text-xs leading-6">
-                {uptown
-                  ? isTrio
-                    ? m['home.generator.trio_scene']()
-                    : m['home.generator.scene']()
-                  : peeper
-                    ? m['effect.peeper.scene']()
-                    : campaign === 'bridges'
-                      ? m['effect.bridges.scene']()
-                      : isTrio
-                        ? m['effect.trio.scene']()
-                        : m['effect.bulin.scene']()}
-              </p>
-            </div>
-            <fieldset disabled={busy}>
-              <legend className="mb-3 flex items-center gap-3 font-medium">
-                <Step number={2} />
-                {m['effect.settings_title']()}
-              </legend>
-              <details
-                className="border-border rounded-xl border"
-                open={embedded ? true : undefined}
-              >
-                <summary className="trend-settings-summary flex min-h-16 cursor-pointer list-none items-center gap-3 p-4">
-                  <div className="min-w-0 flex-1">
-                    <span className="text-sm font-medium">
-                      {model.tier} · {settings.resolution} · {pricedDuration}s ·{' '}
-                      {pricedAspectRatio === 'auto'
-                        ? m['create.auto_ratio']()
-                        : pricedAspectRatio}
+              {hasPhoto && (
+                <p
+                  role="status"
+                  className="trend-cyan flex items-center gap-2 text-xs"
+                >
+                  <Check className="size-3.5" />
+                  {m['effect.photo_ready']()}
+                </p>
+              )}
+              {uploadError && (
+                <p role="alert" className="text-destructive text-sm">
+                  {uploadError}
+                </p>
+              )}
+            </fieldset>
+          )}
+          {!uptown && (
+            <div className="trend-settings-step space-y-4">
+              <div className="trend-preset rounded-xl border px-4 py-3 text-sm leading-6">
+                <p className="flex items-center gap-2 font-medium">
+                  <Check className="size-4 shrink-0" />
+                  {uptown
+                    ? isTrio
+                      ? m['home.generator.trio_ready']()
+                      : m['home.generator.source']()
+                    : peeper
+                      ? m['effect.peeper.source_ready']()
+                      : campaign === 'bridges'
+                        ? m['effect.bridges.source_ready']()
+                        : isTrio
+                          ? m['effect.trio.source_ready']()
+                          : m['effect.bulin.source_ready']()}
+                </p>
+                <p className="text-muted-foreground mt-1 text-xs leading-6">
+                  {uptown
+                    ? isTrio
+                      ? m['home.generator.trio_scene']()
+                      : m['home.generator.scene']()
+                    : peeper
+                      ? m['effect.peeper.scene']()
+                      : campaign === 'bridges'
+                        ? m['effect.bridges.scene']()
+                        : isTrio
+                          ? m['effect.trio.scene']()
+                          : m['effect.bulin.scene']()}
+                </p>
+              </div>
+              <fieldset disabled={busy}>
+                <legend className="mb-3 flex items-center gap-3 font-medium">
+                  <Step number={2} />
+                  {m['effect.settings_title']()}
+                </legend>
+                <details
+                  className="border-border rounded-xl border"
+                  open={embedded ? true : undefined}
+                >
+                  <summary className="trend-settings-summary flex min-h-16 cursor-pointer list-none items-center gap-3 p-4">
+                    <div className="min-w-0 flex-1">
+                      <span className="text-sm font-medium">
+                        {model.tier} · {settings.resolution} · {pricedDuration}s
+                        ·{' '}
+                        {pricedAspectRatio === 'auto'
+                          ? m['create.auto_ratio']()
+                          : pricedAspectRatio}
+                      </span>
+                      <span className="text-muted-foreground mt-1 block text-xs">
+                        {m['create.quality_hint']()}
+                      </span>
+                    </div>
+                    <span className="text-primary shrink-0 text-sm font-semibold">
+                      {m['create.cost']({ count: cost })}
                     </span>
-                    <span className="text-muted-foreground mt-1 block text-xs">
-                      {m['create.quality_hint']()}
-                    </span>
-                  </div>
-                  <span className="text-primary shrink-0 text-sm font-semibold">
-                    {m['create.cost']({ count: cost })}
-                  </span>
-                  <ChevronDown className="size-4 shrink-0" />
-                </summary>
-                <div className="trend-setting-options grid grid-cols-2 gap-4 border-t p-4">
-                  <Setting
-                    pills={embedded}
-                    label={m['create.model']()}
-                    value={settings.modelOption}
-                    onChange={(value) =>
-                      isSelectableModelOption(value) &&
-                      setSettings(
-                        settingsForModel(
-                          { ...settings, modelOption: value },
-                          value
+                    <ChevronDown className="size-4 shrink-0" />
+                  </summary>
+                  <div className="trend-setting-options grid grid-cols-2 gap-4 border-t p-4">
+                    <Setting
+                      pills={embedded}
+                      label={m['create.model']()}
+                      value={settings.modelOption}
+                      onChange={(value) =>
+                        isSelectableModelOption(value) &&
+                        setSettings(
+                          settingsForModel(
+                            { ...settings, modelOption: value },
+                            value
+                          )
                         )
-                      )
-                    }
-                    options={availableModels.map((item) => ({
-                      value: item.value,
-                      label: `${item.tier} · ${item.label}`,
-                    }))}
-                  />
-                  <Setting
-                    pills={embedded}
-                    label={m['create.resolution']()}
-                    value={settings.resolution}
-                    onChange={(value) =>
-                      setSettings({ ...settings, resolution: value })
-                    }
-                    options={resolutionsForModel(settings.modelOption).map(
-                      (value) => ({ value, label: value })
-                    )}
-                  />
-                  {isTrio ? (
-                    <>
-                      <Setting
-                        pills={embedded}
-                        label={m['create.duration']()}
-                        value={String(settings.duration)}
-                        onChange={(value) =>
-                          setSettings({
-                            ...settings,
-                            duration: Number(value),
-                          })
-                        }
-                        options={durationsForModel(settings.modelOption).map(
-                          (value) => ({
-                            value: String(value),
-                            label: `${value}s`,
-                          })
-                        )}
-                      />
-                      <div className="bg-muted/40 rounded-lg px-3 py-2 text-xs leading-5">
-                        <span className="font-medium">
-                          {m['create.auto_ratio']()}
-                        </span>
-                        <span className="text-muted-foreground">
-                          {' '}
-                          ·{' '}
-                          {uptown
-                            ? m['home.generator.trio_output']()
-                            : m['effect.trio.fixed_output']()}
-                        </span>
-                      </div>
-                    </>
-                  ) : peeper ? (
-                    referenceOutputLocked ? (
-                      <div className="bg-muted/40 col-span-2 rounded-lg px-3 py-2 text-xs leading-5">
-                        <span className="font-medium">
-                          15s · {m['create.auto_ratio']()}
-                        </span>
-                        <span className="text-muted-foreground">
-                          {' '}
-                          · {m['effect.peeper.ultra_output']()}
-                        </span>
-                      </div>
-                    ) : (
+                      }
+                      options={availableModels.map((item) => ({
+                        value: item.value,
+                        label: `${item.tier} · ${item.label}`,
+                      }))}
+                    />
+                    <Setting
+                      pills={embedded}
+                      label={m['create.resolution']()}
+                      value={settings.resolution}
+                      onChange={(value) =>
+                        setSettings({ ...settings, resolution: value })
+                      }
+                      options={resolutionsForModel(settings.modelOption).map(
+                        (value) => ({ value, label: value })
+                      )}
+                    />
+                    {isTrio ? (
                       <>
                         <Setting
                           pills={embedded}
@@ -1156,95 +1348,200 @@ export function CreateVideo({
                           )}
                         />
                         <div className="bg-muted/40 rounded-lg px-3 py-2 text-xs leading-5">
-                          <span className="font-medium">9:16</span>
+                          <span className="font-medium">
+                            {m['create.auto_ratio']()}
+                          </span>
                           <span className="text-muted-foreground">
                             {' '}
-                            · {m['effect.peeper.fixed_output']()}
+                            ·{' '}
+                            {uptown
+                              ? m['home.generator.trio_output']()
+                              : m['effect.trio.fixed_output']()}
                           </span>
                         </div>
                       </>
-                    )
-                  ) : campaign === 'bridges' ? (
-                    <div className="bg-muted/40 col-span-2 rounded-lg px-3 py-2 text-xs leading-5">
-                      <span className="font-medium">
-                        15s ·{' '}
-                        {referenceOutputLocked
-                          ? m['create.auto_ratio']()
-                          : '16:9'}
-                      </span>
-                      <span className="text-muted-foreground">
-                        {' '}
-                        · {m['effect.bridges.fixed_output']()}
-                      </span>
-                    </div>
-                  ) : referenceOutputLocked ? null : (
-                    <>
-                      <Setting
-                        pills={embedded}
-                        label={m['create.duration']()}
-                        value={String(settings.duration)}
-                        onChange={(value) =>
-                          setSettings({
-                            ...settings,
-                            duration: Number(value),
-                          })
-                        }
-                        options={durationsForModel(settings.modelOption).map(
-                          (value) => ({
-                            value: String(value),
-                            label: `${value}s`,
-                          })
-                        )}
-                      />
-                      <Setting
-                        pills={embedded}
-                        label={m['create.ratio']()}
-                        value={settings.aspectRatio}
-                        onChange={(value) =>
-                          setSettings({ ...settings, aspectRatio: value })
-                        }
-                        options={aspectRatiosForModel(settings.modelOption).map(
-                          (value) => ({
+                    ) : peeper ? (
+                      referenceOutputLocked ? (
+                        <div className="bg-muted/40 col-span-2 rounded-lg px-3 py-2 text-xs leading-5">
+                          <span className="font-medium">
+                            15s · {m['create.auto_ratio']()}
+                          </span>
+                          <span className="text-muted-foreground">
+                            {' '}
+                            · {m['effect.peeper.ultra_output']()}
+                          </span>
+                        </div>
+                      ) : (
+                        <>
+                          <Setting
+                            pills={embedded}
+                            label={m['create.duration']()}
+                            value={String(settings.duration)}
+                            onChange={(value) =>
+                              setSettings({
+                                ...settings,
+                                duration: Number(value),
+                              })
+                            }
+                            options={durationsForModel(
+                              settings.modelOption
+                            ).map((value) => ({
+                              value: String(value),
+                              label: `${value}s`,
+                            }))}
+                          />
+                          <div className="bg-muted/40 rounded-lg px-3 py-2 text-xs leading-5">
+                            <span className="font-medium">9:16</span>
+                            <span className="text-muted-foreground">
+                              {' '}
+                              · {m['effect.peeper.fixed_output']()}
+                            </span>
+                          </div>
+                        </>
+                      )
+                    ) : campaign === 'bridges' ? (
+                      <div className="bg-muted/40 col-span-2 rounded-lg px-3 py-2 text-xs leading-5">
+                        <span className="font-medium">
+                          15s ·{' '}
+                          {referenceOutputLocked
+                            ? m['create.auto_ratio']()
+                            : '16:9'}
+                        </span>
+                        <span className="text-muted-foreground">
+                          {' '}
+                          · {m['effect.bridges.fixed_output']()}
+                        </span>
+                      </div>
+                    ) : referenceOutputLocked ? null : (
+                      <>
+                        <Setting
+                          pills={embedded}
+                          label={m['create.duration']()}
+                          value={String(settings.duration)}
+                          onChange={(value) =>
+                            setSettings({
+                              ...settings,
+                              duration: Number(value),
+                            })
+                          }
+                          options={durationsForModel(settings.modelOption).map(
+                            (value) => ({
+                              value: String(value),
+                              label: `${value}s`,
+                            })
+                          )}
+                        />
+                        <Setting
+                          pills={embedded}
+                          label={m['create.ratio']()}
+                          value={settings.aspectRatio}
+                          onChange={(value) =>
+                            setSettings({ ...settings, aspectRatio: value })
+                          }
+                          options={aspectRatiosForModel(
+                            settings.modelOption
+                          ).map((value) => ({
                             value,
                             label:
                               value === 'auto'
                                 ? m['create.auto_ratio']()
                                 : value,
-                          })
-                        )}
-                      />
-                    </>
+                          }))}
+                        />
+                      </>
+                    )}
+                  </div>
+                  <p className="text-muted-foreground px-4 pb-4 text-xs">
+                    {m['create.price_hint']()}
+                  </p>
+                </details>
+              </fieldset>
+            </div>
+          )}
+          {uptown && (
+            <details className="rounded-xl border">
+              <summary className="cursor-pointer list-none px-4 py-3 text-sm font-medium">
+                {m['effect.settings_title']()}
+              </summary>
+              <div className="grid gap-4 border-t p-4 sm:grid-cols-2">
+                <Setting
+                  pills
+                  label={m['create.model']()}
+                  value={settings.modelOption}
+                  onChange={(value) =>
+                    isSelectableModelOption(value) &&
+                    setSettings((current) =>
+                      settingsForModel(
+                        { ...current, modelOption: value },
+                        value
+                      )
+                    )
+                  }
+                  options={availableModels.map((item) => ({
+                    value: item.value,
+                    label: `${item.tier} · ${item.label}`,
+                  }))}
+                />
+                <Setting
+                  pills
+                  label={m['create.resolution']()}
+                  value={settings.resolution}
+                  onChange={(value) =>
+                    setSettings((current) => ({
+                      ...current,
+                      resolution: value,
+                    }))
+                  }
+                  options={resolutionsForModel(settings.modelOption).map(
+                    (value) => ({ value, label: value })
                   )}
-                </div>
-                <p className="text-muted-foreground px-4 pb-4 text-xs">
-                  {m['create.price_hint']()}
-                </p>
-              </details>
-            </fieldset>
-          </div>
+                />
+              </div>
+            </details>
+          )}
           <div className="trend-console-footer space-y-3">
-            <p className="flex items-center gap-3 font-medium">
-              <Step number={3} />
-              {m['effect.submit_title']()}
-            </p>
-            <Button
-              type="submit"
-              disabled={busy}
-              className={`h-12 w-full gap-2 rounded-xl text-base ${
-                hasPhoto && !busy ? 'photo-ready-cta' : ''
-              }`}
-            >
-              {busy ? (
-                <Loader2 className="size-4 animate-spin" />
-              ) : (
-                <ArrowRight className="size-4" />
+            {!uptown && (
+              <p className="flex items-center gap-3 font-medium">
+                <Step number={3} />
+                {m['effect.submit_title']()}
+              </p>
+            )}
+            <div className={uptown ? 'uptown-generate-bar' : 'contents'}>
+              <Button
+                type="submit"
+                disabled={busy}
+                className={`h-12 w-full gap-2 rounded-xl text-base ${
+                  hasPhoto && !busy ? 'photo-ready-cta' : ''
+                }`}
+              >
+                {busy ? (
+                  <Loader2 className="size-4 animate-spin" />
+                ) : (
+                  <ArrowRight className="size-4" />
+                )}
+                {busy
+                  ? m['create.generating']()
+                  : uptown
+                    ? m['create.generate']()
+                    : !hasPhoto
+                      ? m['effect.add_photo_cta']()
+                      : m['effect.generate_with_photo']()}
+              </Button>
+              {uptown && (
+                <p className="text-center text-sm">
+                  {m['create.cost']({ count: cost })}
+                  {signedIn && (
+                    <span className="text-muted-foreground">
+                      {' '}
+                      ·{' '}
+                      {credits.data
+                        ? m['create.balance']({ count: credits.data.balance })
+                        : '…'}
+                    </span>
+                  )}
+                </p>
               )}
-              {busy
-                ? m['create.generating']()
-                : !hasPhoto
-                  ? m['effect.add_photo_cta']()
-                  : m['effect.generate_with_photo']()}
-            </Button>
+            </div>
             <div className="mx-auto flex max-w-2xl flex-col items-center gap-2 text-center">
               <p className="text-muted-foreground text-sm leading-relaxed text-pretty">
                 {uptown
@@ -1270,18 +1567,20 @@ export function CreateVideo({
                 {generate.error.message}
               </p>
             )}
-            <p className="text-center text-sm">
-              {m['create.cost']({ count: cost })}
-              {signedIn && (
-                <span className="text-muted-foreground">
-                  {' '}
-                  ·{' '}
-                  {credits.data
-                    ? m['create.balance']({ count: credits.data.balance })
-                    : '…'}
-                </span>
-              )}
-            </p>
+            {!uptown && (
+              <p className="text-center text-sm">
+                {m['create.cost']({ count: cost })}
+                {signedIn && (
+                  <span className="text-muted-foreground">
+                    {' '}
+                    ·{' '}
+                    {credits.data
+                      ? m['create.balance']({ count: credits.data.balance })
+                      : '…'}
+                  </span>
+                )}
+              </p>
+            )}
             {monthly && (
               <button
                 type="button"
