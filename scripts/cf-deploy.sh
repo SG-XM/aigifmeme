@@ -52,5 +52,14 @@ if (!match[1].startsWith('https://') || /localhost|127\.0\.0\.1|[<>]/.test(match
 }
 NODE
 
+# Vite 8 keeps an already-set NODE_ENV (the production default applies only
+# when it is unset) and sets oxc.jsx.development from that value.
+# @vitejs/plugin-react leaves the flag unset, so an ambient
+# NODE_ENV=development compiles the SSR bundle to react/jsx-dev-runtime
+# (jsxDEV). Production workerd then throws "jsxDEV is not a function" on
+# every SSR page. Override after sourcing .env.production so a NODE_ENV
+# line in that file cannot reintroduce the development runtime.
+export NODE_ENV=production
+
 pnpm cf:build
 exec wrangler deploy
