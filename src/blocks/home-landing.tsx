@@ -210,18 +210,6 @@ export function HomeLanding({
         source: '',
       }
     : effectContent;
-  const clipTitle = (index: number, fallback: string) => {
-    if (!uptown) return fallback;
-    const titles = [
-      m['home.clip_1'](),
-      m['home.clip_2'](),
-      m['home.clip_3'](),
-      m['home.clip_4'](),
-      m['home.clip_5'](),
-      m['home.clip_6'](),
-    ];
-    return titles[index] ?? m['home.clip_fallback']();
-  };
   // Bridges keeps these clips. The default homepage receives HOME_HERO_DEMOS.
   const bridgesDemos: LandingClip[] = [
     {
@@ -258,10 +246,7 @@ export function HomeLanding({
     : bridges
       ? bridgesDemos
       : galleryVideos;
-  const shownHero = heroClips.map((clip, index) => ({
-    ...clip,
-    title: clipTitle(index, clip.title),
-  }));
+  const shownHero = heroClips;
   const facts = uptown
     ? [
         {

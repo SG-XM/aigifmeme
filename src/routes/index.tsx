@@ -29,14 +29,8 @@ export const Route = createFileRoute('/')({
       ),
       generatedCount,
       siteName,
-      heroVideos: videos.hero.map((clip, index) => ({
-        ...clip,
-        title: homeClipTitle(index),
-      })),
-      galleryVideos: videos.gallery.map((clip, index) => ({
-        ...clip,
-        title: homeClipTitle(index),
-      })),
+      heroVideos: videos.hero,
+      galleryVideos: videos.gallery,
       title: m['home.meta_title']({}, { locale }),
       description: m['home.meta_description']({}, { locale }),
       summary: m['home.summary']({}, { locale }),
@@ -52,7 +46,9 @@ export const Route = createFileRoute('/')({
         {
           rel: 'preload',
           as: 'image',
-          href: '/videos/showcase/home/werewolf-dance-poster.jpg',
+          href:
+            loaderData.heroVideos[0]?.poster ??
+            '/videos/showcase/home/uptown-demo-ceo-hallelujah-v1.jpg',
           fetchPriority: 'high',
         },
       ],
@@ -60,18 +56,6 @@ export const Route = createFileRoute('/')({
   },
   component: HomePage,
 });
-
-function homeClipTitle(index: number) {
-  const titles = [
-    m['home.clip_1'](),
-    m['home.clip_2'](),
-    m['home.clip_3'](),
-    m['home.clip_4'](),
-    m['home.clip_5'](),
-    m['home.clip_6'](),
-  ];
-  return titles[index] ?? m['home.clip_fallback']();
-}
 
 function HomePage() {
   const { posts, heroVideos, galleryVideos, generatedCount } =

@@ -1,5 +1,3 @@
-import { SOLO_DEMO } from '@/lib/bulin-reference';
-
 export type HomeDemoClip = {
   id: string;
   src: string;
@@ -18,62 +16,47 @@ type HomeDemoSource = {
 };
 
 /**
- * Homepage hero clips, copied from the live uptownfunkai.video loader.
+ * Homepage hero clips: four Uptown Funk AI video examples.
  * Window Peeper and Burning Bridges keep their own constants.
  * Change these in a pull request. The admin Demo videos page is gone.
  * `home_demo_video` (migration 0014) is an unused leftover table.
  */
 export const HOME_HERO_DEMOS: readonly HomeDemoSource[] = [
   {
-    id: 'retention-werewolf-dance-v1',
-    src: SOLO_DEMO.src,
-    poster: SOLO_DEMO.poster,
-    title: 'Werewolf dance example',
-    titleZh: '狼人舞蹈示例',
-    titleAr: 'مثال رقص المستذئب',
-    titleEs: 'Ejemplo de baile del hombre lobo',
+    id: 'uptown-demo-ceo-hallelujah-v1',
+    src: '/videos/showcase/home/uptown-demo-ceo-hallelujah-v1.mp4',
+    poster: '/videos/showcase/home/uptown-demo-ceo-hallelujah-v1.jpg',
+    title: 'CEO crew AI video example',
+    titleZh: 'CEO 团队 AI 视频示例',
+    titleAr: 'مثال فيديو AI لفريق الرئيس التنفيذي',
+    titleEs: 'Ejemplo de video IA del equipo CEO',
   },
   {
-    id: 'seed-hero-1',
-    src: '/videos/showcase/home/7693717519374224672.mp4',
-    title: 'Freestyle example 1',
-    titleZh: 'Freestyle 示例 1',
-    titleAr: 'مثال حر 1',
-    titleEs: 'Ejemplo de freestyle 1',
+    id: 'uptown-demo-ceo-dutch-v1',
+    src: '/videos/showcase/home/uptown-demo-ceo-dutch-v1.mp4',
+    poster: '/videos/showcase/home/uptown-demo-ceo-dutch-v1.jpg',
+    title: 'Street dance AI video example',
+    titleZh: '街舞 AI 视频示例',
+    titleAr: 'مثال فيديو AI لرقص الشارع',
+    titleEs: 'Ejemplo de video IA de baile callejero',
   },
   {
-    id: 'seed-hero-2',
-    src: '/videos/showcase/home/7693726580874464545.mp4',
-    title: 'Freestyle example 2',
-    titleZh: 'Freestyle 示例 2',
-    titleAr: 'مثال حر 2',
-    titleEs: 'Ejemplo de freestyle 2',
+    id: 'uptown-demo-zhaobenshan-v1',
+    src: '/videos/showcase/home/uptown-demo-zhaobenshan-v1.mp4',
+    poster: '/videos/showcase/home/uptown-demo-zhaobenshan-v1.jpg',
+    title: 'Ivory Mountain remake AI example',
+    titleZh: '象牙山重制 AI 示例',
+    titleAr: 'مثال إعادة إنتاج Ivory Mountain بالذكاء الاصطناعي',
+    titleEs: 'Ejemplo de remake IA de Ivory Mountain',
   },
   {
-    id: 'seed-hero-3',
-    src: '/videos/showcase/home/7693727814683462944.mp4',
-    title: 'Freestyle example 3',
-    titleZh: 'Freestyle 示例 3',
-    titleAr: 'مثال حر 3',
-    titleEs: 'Ejemplo de freestyle 3',
-  },
-  {
-    id: 'seed-hero-4',
-    src: '/videos/showcase/home/bulin-trio-hero-original-v1.mp4',
-    poster: '/videos/showcase/home/bulin-trio-hero-original-v1.jpg',
-    title: 'Dame Hombro trio — the original',
-    titleZh: 'Dame Hombro 三人原版',
-    titleAr: 'ثلاثي Dame Hombro — الأصل',
-    titleEs: 'Trío Dame Hombro — el original',
-  },
-  {
-    id: 'seed-hero-5',
-    src: '/videos/showcase/home/bulin-trio-hero-second-v1.mp4',
-    poster: '/videos/showcase/home/bulin-trio-hero-second-v1.jpg',
-    title: 'Dame Hombro trio — street take',
-    titleZh: 'Dame Hombro 三人街头版',
-    titleAr: 'ثلاثي Dame Hombro — نسخة الشارع',
-    titleEs: 'Trío Dame Hombro — versión calle',
+    id: 'uptown-demo-ceo-justwatch-v1',
+    src: '/videos/showcase/home/uptown-demo-ceo-justwatch-v1.mp4',
+    poster: '/videos/showcase/home/uptown-demo-ceo-justwatch-v1.jpg',
+    title: 'Just Watch AI video example',
+    titleZh: 'Just Watch AI 视频示例',
+    titleAr: 'مثال فيديو AI: Just Watch',
+    titleEs: 'Ejemplo de video IA Just Watch',
   },
 ];
 

@@ -3,8 +3,6 @@ import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 
-import { SOLO_DEMO } from '@/lib/bulin-reference';
-
 import { HOME_HERO_DEMOS, homeDemoClips, homeDemoTitle } from './home-demos';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
@@ -33,45 +31,44 @@ describe('homeDemoClips', () => {
     const english = homeDemoClips('en');
     expect(english.gallery).toEqual([]);
     expect(english.hero.map((clip) => clip.id)).toEqual([
-      'retention-werewolf-dance-v1',
-      'seed-hero-1',
-      'seed-hero-2',
-      'seed-hero-3',
-      'seed-hero-4',
-      'seed-hero-5',
+      'uptown-demo-ceo-hallelujah-v1',
+      'uptown-demo-ceo-dutch-v1',
+      'uptown-demo-zhaobenshan-v1',
+      'uptown-demo-ceo-justwatch-v1',
+    ]);
+    expect(english.hero.map((clip) => clip.title)).toEqual([
+      'CEO crew AI video example',
+      'Street dance AI video example',
+      'Ivory Mountain remake AI example',
+      'Just Watch AI video example',
     ]);
     expect(english.hero[0]).toEqual({
-      id: 'retention-werewolf-dance-v1',
-      src: SOLO_DEMO.src,
-      poster: SOLO_DEMO.poster,
-      title: 'Werewolf dance example',
+      id: 'uptown-demo-ceo-hallelujah-v1',
+      src: '/videos/showcase/home/uptown-demo-ceo-hallelujah-v1.mp4',
+      poster: '/videos/showcase/home/uptown-demo-ceo-hallelujah-v1.jpg',
+      title: 'CEO crew AI video example',
     });
-    expect(english.hero[1]).toEqual({
-      id: 'seed-hero-1',
-      src: '/videos/showcase/home/7693717519374224672.mp4',
-      title: 'Freestyle example 1',
-    });
-    expect(english.hero[4]?.src).toBe(
-      '/videos/showcase/home/bulin-trio-hero-original-v1.mp4'
-    );
-    expect(english.hero[4]?.poster).toBe(
-      '/videos/showcase/home/bulin-trio-hero-original-v1.jpg'
-    );
     for (const clip of HOME_HERO_DEMOS) {
+      expect(clip.src).toBe(`/videos/showcase/home/${clip.id}.mp4`);
+      expect(clip.poster).toBe(`/videos/showcase/home/${clip.id}.jpg`);
       for (const url of [clip.src, clip.poster]) {
         if (!url) continue;
-        expect(url.startsWith('/videos/')).toBe(true);
-        expect(url).not.toMatch(/r2\.dev|airapduo\.io/);
+        expect(url.startsWith('/videos/showcase/home/')).toBe(true);
+        expect(url).not.toMatch(/r2\.dev|airapduo\.io|tiktok|demo-0[45]/i);
         expect(existsSync(resolve(ROOT, 'public', url.slice(1)))).toBe(true);
       }
     }
-    expect(english.hero[5]?.title).toBe('Dame Hombro trio — street take');
-    expect(homeDemoClips('zh').hero[0]?.title).toBe('狼人舞蹈示例');
-    expect(homeDemoClips('es').hero[4]?.title).toBe(
-      'Trío Dame Hombro — el original'
+    expect(homeDemoClips('zh').hero.map((clip) => clip.title)).toEqual([
+      'CEO 团队 AI 视频示例',
+      '街舞 AI 视频示例',
+      '象牙山重制 AI 示例',
+      'Just Watch AI 视频示例',
+    ]);
+    expect(homeDemoClips('es').hero[2]?.title).toBe(
+      'Ejemplo de remake IA de Ivory Mountain'
     );
-    expect(homeDemoClips('ar').hero[5]?.title).toBe(
-      'ثلاثي Dame Hombro — نسخة الشارع'
+    expect(homeDemoClips('ar').hero[3]?.title).toBe(
+      'مثال فيديو AI: Just Watch'
     );
   });
 });
