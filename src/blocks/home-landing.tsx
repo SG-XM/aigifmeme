@@ -73,6 +73,18 @@ type LandingClip = {
   cite?: string;
 };
 
+function emphasizePhrase(text: string, phrase: string) {
+  const index = text.indexOf(phrase);
+  if (index < 0) return text;
+  return (
+    <>
+      {text.slice(0, index)}
+      <strong>{phrase}</strong>
+      {text.slice(index + phrase.length)}
+    </>
+  );
+}
+
 const LEGACY_TREND_COPY =
   /bulin|burning bridges|freestyle|dame hombro|recast|free\s*rap|window peeper|peeper|i['’]?m so sorry/i;
 
@@ -438,6 +450,7 @@ export function HomeLanding({
         { question: m['home.faq_q4'](), answer: m['home.faq_a4']() },
         { question: m['home.faq_q5'](), answer: m['home.faq_a5']() },
         { question: m['home.faq_q6'](), answer: m['home.faq_a6']() },
+        { question: m['home.faq_q7'](), answer: m['home.faq_a7']() },
       ]
     : [
         ...(peeper
@@ -488,6 +501,9 @@ export function HomeLanding({
             <div className="trend-container">
               <p className="trend-sticker">{content.eyebrow}</p>
               <h1 className="trend-hero-title">{content.title}</h1>
+              {uptown ? (
+                <p className="trend-hero-subtitle">{m['home.subtitle']()}</p>
+              ) : null}
               {peeper ? (
                 <>
                   <h2 className="trend-price-line">
@@ -498,7 +514,17 @@ export function HomeLanding({
                   </p>
                 </>
               ) : null}
-              <p className="trend-hero-description">{content.description}</p>
+              <p className="trend-hero-description">
+                {uptown
+                  ? emphasizePhrase(content.description, m['home.keyword']())
+                  : content.description}
+              </p>
+              {uptown ? (
+                <div className="trend-answer">
+                  <h2>{m['home.tldr_label']()}</h2>
+                  <p>{m['home.tldr']()}</p>
+                </div>
+              ) : null}
               {peeper ? (
                 <p className="trend-hero-description">
                   <PeeperPriceCite />
@@ -728,8 +754,16 @@ export function HomeLanding({
             >
               <div className="trend-container">
                 <SectionHeading
-                  eyebrow={m['trend.examples_eyebrow']()}
-                  title={m['effect.examples_title']()}
+                  eyebrow={
+                    uptown
+                      ? m['home.examples_eyebrow']()
+                      : m['trend.examples_eyebrow']()
+                  }
+                  title={
+                    uptown
+                      ? m['home.examples_title']()
+                      : m['effect.examples_title']()
+                  }
                   description={
                     uptown
                       ? m['home.examples_description']()

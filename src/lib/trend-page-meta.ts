@@ -5,6 +5,31 @@ import { locales, localizeUrl, type Locale } from '@/paraglide/runtime.js';
 /** Actual content revision date, shared with the visible page update line. */
 export const TREND_PAGE_UPDATED_AT = '2026-10-11';
 
+/** Public homepage origin. Never a workers.dev host or the .com domain. */
+export const PUBLIC_SITE_ORIGIN = 'https://uptownfunkai.video';
+
+/**
+ * Homepage canonical stays on the public domain. Other pages keep a real
+ * configured origin, but workers.dev and uptownfunkai.com are rewritten.
+ */
+export function canonicalOrigin(configured: string, path = '') {
+  const home = path === '/' || path === '';
+  if (home) return PUBLIC_SITE_ORIGIN;
+  try {
+    const url = new URL(configured);
+    const host = url.hostname.toLowerCase();
+    const blocked =
+      host === 'uptownfunkai.com' ||
+      host.endsWith('.uptownfunkai.com') ||
+      host === 'workers.dev' ||
+      host.endsWith('.workers.dev');
+    if (blocked) return PUBLIC_SITE_ORIGIN;
+    return url.origin;
+  } catch {
+    return PUBLIC_SITE_ORIGIN;
+  }
+}
+
 /** Shared metadata keeps both keyword pages and their language versions aligned. */
 export function trendPageMeta({
   locale,
@@ -24,7 +49,7 @@ export function trendPageMeta({
   siteName?: string;
   dateModified?: string;
 }) {
-  const baseUrl = envConfigs.app_url.replace(/\/$/, '');
+  const baseUrl = canonicalOrigin(envConfigs.app_url, path);
   const urlFor = (language: Locale) =>
     localizeUrl(`${baseUrl}${path}`, { locale: language }).href;
   return {

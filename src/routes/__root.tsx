@@ -20,6 +20,7 @@ import { isMessagesShellOnlyPath } from '@/core/i18n/shell-path';
 import { envConfigs } from '@/config';
 import { apiPost } from '@/lib/api-client';
 import { getQueryClient } from '@/lib/query-client';
+import { canonicalOrigin } from '@/lib/trend-page-meta';
 import { m } from '@/paraglide/messages.js';
 import {
   baseLocale,
@@ -89,15 +90,15 @@ export const Route = createRootRoute({
   },
   head: ({ matches, loaderData }) => {
     // head() runs on the SSR server AND again on the client during hydration.
-    // On the client, app_url falls back to the localhost dev default when
-    // VITE_APP_URL wasn't inlined into the client bundle at build — which would
-    // emit a second, localhost set of hreflang links. Prefer the live origin
-    // on the client so it always matches; the server uses the configured URL.
-    const appUrl =
-      (typeof window !== 'undefined' && window.location?.origin) ||
-      envConfigs.app_url ||
-      '';
+    // Homepage canonical stays on https://uptownfunkai.video. Other pages use
+    // the live origin, except workers.dev and uptownfunkai.com, which are rewritten.
     const pagePath = matches.at(-1)?.pathname || '/';
+    const appUrl = canonicalOrigin(
+      (typeof window !== 'undefined' && window.location?.origin) ||
+        envConfigs.app_url ||
+        '',
+      pagePath
+    );
     const pageData = matches.at(-1)?.loaderData as
       | { post?: { localizedLocales?: string[] } }
       | undefined;

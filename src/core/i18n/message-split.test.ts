@@ -69,13 +69,15 @@ describe('homepage message shell', () => {
     const zhShell = renderCatalog('zh', shellKeys, compiled);
 
     expect(enShell).toContain(
-      'Uptown Funk AI Video Generator | One Photo, You Lead the Crew'
+      'Uptown Funk AI Video Generator | Create Viral Dance Videos'
     );
     expect(enShell).not.toContain('免费 Bulin 47 AI 视频生成器');
     expect(enShell).not.toContain('一张照片，站到舞团最前面');
     expect(enShell).not.toContain('Credits granted');
     expect(enShell).not.toContain('const zh_');
-    expect(zhShell).toContain('Uptown Funk AI 视频生成器｜一张照片，你带舞团');
+    expect(zhShell).toContain(
+      'Uptown Funk AI Video Generator｜一张照片，领衔街舞'
+    );
     expect(enRest).toContain('Credits granted');
     expect(enShell.length).toBeLessThan(enRest.length);
     expect(shellKeys.length).toBeGreaterThan(50);

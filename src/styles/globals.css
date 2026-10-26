@@ -307,12 +307,49 @@ html:has(.trend-site) {
   font-size: clamp(36px, 5.2vw, 72px);
   line-height: 0.98;
 }
+.trend-hero-subtitle {
+  max-width: 780px;
+  margin: 14px auto 0;
+  color: var(--trend-paper);
+  font-size: clamp(18px, 2vw, 24px);
+  font-weight: 600;
+  line-height: 1.35;
+}
 .trend-hero-description {
   max-width: 780px;
   margin: 22px auto 0;
   font-size: clamp(16px, 1.35vw, 18px);
   line-height: 1.65;
   color: var(--trend-muted);
+}
+.trend-hero-description strong {
+  color: var(--trend-paper);
+  font-weight: 700;
+}
+.trend-answer {
+  max-width: 780px;
+  margin: 18px auto 0;
+  padding: 14px 16px 16px;
+  border: 2px solid var(--trend-stroke);
+  background: color-mix(in oklch, var(--trend-paper) 6%, transparent);
+  text-align: start;
+}
+.trend-answer h2 {
+  margin: 0;
+  color: var(--trend-paper);
+  font-family: var(--font-sans);
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: 0;
+  line-height: 1.4;
+  text-shadow: none;
+  text-transform: none;
+}
+.trend-answer p {
+  margin: 8px 0 0;
+  color: var(--trend-muted);
+  font-size: 15px;
+  line-height: 1.6;
 }
 .trend-price-line {
   max-width: 780px;
