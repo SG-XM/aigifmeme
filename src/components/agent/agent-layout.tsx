@@ -50,7 +50,7 @@ export function AgentLayout({ children }: { children: React.ReactNode }) {
   const needsSignIn = !publicCreate && (isPending || !userId);
   return (
     <div className="bg-background flex h-dvh flex-col overflow-hidden">
-      <Header />
+      <Header brandMark="trend" nav="uptown" />
       <SidebarProvider
         key={showHistory ? 'chat' : 'tool'}
         defaultOpen={showHistory}

@@ -371,6 +371,18 @@ export function CreateVideo({
       if (uptown) toast.error(error.message);
     },
   });
+  const photosTouched = useRef(false);
+  const stateRef = useRef({
+    references,
+    trioSlots,
+    isTrio,
+    effect,
+    lineup,
+    settings,
+    campaign,
+    cost,
+    hasPhoto,
+  });
   const generate = useMutation({
     mutationFn: (body: {
       images: string[];
@@ -401,11 +413,27 @@ export function CreateVideo({
             : value;
         })(),
       }),
-    onSuccess: async () => {
-      await clearCreateDraft();
+    onSuccess: () => {
+      // Mutation status stays pending until this callback returns. Clear the
+      // slots synchronously and do not await draft cleanup or task refresh,
+      // or the CTA stays on "generating" after the job is already queued.
+      const snap = stateRef.current;
+      for (const item of snap.references) releasePreview(item);
+      for (const key of CREW_SLOT_KEYS) releasePreview(snap.trioSlots[key]);
+      photosTouched.current = true;
+      stateRef.current = {
+        ...snap,
+        references: [],
+        trioSlots: {},
+        hasPhoto: false,
+      };
+      setReferences([]);
+      setTrioSlots({});
+      setUploadError('');
+      void clearCreateDraft();
       notifyCreditsChanged();
-      await queryClient.invalidateQueries({ queryKey: ['create-tasks'] });
-      await queryClient.invalidateQueries({
+      void queryClient.invalidateQueries({ queryKey: ['create-tasks'] });
+      void queryClient.invalidateQueries({
         queryKey: ['create-task-history'],
       });
     },
@@ -419,21 +447,11 @@ export function CreateVideo({
   });
   const [preparing, setPreparing] = useState(false);
   const preparingRef = useRef(false);
-  const photosTouched = useRef(false);
   const [draftReady, setDraftReady] = useState(false);
-  const busy =
-    generate.isPending || upload.isPending || preparing || sessionPending;
-  const stateRef = useRef({
-    references,
-    trioSlots,
-    isTrio,
-    effect,
-    lineup,
-    settings,
-    campaign,
-    cost,
-    hasPhoto,
-  });
+  // Lock only the in-flight upload or this submit. Active tasks and the 5s
+  // rate limit must not freeze the form; a rate-limit error is a toast.
+  const submitting = preparing || generate.isPending;
+  const busy = submitting || upload.isPending;
   stateRef.current = {
     references,
     trioSlots,
@@ -721,7 +739,7 @@ export function CreateVideo({
   }
 
   async function submit() {
-    if (busy) return;
+    if (sessionPending || busy) return;
     if (!hasPhoto) {
       if (uptown) openCrewPicker(lineup);
       else openFilePicker(isTrio ? 'center' : 'solo');
@@ -1512,17 +1530,17 @@ export function CreateVideo({
             <div className={uptown ? 'uptown-generate-bar' : 'contents'}>
               <Button
                 type="submit"
-                disabled={busy}
-                className={`h-12 w-full gap-2 rounded-xl text-base ${
-                  hasPhoto && !busy ? 'photo-ready-cta' : ''
+                disabled={sessionPending || busy}
+                className={`h-12 min-h-12 w-full gap-2 rounded-xl text-base ${
+                  hasPhoto && !submitting ? 'photo-ready-cta' : ''
                 }`}
               >
-                {busy ? (
+                {submitting ? (
                   <Loader2 className="size-4 animate-spin" />
                 ) : (
                   <ArrowRight className="size-4" />
                 )}
-                {busy
+                {submitting
                   ? m['create.generating']()
                   : uptown
                     ? m['create.generate']()
