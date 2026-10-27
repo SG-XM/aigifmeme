@@ -3,6 +3,7 @@ import handler from '@tanstack/react-start/server-entry';
 
 import { ensureRequestMessages } from './core/i18n/message-runtime';
 import { getCookieFromHeader } from './lib/cookie';
+import { goneResponse, isGonePath } from './lib/gone-paths';
 import {
   MARKETING_HTML_CACHE_CONTROL,
   MARKETING_HTML_PRIVATE_CONTROL,
@@ -84,6 +85,10 @@ function edgeCache(): Cache | null {
 // getLocale() resolves per-request (AsyncLocalStorage) during SSR.
 export default {
   async fetch(req: Request, _opts?: unknown, ctx?: unknown): Promise<Response> {
+    // Retired campaign and blog URLs, including locale prefixes. This runs
+    // before routing so a page route cannot answer 200 or 301 instead.
+    if (isGonePath(new URL(req.url).pathname)) return goneResponse(req.method);
+
     await ensureCloudflareEnv();
     const decision = marketingHtmlCacheDecision(req);
     const cache = decision.cache ? edgeCache() : null;

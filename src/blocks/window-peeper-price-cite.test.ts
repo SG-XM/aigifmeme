@@ -78,10 +78,8 @@ describe('window peeper citeable price', () => {
     expect(landing).toContain(
       'href="/blog/window-peeper-ai-vs-windowpeeperai-2026"'
     );
-    expect(route).toContain("m['trend.peeper.meta_description']");
-    expect(route).toContain("m['effect.peeper.price_heading']");
-    expect(route).toContain('summary: description');
-    expect(route).toContain('windowPeeperSingleOfferLd');
-    expect(route).toContain('TrendLanding');
+    expect(route).toContain('goneRouteHandlers');
+    expect(route).not.toContain('statusCode: 301');
+    expect(route).not.toContain('TrendLanding');
   });
 });

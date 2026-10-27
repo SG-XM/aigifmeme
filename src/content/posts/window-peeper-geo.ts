@@ -1,10 +1,10 @@
 import type { BlogLocale, BlogPost, BlogPostDetail } from './index';
 
 /**
- * Code-published Window Peeper guides: the 2026 pricing note, then the
- * public Single comparison. Tagged `window-peeper` so the effect page can
- * list them without a database row. A published database post with the same
- * slug replaces one. The title stays the English H1 in every locale.
+ * Retired Window Peeper guides. Not merged into /blog, the sitemap, or
+ * llms.txt — those URLs return 410 (`src/lib/gone-paths.ts`). Kept so the
+ * article copy can still be read in tests.
+ * The title stays the English H1 in every locale.
  */
 export const WINDOW_PEEPER_GEO_TAG = 'window-peeper';
 

@@ -9,6 +9,7 @@ import {
 } from '@/lib/ai-video-paths';
 import { apiGet } from '@/lib/api-client';
 import { CREDITS_CHANGED_EVENT } from '@/lib/credits-changed';
+import { isGonePath } from '@/lib/gone-paths';
 import { liveEffectNav } from '@/lib/live-effect-nav';
 import { trendingEffects } from '@/lib/trending-effects';
 import { m } from '@/paraglide/messages.js';
@@ -51,13 +52,15 @@ export function Header({
           : []),
       ]
     : [
-        ...liveEffectNav().map((effect) => ({
-          href: effect.href,
-          label: effect.title,
-          shortLabel: effect.shortTitle,
-          chipLabel: effect.chipLabel,
-          isCurrent: effect.isCurrent,
-        })),
+        ...liveEffectNav()
+          .filter((effect) => !isGonePath(effect.href))
+          .map((effect) => ({
+            href: effect.href,
+            label: effect.title,
+            shortLabel: effect.shortTitle,
+            chipLabel: effect.chipLabel,
+            isCurrent: effect.isCurrent,
+          })),
         {
           href: '/pricing',
           label: m['landing.nav.pricing'](),
@@ -92,10 +95,12 @@ export function Header({
               lede: m['trending.lede'](),
               closeLabel: m['announce.effects.close'](),
               newLabel: m['trending.new'](),
-              cards: trendingEffects().map((effect) => ({
-                ...effect,
-                ...trendingCardCopy(effect.id),
-              })),
+              cards: trendingEffects()
+                .filter((effect) => !isGonePath(effect.href))
+                .map((effect) => ({
+                  ...effect,
+                  ...trendingCardCopy(effect.id),
+                })),
             }
       }
     />

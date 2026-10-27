@@ -1,7 +1,17 @@
-import { and, count, desc, eq, like, or, type SQL } from 'drizzle-orm';
+import {
+  and,
+  count,
+  desc,
+  eq,
+  like,
+  notInArray,
+  or,
+  type SQL,
+} from 'drizzle-orm';
 
 import { db } from '@/core/db';
 import { post } from '@/config/db/schema';
+import { isRetiredBlogSlug, RETIRED_BLOG_SLUGS } from '@/lib/gone-paths';
 import { getUuid } from '@/lib/hash';
 import { scrubPublicPostCopy } from '@/lib/public-post-copy';
 import { formatTagList, parseTagList } from '@/lib/related-posts';
@@ -72,6 +82,11 @@ const LOCALE_COLUMNS = {
 
 function asLocale(locale?: string): PostLocale {
   return locale && isPostLocale(locale) ? locale : 'en';
+}
+
+/** Public article lists skip retired campaign posts even if a row is still published. */
+function hideRetiredPosts(extra?: SQL) {
+  return and(extra, notInArray(post.slug, [...RETIRED_BLOG_SLUGS]));
 }
 
 function present(value: string | null | undefined): string | undefined {
@@ -198,36 +213,42 @@ export async function listPublishedArticles(
     })
     .from(post)
     .where(
-      and(
-        eq(post.type, PostType.ARTICLE),
-        eq(post.status, PostStatus.PUBLISHED)
+      hideRetiredPosts(
+        and(
+          eq(post.type, PostType.ARTICLE),
+          eq(post.status, PostStatus.PUBLISHED)
+        )
       )
     )
     .orderBy(desc(post.createdAt));
   const rows = (
     limit === null ? await query : await query.limit(limit)
   ) as ArticleRow[];
-  return rows.map((row) => {
-    const fields = toTextFields(row);
-    return {
-      id: row.id,
-      slug: row.slug,
-      title: postText(fields, locale, 'title') || row.slug,
-      description: scrubPublicPostCopy(postText(fields, locale, 'description')),
-      image: present(row.image),
-      authorName: present(row.authorName),
-      authorImage: present(row.authorImage),
-      tags: parseTagList(row.tags),
-      createdAt: row.createdAt,
-      locales: postLocales(fields),
-      contentLocale: postContentLocale(fields, locale),
-      ...(params.includeContent
-        ? {
-            content: scrubPublicPostCopy(postText(fields, locale, 'content')),
-          }
-        : {}),
-    };
-  });
+  return rows
+    .filter((row) => !isRetiredBlogSlug(row.slug))
+    .map((row) => {
+      const fields = toTextFields(row);
+      return {
+        id: row.id,
+        slug: row.slug,
+        title: postText(fields, locale, 'title') || row.slug,
+        description: scrubPublicPostCopy(
+          postText(fields, locale, 'description')
+        ),
+        image: present(row.image),
+        authorName: present(row.authorName),
+        authorImage: present(row.authorImage),
+        tags: parseTagList(row.tags),
+        createdAt: row.createdAt,
+        locales: postLocales(fields),
+        contentLocale: postContentLocale(fields, locale),
+        ...(params.includeContent
+          ? {
+              content: scrubPublicPostCopy(postText(fields, locale, 'content')),
+            }
+          : {}),
+      };
+    });
 }
 
 /** All public article URLs for the sitemap, without the blog-list limit. */
@@ -241,24 +262,29 @@ export async function listPublishedArticleSitemapEntries() {
     })
     .from(post)
     .where(
-      and(
-        eq(post.type, PostType.ARTICLE),
-        eq(post.status, PostStatus.PUBLISHED)
+      hideRetiredPosts(
+        and(
+          eq(post.type, PostType.ARTICLE),
+          eq(post.status, PostStatus.PUBLISHED)
+        )
       )
     )
     .orderBy(desc(post.createdAt));
-  return (rows as ArticleRow[]).map((row) => ({
-    slug: row.slug,
-    createdAt: row.createdAt,
-    updatedAt: row.updatedAt,
-    locales: postLocales(toTextFields(row)),
-  }));
+  return (rows as ArticleRow[])
+    .filter((row) => !isRetiredBlogSlug(row.slug))
+    .map((row) => ({
+      slug: row.slug,
+      createdAt: row.createdAt,
+      updatedAt: row.updatedAt,
+      locales: postLocales(toTextFields(row)),
+    }));
 }
 
 export async function findPublishedBySlug(
   slug: string,
   locale: string = 'en'
 ): Promise<PublishedArticleDetail | undefined> {
+  if (isRetiredBlogSlug(slug)) return undefined;
   const requested = asLocale(locale);
   const [row] = await db()
     .select()

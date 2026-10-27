@@ -1,18 +1,14 @@
 import { createFileRoute } from '@tanstack/react-router';
 
 import { envConfigs } from '@/config';
-import { AI_VIDEO_INDEX_PATH, WINDOW_PEEPER_PATH } from '@/lib/ai-video-paths';
-import { SORRY_PAGE_UPDATED_AT } from '@/lib/im-so-sorry';
+import { isGonePath } from '@/lib/gone-paths';
 import { TREND_PAGE_UPDATED_AT } from '@/lib/trend-page-meta';
-import { WINDOW_PEEPER_UPDATED_AT } from '@/lib/window-peeper-reference';
 import {
   baseLocale,
   locales,
   localizeUrl,
   type Locale,
 } from '@/paraglide/runtime.js';
-import { imSoSorryGeoSitemapEntries } from '@/content/posts/im-so-sorry-geo';
-import { windowPeeperGeoSitemapEntries } from '@/content/posts/window-peeper-geo';
 
 const STATIC_PATHS = [
   '',
@@ -20,12 +16,8 @@ const STATIC_PATHS = [
   '/blog',
   '/privacy-policy',
   '/terms-of-service',
-  '/burning-bridges-ai',
-  AI_VIDEO_INDEX_PATH,
-  WINDOW_PEEPER_PATH,
-  '/im-so-sorry',
-];
-// /bulin-47-ai uses the homepage canonical; private app/auth routes are omitted.
+].filter((path) => !isGonePath(path || '/'));
+// Retired campaign URLs are omitted. Private app/auth routes stay omitted.
 
 type Entry = {
   path: string;
@@ -101,8 +93,10 @@ export const Route = createFileRoute('/sitemap.xml')({
           const rows = await listPublishedArticleSitemapEntries();
           for (const post of rows) {
             if (post.locales.length === 0) continue;
+            const path = `/blog/${encodeURIComponent(post.slug)}`;
+            if (isGonePath(path)) continue;
             posts.push({
-              path: `/blog/${encodeURIComponent(post.slug)}`,
+              path,
               lastModified: lastModified(post.updatedAt ?? post.createdAt),
               locales: post.locales,
             });
@@ -110,41 +104,21 @@ export const Route = createFileRoute('/sitemap.xml')({
         } catch {
           // Static pages stay listed when the database is unreachable.
         }
-        const listed = new Set(
-          posts.map((post) => post.path.replace(/^\/blog\//, ''))
-        );
-        for (const article of [
-          ...imSoSorryGeoSitemapEntries(),
-          ...windowPeeperGeoSitemapEntries(),
-        ]) {
-          const encoded = encodeURIComponent(article.slug);
-          if (listed.has(encoded) || listed.has(article.slug)) continue;
-          posts.push({
-            path: `/blog/${encoded}`,
-            lastModified: lastModified(article.createdAt),
-            locales: article.locales,
-          });
-        }
 
         const urls = locales.flatMap((locale) => {
           const entries = new Map<string, Entry>(
-            STATIC_PATHS.map((path) => [
-              path,
-              {
+            STATIC_PATHS.filter((path) => !isGonePath(path || '/')).map(
+              (path) => [
                 path,
-                lastModified:
-                  path === '' || path === '/burning-bridges-ai'
-                    ? TREND_PAGE_UPDATED_AT
-                    : path === AI_VIDEO_INDEX_PATH ||
-                        path === WINDOW_PEEPER_PATH
-                      ? WINDOW_PEEPER_UPDATED_AT
-                      : path === '/im-so-sorry'
-                        ? SORRY_PAGE_UPDATED_AT
-                        : undefined,
-              },
-            ])
+                {
+                  path,
+                  lastModified: path === '' ? TREND_PAGE_UPDATED_AT : undefined,
+                },
+              ]
+            )
           );
           for (const post of posts) {
+            if (isGonePath(post.path)) continue;
             if (post.locales?.includes(locale)) entries.set(post.path, post);
           }
           return [...entries.values()].map((entry) => entryXml(entry, locale));

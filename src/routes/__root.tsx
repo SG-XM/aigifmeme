@@ -5,6 +5,7 @@ import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import {
   createRootRoute,
   HeadContent,
+  notFound,
   Outlet,
   Scripts,
   type ErrorComponentProps,
@@ -19,6 +20,7 @@ import { usePathname } from '@/core/i18n/navigation';
 import { isMessagesShellOnlyPath } from '@/core/i18n/shell-path';
 import { envConfigs } from '@/config';
 import { apiPost } from '@/lib/api-client';
+import { isGonePath } from '@/lib/gone-paths';
 import { sanitizeGoogleAnalyticsId } from '@/lib/google-analytics-id';
 import { getQueryClient } from '@/lib/query-client';
 import { canonicalOrigin } from '@/lib/trend-page-meta';
@@ -85,6 +87,11 @@ const getAnalyticsConfigs = createServerFn().handler(async () => {
 export const Route = createRootRoute({
   loader: () => getAnalyticsConfigs(),
   beforeLoad: async ({ location }) => {
+    // Document requests already 410 in src/server.ts. This stops a client
+    // navigation from painting the retired page without a new document.
+    if (!import.meta.env.SSR && isGonePath(location.pathname)) {
+      throw notFound();
+    }
     if (import.meta.env.SSR) return;
     if (isMessagesShellOnlyPath(location.pathname)) return;
     await ensureRest(getLocale());

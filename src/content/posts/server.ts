@@ -1,37 +1,16 @@
 import { createServerFn } from '@tanstack/react-start';
 
-import { imSoSorryGeoPost, imSoSorryGeoPosts } from './im-so-sorry-geo';
+import { isRetiredBlogSlug } from '@/lib/gone-paths';
+
 import type { BlogLocale, BlogPost, BlogPostDetail } from './index';
-import { windowPeeperGeoPost, windowPeeperGeoPosts } from './window-peeper-geo';
-
-function codeGeoPosts(locale: string, includeContent = false): BlogPost[] {
-  return [
-    ...imSoSorryGeoPosts(locale, { includeContent }),
-    ...windowPeeperGeoPosts(locale, { includeContent }),
-  ];
-}
-
-function codeGeoPost(slug: string, locale: string): BlogPostDetail | null {
-  return imSoSorryGeoPost(slug, locale) ?? windowPeeperGeoPost(slug, locale);
-}
-
-function mergeGeoPosts(
-  posts: BlogPost[],
-  locale: string,
-  includeContent = false
-): BlogPost[] {
-  const seen = new Set(posts.map((post) => post.slug));
-  const extras = codeGeoPosts(locale, includeContent).filter(
-    (post) => !seen.has(post.slug)
-  );
-  return [...posts, ...extras].sort((a, b) =>
-    b.createdAt.localeCompare(a.createdAt)
-  );
-}
 
 function asBlogLocale(locale: string): BlogLocale {
   if (locale === 'zh' || locale === 'es' || locale === 'ar') return locale;
   return 'en';
+}
+
+function withoutRetired<T extends { slug: string }>(posts: T[]): T[] {
+  return posts.filter((post) => !isRetiredBlogSlug(post.slug));
 }
 
 export const getBlogPostsFn = createServerFn()
@@ -47,7 +26,7 @@ export const getBlogPostsFn = createServerFn()
         locale: asBlogLocale(data.locale),
         includeContent,
       });
-      const mapped = rows.map((row) => ({
+      return withoutRetired(rows).map((row) => ({
         id: row.id,
         slug: row.slug,
         title: row.title,
@@ -59,22 +38,24 @@ export const getBlogPostsFn = createServerFn()
         tags: row.tags,
         ...(row.content != null ? { content: row.content } : {}),
       }));
-      return mergeGeoPosts(mapped, data.locale, includeContent);
     } catch {
-      return mergeGeoPosts([], data.locale, includeContent);
+      // Retired code-published guides are not a fallback. An unreachable
+      // database leaves the blog index empty instead of republishing them.
+      return [];
     }
   });
 
 export const getBlogPostFn = createServerFn()
   .inputValidator((data: { slug: string; locale: string }) => data)
   .handler(async ({ data }): Promise<BlogPostDetail | null> => {
+    if (isRetiredBlogSlug(data.slug)) return null;
     try {
       const { findPublishedBySlug } = await import('@/modules/posts/service');
       const row = await findPublishedBySlug(
         data.slug,
         asBlogLocale(data.locale)
       );
-      if (!row) return codeGeoPost(data.slug, data.locale);
+      if (!row || isRetiredBlogSlug(row.slug)) return null;
       return {
         id: row.id,
         slug: row.slug,
@@ -90,6 +71,6 @@ export const getBlogPostFn = createServerFn()
         contentLocale: row.contentLocale,
       };
     } catch {
-      return codeGeoPost(data.slug, data.locale);
+      return null;
     }
   });

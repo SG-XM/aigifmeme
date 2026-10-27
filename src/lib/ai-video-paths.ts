@@ -5,9 +5,9 @@ export type LiveEffectId = EffectCampaign | 'sorry';
 
 export const AI_VIDEO_INDEX_PATH = '/ai-video' as const;
 export const WINDOW_PEEPER_PATH = '/window-peeper' as const;
-/** Previous public URL. The route 301s to `WINDOW_PEEPER_PATH`. */
+/** Retired URL. The route returns 410. See `gone-paths.ts`. */
 export const WINDOW_PEEPER_AI_VIDEO_PATH = '/ai-video/window-peeper' as const;
-/** Earlier public alias. The route 301s to `WINDOW_PEEPER_PATH`. */
+/** Retired alias. The route returns 410. See `gone-paths.ts`. */
 export const WINDOW_PEEPER_LEGACY_PATH = '/window-peeper-ai' as const;
 export const IM_SO_SORRY_PATH = '/im-so-sorry' as const;
 

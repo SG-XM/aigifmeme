@@ -1,5 +1,6 @@
 import { localeNames } from '@/config/locale';
 import { AI_VIDEO_INDEX_PATH, WINDOW_PEEPER_PATH } from '@/lib/ai-video-paths';
+import { isGonePath } from '@/lib/gone-paths';
 import { m } from '@/paraglide/messages.js';
 import { locales, localizeUrl, type Locale } from '@/paraglide/runtime.js';
 import { SiteFooter, type FooterColumn } from '@/components/site-footer';
@@ -24,7 +25,7 @@ export function Footer({
     { label: m['effect.bridges.title'](), href: '/burning-bridges-ai' },
     { label: m['effect.peeper.title'](), href: WINDOW_PEEPER_PATH },
     { label: m['sorry.title'](), href: '/im-so-sorry' },
-  ];
+  ].filter((link) => !isGonePath(link.href));
   const homeTitle = m['home.title']();
   const languageLinks = locales.map((locale) => ({
     label: `${homeTitle} · ${localeNames[locale] ?? locale}`,
@@ -49,7 +50,7 @@ export function Footer({
             { label: m['landing.pricing.title'](), href: '/pricing' },
           ],
       sections: [
-        ...(uptown
+        ...(uptown && sceneLinks.length > 0
           ? [
               {
                 title: m['landing.footer.scenes'](),
