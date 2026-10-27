@@ -44,6 +44,7 @@ import { notifyCreditsChanged } from '@/lib/credits-changed';
 import {
   CREW_SLOT_KEYS,
   crewSlotRecord,
+  DEFAULT_HOMEPAGE_CLIP_SECONDS,
   homepageClipSeconds,
   placeCrewPhotos,
   type CrewSlotKey,
@@ -166,9 +167,11 @@ export function CreateVideo({
     ...defaultComposerSettings(),
     aspectRatio: campaign === 'bridges' ? '16:9' : '9:16',
     duration:
-      voice === 'uptown' || campaign === 'bridges'
+      campaign === 'bridges'
         ? 15
-        : defaultComposerSettings().duration,
+        : voice === 'uptown'
+          ? DEFAULT_HOMEPAGE_CLIP_SECONDS
+          : defaultComposerSettings().duration,
   }));
   const needsSeedance = campaign === 'bridges' || peeper || isTrio;
   const availableModels = needsSeedance

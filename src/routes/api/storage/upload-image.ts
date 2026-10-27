@@ -53,6 +53,58 @@ const extFromMime = (mimeType: string) => {
 const INLINE_MAX_BYTES =
   (Number(envConfigs.inline_image_max_kb) || 10240) * 1024;
 
+export const STORAGE_NOT_CONFIGURED =
+  'Storage is not configured. Set R2 in Admin → Storage.';
+
+/** workerd sets this user agent and `caches.default`. Node dev does not. */
+export function isCloudflareWorkersRuntime(): boolean {
+  if (typeof navigator !== 'undefined') {
+    const agent = navigator.userAgent;
+    if (
+      agent === 'Cloudflare-Workers' ||
+      agent.includes('Cloudflare-Workers')
+    ) {
+      return true;
+    }
+  }
+  if (typeof globalThis !== 'undefined' && 'Cloudflare' in globalThis) {
+    return true;
+  }
+  const cacheStorage = (globalThis as { caches?: { default?: unknown } })
+    .caches;
+  return cacheStorage?.default != null;
+}
+
+/**
+ * `public/uploads` exists only on a real Node filesystem. Workers (including
+ * nodejs_compat) must not call mkdir/writeFile — that throws EPERM.
+ */
+export function canUseLocalUploadDisk(): boolean {
+  if (isCloudflareWorkersRuntime()) return false;
+  return (
+    typeof process !== 'undefined' &&
+    process.release?.name === 'node' &&
+    typeof process.versions?.node === 'string'
+  );
+}
+
+function isDiskFallbackFailure(error: unknown): boolean {
+  const code =
+    error && typeof error === 'object' && 'code' in error
+      ? String((error as { code?: unknown }).code)
+      : '';
+  if (
+    code === 'EPERM' ||
+    code === 'EROFS' ||
+    code === 'EACCES' ||
+    code === 'ENOTSUP'
+  ) {
+    return true;
+  }
+  const message = error instanceof Error ? error.message : '';
+  return /operation not permitted|read-only file system/i.test(message);
+}
+
 function hasExpectedSignature(bytes: Uint8Array, mimeType: string): boolean {
   if (mimeType === 'image/jpeg') {
     return bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff;
@@ -110,7 +162,7 @@ function hasExpectedSignature(bytes: Uint8Array, mimeType: string): boolean {
   return false;
 }
 
-async function POST({ request }: { request: Request }) {
+export async function POST({ request }: { request: Request }) {
   const limited = enforceMinIntervalRateLimit(request, {
     intervalMs: 1000,
     keyPrefix: 'upload-image',
@@ -150,6 +202,9 @@ async function POST({ request }: { request: Request }) {
       return respErr(
         'Public storage is not configured. Configure Storage in Admin Settings before adding reference media.'
       );
+    }
+    if (!storage && !canUseLocalUploadDisk()) {
+      return respErr(STORAGE_NOT_CONFIGURED);
     }
     const uploadResults: Array<{
       url: string;
@@ -193,13 +248,19 @@ async function POST({ request }: { request: Request }) {
       // key is the bare filename. The local fallback uses `public/uploads/<file>`.
       const objectKey = `${digest}.${ext}`;
 
-      // No storage configured → persist to public/uploads and return a short
-      // local URL. Avoids inlining a giant base64 data URL into DB columns (some
-      // are varchar(255)). Configure R2 (admin → Storage) for production.
+      // No storage configured, and this is a real Node process: persist to
+      // public/uploads. Workers return STORAGE_NOT_CONFIGURED above instead.
       if (!storage) {
-        const dir = path.join(process.cwd(), 'public', 'uploads');
-        await mkdir(dir, { recursive: true });
-        await writeFile(path.join(dir, objectKey), body);
+        try {
+          const dir = path.join(process.cwd(), 'public', 'uploads');
+          await mkdir(dir, { recursive: true });
+          await writeFile(path.join(dir, objectKey), body);
+        } catch (error) {
+          if (isDiskFallbackFailure(error)) {
+            return respErr(STORAGE_NOT_CONFIGURED);
+          }
+          throw error;
+        }
         uploadResults.push({
           url: `/uploads/${objectKey}`,
           key: `uploads/${objectKey}`,
@@ -246,9 +307,11 @@ async function POST({ request }: { request: Request }) {
       urls: uploadResults.map((r) => r.url),
       results: uploadResults,
     });
-  } catch (e: any) {
+  } catch (e: unknown) {
     console.error('upload image failed:', e);
-    return respErr(e?.message || 'upload image failed');
+    if (isDiskFallbackFailure(e)) return respErr(STORAGE_NOT_CONFIGURED);
+    const message = e instanceof Error ? e.message : '';
+    return respErr(message || 'upload image failed');
   }
 }
 

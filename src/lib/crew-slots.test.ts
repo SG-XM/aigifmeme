@@ -68,11 +68,11 @@ describe('crew lineup helpers', () => {
     ).toEqual({ center: 'c' });
   });
 
-  it('snaps clip length to 12 or 15 seconds, defaulting to 15', () => {
-    expect(DEFAULT_HOMEPAGE_CLIP_SECONDS).toBe(15);
+  it('snaps clip length to 12 or 15 seconds, defaulting to 12', () => {
+    expect(DEFAULT_HOMEPAGE_CLIP_SECONDS).toBe(12);
     expect(homepageClipSeconds(12)).toBe(12);
     expect(homepageClipSeconds(15)).toBe(15);
-    expect(homepageClipSeconds(9)).toBe(15);
+    expect(homepageClipSeconds(9)).toBe(12);
   });
 
   it('forwards at most five reference photos', () => {

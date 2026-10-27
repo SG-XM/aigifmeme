@@ -22,10 +22,13 @@ export const CREW_SLOT_LIMIT = CREW_SLOT_KEYS.length;
 
 export const HOMEPAGE_CLIP_SECONDS = [12, 15] as const;
 export type HomepageClipSeconds = (typeof HOMEPAGE_CLIP_SECONDS)[number];
-export const DEFAULT_HOMEPAGE_CLIP_SECONDS: HomepageClipSeconds = 15;
+/** First-load homepage length. 15s stays selectable; unknown values snap here. */
+export const DEFAULT_HOMEPAGE_CLIP_SECONDS: HomepageClipSeconds = 12;
 
 export function homepageClipSeconds(value: number): HomepageClipSeconds {
-  return value === 12 ? 12 : DEFAULT_HOMEPAGE_CLIP_SECONDS;
+  return (HOMEPAGE_CLIP_SECONDS as readonly number[]).includes(value)
+    ? (value as HomepageClipSeconds)
+    : DEFAULT_HOMEPAGE_CLIP_SECONDS;
 }
 
 export type CrewSlotMap<T> = Partial<Record<CrewSlotKey, T>>;
