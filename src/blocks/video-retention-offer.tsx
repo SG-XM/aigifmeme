@@ -44,7 +44,8 @@ import {
 const RETENTION_DEMO = HOME_HERO_DEMOS[0];
 const RETENTION_VIDEO_URL = RETENTION_DEMO.src;
 const RETENTION_VIDEO_POSTER_URL = RETENTION_DEMO.poster ?? RETENTION_DEMO.src;
-const RETENTION_IMAGE_URL = RETENTION_DEMO.poster ?? RETENTION_DEMO.src;
+/** Compare Original still: public/images/retention-offer-original.png */
+const RETENTION_IMAGE_URL = '/images/retention-offer-original.png';
 
 interface OfferRequest {
   campaign: EffectCampaign;
