@@ -11,6 +11,7 @@ import {
 import { Link } from '@/core/i18n/navigation';
 import { type EffectCampaign } from '@/lib/ai-video-paths';
 import { BURNING_BRIDGES_SHOWCASE } from '@/lib/burning-bridges-reference';
+import { HOME_CREATE_ELEMENT_ID } from '@/lib/home-create-scroll';
 import type { HomeDemoClip } from '@/lib/home-demos';
 import { liveEffectNav } from '@/lib/live-effect-nav';
 import { TREND_PAGE_UPDATED_AT } from '@/lib/trend-page-meta';
@@ -24,6 +25,7 @@ import { getLocale } from '@/paraglide/runtime.js';
 import { CreateVideo } from '@/blocks/create-video';
 import { Footer } from '@/blocks/footer';
 import { Header } from '@/blocks/header';
+import { HomeCreateScroll } from '@/blocks/home-create-scroll';
 import { HomeHeroDemos } from '@/blocks/home-hero-demos';
 import { Pricing } from '@/blocks/pricing';
 import { SupportWidget } from '@/blocks/support-widget';
@@ -592,7 +594,11 @@ export function HomeLanding({
                     </div>
                   </>
                 )}
-                <div id="create" className="trend-generator scroll-mt-24">
+                {uptown ? <HomeCreateScroll /> : null}
+                <div
+                  id={HOME_CREATE_ELEMENT_ID}
+                  className="trend-generator scroll-mt-24"
+                >
                   <AgentHeaderProvider>
                     <CreateVideo
                       key={campaign}

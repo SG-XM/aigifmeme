@@ -11,6 +11,26 @@ type HeroClip = {
 };
 
 /**
+ * Move one phone slide inside the clip row.
+ * `scrollIntoView` would also scroll the page and pull the viewport off the
+ * photo picker after the homepage's initial scroll.
+ */
+export function scrollHeroSlideWithinTrack(
+  track: HTMLElement,
+  slide: HTMLElement
+) {
+  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const left =
+    track.scrollLeft +
+    slide.getBoundingClientRect().left -
+    track.getBoundingClientRect().left;
+  track.scrollTo({
+    left,
+    behavior: reduce ? 'instant' : 'smooth',
+  });
+}
+
+/**
  * Homepage examples stay 16:9.
  * Phones swipe one full-width card. Wider screens show a 2×2 grid.
  * Clips autoplay muted. Sound starts only after a tap on that card.
@@ -45,11 +65,7 @@ export function HomeHeroDemos({ clips }: { clips: HeroClip[] }) {
   function show(next: number) {
     const root = trackRef.current;
     const slide = root?.querySelector<HTMLElement>(`[data-index="${next}"]`);
-    slide?.scrollIntoView({
-      behavior: 'smooth',
-      inline: 'start',
-      block: 'nearest',
-    });
+    if (root && slide) scrollHeroSlideWithinTrack(root, slide);
     setIndex(next);
   }
 
