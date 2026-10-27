@@ -1,3 +1,5 @@
+import { publicReferenceUrl } from '@/lib/public-reference-media';
+
 export const WINDOW_PEEPER_MEDIA_VERSION = 'windowPeeper' as const;
 export type WindowPeeperMediaVersion = typeof WINDOW_PEEPER_MEDIA_VERSION;
 
@@ -10,16 +12,17 @@ export const WINDOW_PEEPER_UPDATED_AT = '2026-10-24';
  * 1080×1920): night street, push-in to one lit window, the look back, and the
  * curtain. Seedance 2.5 still prices a 15-second output.
  *
- * The generation URL is on the public R2 host under `reference/`, the same
- * pattern as the freestyle and trio refs. Those objects answer HTTP Range
- * (206). The Worker path `/videos/showcase/window-peeper/…` does not, and Kie
- * then fails the download (`content[0].image_url` resource download failed).
- * Marketing players use `WINDOW_PEEPER_RESULT`, not this reference file.
+ * The generation URL is on the public R2 host under `reference/`
+ * (`media.uptownfunkai.video`), the same pattern as the freestyle and trio
+ * refs. Those objects answer HTTP Range (206). The Worker path
+ * `/videos/showcase/window-peeper/…` does not, and Kie then fails the
+ * download (`content[0].image_url` resource download failed). Marketing
+ * players use `WINDOW_PEEPER_RESULT`, not this reference file.
  *
  * Bucket object key: `reference/window-peeper-master.mp4` (`bulin47ai`).
  */
 export const WINDOW_PEEPER_REFERENCE = {
-  url: 'https://media.uptownfunkai.video/reference/window-peeper-master.mp4',
+  url: publicReferenceUrl('window-peeper-master.mp4'),
   durationSeconds: 14,
 };
 

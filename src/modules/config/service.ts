@@ -9,6 +9,10 @@ import {
   RECALL_MONTHLY_COUNTER_KEY,
   RECALL_PAUSE_CONFIG_KEY,
 } from '@/lib/email-recall';
+import {
+  isCreateReferenceVideoConfigKey,
+  probeReferenceVideoUrl,
+} from '@/lib/reference-video-config';
 import { isEffectAdminConfigKey } from '@/lib/related-posts';
 import { VIDEO_RETENTION_CONFIG_PREFIX } from '@/lib/video-retention-offer';
 
@@ -147,12 +151,24 @@ export async function saveConfigs(configs: ConfigMap) {
           !name.startsWith(VIDEO_RETENTION_CONFIG_PREFIX) &&
           !isMaskedConfigValue(value)
       )
-      .map(
-        async ([name, value]): Promise<[string, string]> =>
-          isSecretConfigKey(name)
-            ? [name, await encryptSecret(value)]
-            : [name, value]
-      )
+      .map(async ([name, value]): Promise<[string, string]> => {
+        let next = value;
+        if (isCreateReferenceVideoConfigKey(name)) {
+          next = value.trim();
+          if (next) {
+            try {
+              await probeReferenceVideoUrl(next);
+            } catch (error) {
+              const detail =
+                error instanceof Error ? error.message : 'invalid URL';
+              throw new Error(`${name}: ${detail}`);
+            }
+          }
+        }
+        return isSecretConfigKey(name)
+          ? [name, await encryptSecret(next)]
+          : [name, next];
+      })
   );
   if (entries.length === 0) {
     return;

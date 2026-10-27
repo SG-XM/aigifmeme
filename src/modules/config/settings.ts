@@ -172,6 +172,13 @@ export function getSettingGroups(): SettingGroup[] {
       tab: 'ai',
     },
     {
+      name: 'create_reference',
+      title: 'Create reference video',
+      description:
+        'Public MP4 URLs sent as the motion reference. Leave a field empty to keep the built-in clip on media.uptownfunkai.video. Saving checks that the file answers HTTP Range with 206.',
+      tab: 'ai',
+    },
+    {
       name: 'openai',
       title: 'OpenAI',
       description: 'OpenAI (or compatible) API',
@@ -940,6 +947,36 @@ export function getSettings(): Setting[] {
       group: 'video_generation',
       tab: 'ai',
       defaultValue: 'auto',
+    },
+    {
+      name: 'create_reference_video_url',
+      title: 'Default reference video URL',
+      type: 'text',
+      placeholder:
+        'https://media.uptownfunkai.video/reference/bulin47-freestyle-from-7s-15s.mp4',
+      tip: 'Public https MP4 that answers Range bytes=0-1 with HTTP 206. Used for solo jobs, and for Uptown crew jobs when the 12s or 15s field is empty. Leave empty to keep the built-in clip.',
+      group: 'create_reference',
+      tab: 'ai',
+    },
+    {
+      name: 'create_reference_video_url_12s',
+      title: '12-second reference video URL',
+      type: 'text',
+      placeholder:
+        'https://media.uptownfunkai.video/reference/bulin-trio-12s-v1.mp4',
+      tip: 'Overrides the 12-second Uptown crew clip, which is the homepage default. Leave empty to use the default reference URL, then the built-in 12-second clip.',
+      group: 'create_reference',
+      tab: 'ai',
+    },
+    {
+      name: 'create_reference_video_url_15s',
+      title: '15-second reference video URL',
+      type: 'text',
+      placeholder:
+        'https://media.uptownfunkai.video/reference/bulin-trio-15s-v1.mp4',
+      tip: 'Overrides the 15-second Uptown crew clip. Leave empty to use the default reference URL, then the built-in 15-second clip.',
+      group: 'create_reference',
+      tab: 'ai',
     },
 
     // ─── AI / Fal ────────────────────────────────────────────────────

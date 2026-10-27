@@ -1,3 +1,5 @@
+import { publicReferenceUrl } from '@/lib/public-reference-media';
+
 export const BULIN_MEDIA_VERSIONS = ['from7s15s', 'from4s15s'] as const;
 export type BulinMediaVersion = (typeof BULIN_MEDIA_VERSIONS)[number];
 export const BULIN_FIXED_MEDIA_VERSION = 'from7s15s' as const;
@@ -8,7 +10,7 @@ export interface BulinMediaSource {
 }
 
 export const BULIN_ORIGINAL_VIDEO: BulinMediaSource = {
-  url: 'https://media.uptownfunkai.video/reference/bulin47-freestyle-full-46s-v1.mp4',
+  url: publicReferenceUrl('bulin47-freestyle-full-46s-v1.mp4'),
   durationSeconds: 46.333333,
 };
 
@@ -17,11 +19,11 @@ export const BULIN_REFERENCE_VIDEOS: Record<
   BulinMediaSource
 > = {
   from7s15s: {
-    url: 'https://media.uptownfunkai.video/reference/bulin47-freestyle-from-7s-15s.mp4',
+    url: publicReferenceUrl('bulin47-freestyle-from-7s-15s.mp4'),
     durationSeconds: 15,
   },
   from4s15s: {
-    url: 'https://media.uptownfunkai.video/reference/bulin47-freestyle-from-4s-15s.mp4',
+    url: publicReferenceUrl('bulin47-freestyle-from-4s-15s.mp4'),
     durationSeconds: 15,
   },
 };

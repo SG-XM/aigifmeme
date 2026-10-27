@@ -1,8 +1,13 @@
 export const BURNING_BRIDGES_MEDIA_VERSION = 'bridgesParty15s' as const;
 export type BurningBridgesMediaVersion = typeof BURNING_BRIDGES_MEDIA_VERSION;
 
+/**
+ * Retired campaign. The old site path
+ * `/videos/reference/burning-bridges-party-2m37s-15s.mp4` is 404, and that
+ * object is not on the public R2 host either. Create refuses the campaign
+ * instead of sending `video_url`. Duration stays for pricing of stored jobs.
+ */
 export const BURNING_BRIDGES_REFERENCE = {
-  url: 'https://uptownfunkai.video/videos/reference/burning-bridges-party-2m37s-15s.mp4',
   durationSeconds: 15,
 };
 

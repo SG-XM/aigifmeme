@@ -15,11 +15,11 @@ import {
   isTrioMediaVersion,
   TRIO_REFERENCE_VIDEOS,
 } from '@/lib/bulin-trio-reference';
-import { BURNING_BRIDGES_REFERENCE } from '@/lib/burning-bridges-reference';
 import { getCookieFromHeader } from '@/lib/cookie';
 import { parseCreateVideoInput } from '@/lib/create-video';
 import { getUuid } from '@/lib/hash';
 import { enforceMinIntervalRateLimit } from '@/lib/rate-limit';
+import { resolveCreateReferenceVideoUrl } from '@/lib/reference-video-config';
 import { respData, respErr } from '@/lib/resp';
 import { requireWindowPeeperReference } from '@/lib/window-peeper-reference';
 
@@ -34,6 +34,11 @@ export async function POST({ request }: { request: Request }) {
   if (rateLimit) return rateLimit;
   try {
     const input = parseCreateVideoInput(await request.json());
+    if (input.campaign === 'bridges') {
+      return respErr(
+        'Burning Bridges is retired. Its reference clip is not available for download, so this request was not submitted.'
+      );
+    }
     const storage = await getStorage();
     const publicUrl = storage?.getPublicUrl({ key: 'uploads/reference' });
     if (
@@ -45,6 +50,18 @@ export async function POST({ request }: { request: Request }) {
       return respErr('Please upload your reference images through this site');
     }
     const configs = await getAllConfigs();
+    const fallbackReferenceUrl = isTrioMediaVersion(input.referenceVideoVersion)
+      ? TRIO_REFERENCE_VIDEOS[input.referenceVideoVersion].url
+      : input.campaign === 'peeper'
+        ? requireWindowPeeperReference().url
+        : BULIN_REFERENCE_VIDEOS[
+            input.referenceVideoVersion as 'from7s15s' | 'from4s15s'
+          ].url;
+    const referenceVideoUrl = resolveCreateReferenceVideoUrl({
+      configs,
+      referenceVideoVersion: input.referenceVideoVersion,
+      fallbackUrl: fallbackReferenceUrl,
+    });
     const result = JSON.parse(
       await runVideoGeneration({
         ctx: {
@@ -52,21 +69,10 @@ export async function POST({ request }: { request: Request }) {
           sessionId: `create-${getUuid()}`,
           settings: {
             ...input.settings,
-            ...(input.campaign === 'bulin' ||
-            input.campaign === 'bridges' ||
-            input.campaign === 'peeper'
-              ? { audioMode: 'silent' as const }
-              : {}),
+            audioMode: 'silent' as const,
           },
-          useSampleSoundtrack:
-            input.campaign === 'bulin' ||
-            input.campaign === 'bridges' ||
-            input.campaign === 'peeper',
-          ...(input.campaign === 'bulin' ||
-          input.campaign === 'bridges' ||
-          input.campaign === 'peeper'
-            ? { soundtrackVersion: input.soundtrackVersion }
-            : {}),
+          useSampleSoundtrack: true,
+          soundtrackVersion: input.soundtrackVersion,
         },
         prompt: input.prompt,
         modelKey: input.settings.modelName as AgentModelOptionValue,
@@ -74,31 +80,9 @@ export async function POST({ request }: { request: Request }) {
         providerOverride: createVideoProviderOverride(configs),
         options: {
           source: 'create',
-          ...(input.campaign === 'peeper'
-            ? {
-                reference_image_urls: input.images,
-                reference_video_urls: [requireWindowPeeperReference().url],
-                referenceVideoVersion: input.referenceVideoVersion,
-              }
-            : input.campaign === 'bulin'
-              ? {
-                  reference_image_urls: input.images,
-                  reference_video_urls: [
-                    isTrioMediaVersion(input.referenceVideoVersion)
-                      ? TRIO_REFERENCE_VIDEOS[input.referenceVideoVersion].url
-                      : BULIN_REFERENCE_VIDEOS[
-                          input.referenceVideoVersion as
-                            | 'from7s15s'
-                            | 'from4s15s'
-                        ]!.url,
-                  ],
-                  referenceVideoVersion: input.referenceVideoVersion,
-                }
-              : {
-                  reference_image_urls: input.images,
-                  reference_video_urls: [BURNING_BRIDGES_REFERENCE.url],
-                  referenceVideoVersion: input.referenceVideoVersion,
-                }),
+          reference_image_urls: input.images,
+          reference_video_urls: [referenceVideoUrl],
+          referenceVideoVersion: input.referenceVideoVersion,
           aspect_ratio: input.settings.aspectRatio,
           resolution: input.settings.resolution,
           duration: input.settings.duration,

@@ -183,6 +183,79 @@ describe('Window Peeper creation', () => {
 });
 
 describe('Trio creation', () => {
+  it('prefers an admin 12-second reference over the built-in clip', async () => {
+    const center = 'https://media.example.com/photo.png';
+    const override = 'https://cdn.example.com/crew-12s.mp4';
+    mocks.configs.create_reference_video_url_12s = override;
+    mocks.configs.create_reference_video_url =
+      'https://cdn.example.com/default.mp4';
+    await POST({
+      request: request({
+        campaign: 'bulin',
+        take: 0,
+        effect: 'trio',
+        slots: { center },
+        images: [center],
+        settings: {
+          modelName: 'seedance-2-mini',
+          resolution: '720p',
+          aspectRatio: '9:16',
+          duration: 12,
+        },
+      }),
+    });
+    expect(mocks.run).toHaveBeenCalledWith(
+      expect.objectContaining({
+        options: expect.objectContaining({
+          reference_video_urls: [override],
+        }),
+      })
+    );
+  });
+  it('uses the default admin reference for a 12-second crew job when 12s is unset', async () => {
+    const center = 'https://media.example.com/photo.png';
+    const override = 'https://cdn.example.com/default.mp4';
+    mocks.configs.create_reference_video_url = override;
+    await POST({
+      request: request({
+        campaign: 'bulin',
+        take: 0,
+        effect: 'trio',
+        slots: { center },
+        images: [center],
+        settings: {
+          modelName: 'seedance-2-mini',
+          resolution: '720p',
+          aspectRatio: '9:16',
+          duration: 12,
+        },
+      }),
+    });
+    expect(mocks.run).toHaveBeenCalledWith(
+      expect.objectContaining({
+        options: expect.objectContaining({
+          reference_video_urls: [override],
+        }),
+      })
+    );
+  });
+  it('does not submit Burning Bridges with a site video path', async () => {
+    const response = await POST({
+      request: request({
+        campaign: 'bridges',
+        take: 0,
+        images: ['https://media.example.com/photo.png'],
+        settings: {
+          modelName: 'seedance-2-5',
+          resolution: '720p',
+          aspectRatio: '16:9',
+          duration: 15,
+        },
+      }),
+    });
+    expect((await response.json()).message).toMatch(/Burning Bridges/);
+    expect(mocks.run).not.toHaveBeenCalled();
+  });
   it('pins the 12-second trio reference and soundtrack', async () => {
     const center = 'https://media.example.com/photo.png';
     await POST({
@@ -211,7 +284,7 @@ describe('Trio creation', () => {
           referenceVideoVersion: 'trio12',
           reference_image_urls: [center],
           reference_video_urls: [
-            expect.stringContaining('bulin-trio-12s-v1.mp4'),
+            'https://media.uptownfunkai.video/reference/bulin-trio-12s-v1.mp4',
           ],
         }),
       })
