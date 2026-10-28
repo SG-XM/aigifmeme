@@ -16,14 +16,12 @@
     {
       "binding": "DB",
       "database_name": "uptown-db",
-      "database_id": "00000000-0000-4000-8000-000000000000",
+      "database_id": "6697f808-69d8-45d9-9712-c0de353be191",
       "migrations_dir": "drizzle"
     }
   ],
   "routes": [
-    {
-      "pattern": "uptownfunkai.video/*",
-      "zone_name": "uptownfunkai.video"
-    }
+    { "pattern": "uptownfunkai.video/*", "zone_name": "uptownfunkai.video" },
+    { "pattern": "www.uptownfunkai.video/*", "zone_name": "uptownfunkai.video" }
   ]
 }

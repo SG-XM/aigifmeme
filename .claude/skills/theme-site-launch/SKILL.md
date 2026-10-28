@@ -1,13 +1,15 @@
 ---
 name: theme-site-launch
-description: "First launch of a themed fork of this uptown template onto a new domain (for example an AI dance site). Covers a new repo, the hardcoded Bulin paths, a new Cloudflare Worker/D1/R2, wrangler.jsonc and .env.production, migrations and db:init-pricing, admin settings, Dynadot nameservers, the Stripe webhook, Google OAuth, GA4/Clarity, and pnpm cf:deploy. Use when forking this template, launching a themed video site on its own domain, or the user says theme site launch or first deploy of a fork."
+description: "First launch of a NEW product fork of this Uptown template onto a new domain/Worker/D1/brand. Not for daily redeploy (use deploy-cloudflare). Covers new repo, strip parent campaign leftovers, Cloudflare Worker/D1/R2, committing wrangler.jsonc with real D1 id + zone_name routes, .env.production (gitignored), migrations and db:init-pricing, admin settings including create_reference_video_*, Dynadot nameservers, Stripe webhook, Google OAuth, GA4/Clarity, and pnpm cf:deploy. Use when forking this template or first-deploying a themed video site."
 argument-hint: "[--domain=example.com --worker=name --db=name]"
 user-invocable: true
 ---
 
 # Theme site launch — $ARGUMENTS
 
-First production launch of a **new product** forked from this repo. The human checklist is `docs/theme-site-launch.md`. A later redeploy of the same Worker, D1, and domain is `/deploy-cloudflare`, not this skill.
+**Fork workflow (this skill only):** first production launch of a **new product** forked from this Uptown template onto a **new domain / new Worker / new D1 / new brand**. Live parent today: Worker `uptown`, site [uptownfunkai.video](https://uptownfunkai.video). The human checklist is `docs/theme-site-launch.md`.
+
+**Not this skill:** daily redeploy of an already-live Worker — that is `/deploy-cloudflare` / `pnpm cf:deploy` (Node 22+). Do not run the full fork checklist for a silent ship.
 
 This path is D1. Postgres via Hyperdrive stays on `/deploy-cloudflare`.
 
@@ -15,26 +17,30 @@ Human steps are only: new repo, buy the domain, Stripe KYC plus API keys, reconn
 
 ## Rules
 
-- This product is Worker `uptown` and D1 `uptown-db`. A further fork needs a new Worker name and a new D1 name.
-- Never commit secrets, tokens, real D1 ids, Stripe keys, Dynadot keys, Resend keys, or real `.env.production` values. `wrangler.jsonc` is committed with placeholder database id `00000000-0000-4000-8000-000000000000`. `.env.production` stays gitignored. Provider secrets go in admin settings or `wrangler secret put`, never in `vars` (that block is public).
+- This template product is Worker `uptown` and D1 `uptown-db`. A further fork needs a **new** Worker name and a **new** D1 name.
+- **`wrangler.jsonc` is tracked in git.** Template/main may keep placeholder `database_id` `00000000-0000-4000-8000-000000000000`. After `wrangler d1 create` on a LIVE product fork, **commit** the real `database_id` and `routes` (with `zone_name`) so box silent redeploy matches git. `.env.production` stays gitignored forever. Never commit secrets, Stripe/Dynadot/Resend keys, or secret values. Provider secrets go in admin settings or `wrangler secret put`, never in `vars` (public).
+- **DNS / routing primary path:** Cloudflare zone + Worker routes with `zone_name`, e.g. `{ "pattern": "example.com/*", "zone_name": "example.com" }` and optionally `www`. Do **not** recommend `custom_domain: true` as the primary path.
+- Create reference MP4s: Admin D1 keys `create_reference_video_url` / `create_reference_video_url_12s` / `create_reference_video_url_15s`. Probe `Range: bytes=0-1` → expect **HTTP 206** before trusting a URL. Point the new fork at **its own** media host — not parent `media.uptownfunkai.video` unless intentional.
 - Ask for secret values on the secret card. Do not echo them, do not write them into the repo, and do not put them in the transcript.
-- `pnpm cf:deploy` (`scripts/cf-deploy.sh`) sources `.env.production`, requires an `https` `VITE_APP_URL` (no localhost, no `<placeholder>`), and requires the same URL in `wrangler.jsonc` `vars.VITE_APP_URL`.
+- `pnpm cf:deploy` (`scripts/cf-deploy.sh`) requires Node 22+, sources `.env.production`, requires an `https` `VITE_APP_URL` (no localhost, no `<placeholder>`), and requires the same URL in `wrangler.jsonc` `vars.VITE_APP_URL`.
 - `getAllConfigs()` is `{ ...envConfigs, ...dbConfigs }` (`src/modules/config/service.ts`). A `config` row wins over the same key from env. Admin → Settings is where provider credentials live.
 - Uploads use admin `r2_*` fields through the S3-compatible client in `src/modules/storage/service.ts` (`R2Provider` / `aws4fetch`). The commented `r2_buckets` binding in `wrangler.example.jsonc` is unused. Env `STORAGE_*` names are not `r2_*`, so they do not configure uploads.
 - Keep the D1 binding name `DB`. `wrangler d1 create` prints a different binding name; ignore that suggestion.
 - Nitro schedules `email-recall` every five minutes (`vite.config.ts` `scheduledTasks: { '*/5 * * * *': ['email-recall'] }`, handler `src/tasks/email-recall.ts`). `pnpm cf:build` emits the Cloudflare Cron Trigger. Leave the schedule. Sends stay off until admin `email_recall_enabled` is `true`.
-- Confirm with the user before `wrangler deploy` / `pnpm cf:deploy`.
+- Confirm once before the **first-ever** production deploy of a brand-new Worker. When the owner already asked to ship this first launch after setup, or on later redeploys, run `pnpm cf:deploy` without a redundant yes.
 - Default `super_admin` email to seed: `admin@example.com`. Create that user while seeding RBAC. The password comes from the secret card.
 
 Parse `$ARGUMENTS` for `--domain=`, `--worker=`, `--db=`. Otherwise ask once for the domain, worker name, and D1 name, then proceed.
 
 ## 1. New repo
 
-The human creates the Git remote. Brand edits are normal commits in that repo. Production ids stay in the gitignored files.
+The human creates the Git remote. Brand edits are normal commits in that repo. On the product fork, commit the real `wrangler.jsonc` (D1 id + routes) after create; keep `.env.production` gitignored.
 
-## 2. Replace the hardcoded Bulin paths
+## 2. Strip template leftovers (Uptown / Bulin / Burning Bridges)
 
-These paths on `main` still are this product. A dance (or other) theme has to change them in code. Admin `app_name` does not rewrite them. The human copyright check (below) has to pass before this media ships.
+This template product is **Uptown / uptownfunkai.video**. A new theme must replace campaign routes, reference media, demos, and copy in code — do **not** leave bulin/bridges URLs or media hosts from the parent product. Admin `app_name` does not rewrite those paths. The human copyright check has to pass before new media ships.
+
+Checklist of parent leftovers still on `main` (strip or replace for the fork):
 
 Routes and chrome:
 
@@ -44,7 +50,7 @@ Routes and chrome:
 - `src/routes/sitemap[.]xml.ts` — `STATIC_PATHS` includes `/burning-bridges-ai`
 - `src/blocks/header.tsx`, `src/blocks/footer.tsx`, `src/blocks/home-landing.tsx`, `src/blocks/create-video.tsx` (`campaign: 'bulin' | 'bridges'`)
 
-Reference media (do not keep serving the template bucket or uptownfunkai.video):
+Reference media (do not keep serving the parent bucket or uptownfunkai.video / media.uptownfunkai.video unless intentional; set Admin `create_reference_video_*` on the new media host after Range-206 probe):
 
 - `src/lib/bulin-reference.ts` — freestyle reference MP4s stay on the template `r2.dev` host (generation fetch), `/audio/bulin-reference-*.m4a`. `SOLO_DEMO` and `WEREWOLF_OFFER_MEDIA` are same-origin under `public/videos/showcase/home/`
 - `src/lib/bulin-trio-reference.ts` — trio reference video and audio stay on that host. `TRIO_DEMO` is same-origin under `public/videos/showcase/home/`
@@ -136,15 +142,18 @@ Set `name`, `vars.DATABASE_PROVIDER` = `"d1"`, `vars.VITE_APP_URL` = `https://<d
 }]
 ```
 
-The database id belongs only in this gitignored file.
+**Commit** that real `database_id` in `wrangler.jsonc` on the live product fork (private repo). Template/main may keep placeholder `00000000-0000-4000-8000-000000000000` until create. Never put secrets in `vars`.
 
-Custom domain (zone must already be Active in the account):
+DNS / routing — primary path is zone + Worker routes with **`zone_name`** (zone must already be Active). Do not use `custom_domain: true` as the primary path:
 
 ```jsonc
-"routes": [{ "pattern": "<domain>", "custom_domain": true }]
+"routes": [
+  { "pattern": "<domain>/*", "zone_name": "<domain>" },
+  { "pattern": "www.<domain>/*", "zone_name": "<domain>" }
+]
 ```
 
-`.env.production` (gitignored), same URL. Commit neither this file nor any real values from it:
+`.env.production` (gitignored forever), same URL. Never commit this file or secret values from it:
 
 ```bash
 VITE_APP_URL=https://<domain>
@@ -223,7 +232,7 @@ WHERE u.email = 'admin@example.com' AND r.name = 'super_admin'"
 
 ## 7. `pnpm cf:deploy`
 
-Ask for a yes, then:
+Confirm once only for the first-ever production deploy of this brand-new Worker. If the owner already asked to ship after the setup steps above, run without a second yes:
 
 ```bash
 pnpm cf:deploy
@@ -246,7 +255,7 @@ Set `app_url` to `https://<domain>` (no path). Auth `baseURL` is admin `app_url`
 | App | `app_name`, `app_description`, `app_url` |
 | Stripe | `stripe_enabled` = `true`, `stripe_publishable_key`, `stripe_secret_key`, `stripe_signing_secret`. Set `default_payment_provider` to `stripe`. Values come from the secret card after the human finishes KYC. |
 | R2 | `r2_access_key`, `r2_secret_key`, `r2_bucket_name`, `r2_endpoint`, `r2_domain`, optional `r2_upload_path`. Fill these from the API step above. |
-| Video | `kie_api_key` and/or `apimart_api_key`. Set `default_video_provider` to `kie` or `apimart`. `auto` does not select APIMart. |
+| Video | `kie_api_key` and/or `apimart_api_key`. Set `default_video_provider` to `kie` or `apimart`. `auto` does not select APIMart. Create refs: `create_reference_video_url`, `create_reference_video_url_12s`, `create_reference_video_url_15s` on the fork's own media host; probe `Range: bytes=0-1` → 206 before trusting. |
 | Google | `google_auth_enabled`, `google_client_id`, `google_client_secret`, optional `google_one_tap_enabled` |
 | Analytics | `google_analytics_id`. `clarity_project_id` — empty or non-alphanumeric skips the snippet (`/^[a-z0-9]+$/i` in `src/routes/__root.tsx`) |
 | Resend | `resend_api_key`, `resend_sender_email`. `email_provider` defaults to `resend`. Recall caps on the same card, not `resend_*` names: `email_recall_daily_limit` (80), `email_recall_monthly_limit` (2500), `email_recall_enabled` (leave false until you mean to send) |

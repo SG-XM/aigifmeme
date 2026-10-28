@@ -17,9 +17,11 @@
 src/routeTree.gen.ts
 src/paraglide/
 
-# cloudflare local state. wrangler.jsonc is committed with placeholder
-# database_id 00000000-0000-4000-8000-000000000000 for Worker uptown /
-# D1 uptown-db. Do not commit a real database_id.
+# cloudflare local state. wrangler.jsonc IS committed (not gitignored).
+# Template/main may keep placeholder database_id
+# 00000000-0000-4000-8000-000000000000. Each LIVE product fork should
+# commit the real database_id plus routes after `wrangler d1 create`.
+# Never commit .env.production or secrets in vars.
 /.wrangler/
 
 # claude code local state

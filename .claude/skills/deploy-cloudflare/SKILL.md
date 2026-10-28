@@ -30,10 +30,10 @@ If the chosen backend is Postgres: Phase 2's D1 checks, Phase 4 (D1 migrations),
 The skill is designed to be run **any number of times**. A repeat invocation auto-detects what's already done and only redoes what's needed (e.g. a fresh build + deploy with the latest code). User interaction is capped at:
 
 1. **Cloudflare authorization** — skipped if `wrangler whoami` already shows authenticated.
-2. **Final deploy confirmation** — always asked; deploy is irreversible.
+2. **First-ever production deploy confirmation** — ask once only when this Worker has never been deployed to production before (Phase 2 shows no prior deployment). When the owner already asked to ship / merge-and-deploy / redeploy an existing Worker, run `pnpm cf:deploy` **without** a second interactive yes.
 3. **(Optional) Admin credentials** — only asked on first deploy when no `super_admin` exists yet. User picks one of: `email password` (agent creates the account directly so user can log in immediately), `email` (promote an existing user — requires prior sign-up via web), or `skip` (assign later with `/deploy-cloudflare --admin-email=X --admin-password=Y` or `--admin=X`).
 
-Every other step (D1 create, schema migrations, RBAC seed, secrets, URL fixup) is automatic AND idempotent. So **"再发布一下" / "ship again"** = run `/deploy-cloudflare` again.
+Every other step (D1 create, schema migrations, RBAC seed, secrets, URL fixup) is automatic AND idempotent. So **"再发布一下" / "ship again"** = run `/deploy-cloudflare` again (silent redeploy when already live).
 
 ### Idempotency cheat sheet
 
@@ -44,7 +44,7 @@ Every other step (D1 create, schema migrations, RBAC seed, secrets, URL fixup) i
 | 4 Schema migrations | local `drizzle/meta/_journal.json` entry count == remote applied count | Skip apply (wrangler is idempotent, skip is for speed) |
 | 4.5 RBAC seed | `SELECT COUNT(*) FROM role` ≥ 1 on remote D1 | Skip local-sqlite dance entirely |
 | 5 Secrets | `wrangler secret list` already contains the name | Skip per-secret upload (`--rotate-secrets` forces) |
-| 5.5 Production URL | `.env.production` `VITE_APP_URL` AND `wrangler.jsonc` `vars.VITE_APP_URL` are both consistent with routes (workers.dev + no routes, OR custom domain matching a routes pattern) | Skip the prompt (`--domain=X` overrides) |
+| 5.5 Production URL | `.env.production` `VITE_APP_URL` AND `wrangler.jsonc` `vars.VITE_APP_URL` are both consistent with routes (workers.dev + no routes, OR apex/www patterns with zone_name matching routes) | Skip the prompt (`--domain=X` overrides) |
 | 6 Deploy | (always runs) | Fresh `pnpm run cf:deploy` with the latest code/env |
 | 7 URL fix | Both `.env.production` AND `wrangler.jsonc` vars already match the deployed URL | Skip redeploy |
 | 9 Admin | `SELECT COUNT(*) FROM user_role ur JOIN role r ON r.id=ur.role_id WHERE r.name='super_admin'` ≥ 1 | Don't prompt (explicit `--admin*` flags still run) |
@@ -53,27 +53,27 @@ Narrate auto-picked resource names BEFORE acting so the user can interject with 
 
 ## Hard rules (do not violate)
 
-1. **Never auto-run the final deploy.** The production push is irreversible — always confirm. The Phase 7 redeploy to fix a baked URL is part of the same confirmed deploy event and needs no re-confirmation.
+1. **Confirm only the first-ever production deploy of a brand-new Worker.** If Phase 2 shows a prior deployment, or the owner already asked to ship / merge-and-deploy / redeploy, run `pnpm cf:deploy` without another yes. The Phase 7 redeploy to fix a baked URL is part of the same deploy event and needs no re-confirmation.
 2. **Never echo secret values.** Generate with `openssl`; pipe values from env files directly into `wrangler secret put` (`grep ... | cut -d= -f2- | wrangler ...`). Never `cat` an env file into the conversation.
 3. **Always run the deploy through `pnpm run cf:deploy`.** It sources `.env.production` into the shell BEFORE the build. This matters because `src/lib/env.ts` `loadEnvFiles()` resolves `.env.local > .env.{NODE_ENV} > .env` and never overwrites existing `process.env` — shell-sourced prod values win over any localhost URL lingering in `.env.local`/`.env.development`, so the right `VITE_APP_URL` gets baked into the bundle (better-auth `trustedOrigins`, payment callbacks, canonicals).
 4. **Admin password handling (Phase 9.A):** the user types the password into chat once; pass it to `init-rbac.ts --admin-password=...` and never echo it back — not in narration, commits, or env files. It's stored hashed (better-auth/crypto). Remind them to rotate it after first login.
 5. **Don't hand-edit `.output/server/wrangler.json`** — it's generated. All config belongs in the root `wrangler.jsonc`, which nitro merges at build time.
-6. **Never commit `wrangler.jsonc` or `.env.production`.** They hold this project's worker name, D1 id, and production URL. A second project needs its own names in those gitignored files. Pending files in `drizzle/` (through `0015_funnel_event_metadata.sql`) are applied by the existing migrate step; do not regenerate them.
+6. **`wrangler.jsonc` is tracked in git; `.env.production` stays gitignored forever.** Template/main may keep placeholder D1 id `00000000-0000-4000-8000-000000000000`. Each LIVE product fork should **commit** the real `database_id` plus `routes` (with `zone_name`) after `wrangler d1 create`, so box silent redeploy matches git. Never put secrets in `vars` (public). Never commit `.env.production` or secret values. Pending files in `drizzle/` (through `0015_funnel_event_metadata.sql`) are applied by the existing migrate step; do not regenerate them.
 
 ## Phase 0: Preflight
 
 ### 0.1 Tool & config check (parallel)
 
 ```bash
-node -v
+node -v   # must be 22+; scripts/cf-deploy.sh exits on older Node
 pnpm -v
 npx wrangler --version
-test -f wrangler.jsonc || cp wrangler.example.jsonc wrangler.jsonc   # materialize working copy (gitignored)
+test -f wrangler.jsonc || cp wrangler.example.jsonc wrangler.jsonc   # only if missing; wrangler.jsonc is tracked
 grep -q '"cf:deploy"' package.json && echo deploy script OK
 git status --short
 ```
 
-`wrangler.example.jsonc` is the committed template; `wrangler.jsonc` is the gitignored working copy holding the real D1 `database_id` and production URL (same pattern as `schema.ts`). If the example or the `cf:deploy` script is missing, this clone predates the Cloudflare wiring — pull the latest template (`/sync-upstream`).
+`wrangler.jsonc` **is committed** (not gitignored). Template/main may use placeholder `database_id` `00000000-0000-4000-8000-000000000000`; a live product fork commits the real id and `routes` after `wrangler d1 create`. `wrangler.example.jsonc` is the commented template twin. `.env.production` stays gitignored. If `wrangler.jsonc` or the `cf:deploy` script is missing, this clone predates the Cloudflare wiring — pull the latest template (`/sync-upstream`).
 
 ### 0.2 Wrangler login (Interruption #1)
 
@@ -120,7 +120,7 @@ WORKER=$(node -e "const fs=require('fs');const s=fs.readFileSync('wrangler.jsonc
 DB_NAME=$(node -e "const fs=require('fs');const s=fs.readFileSync('wrangler.jsonc','utf8').replace(/\/\/.*$/gm,'');console.log(JSON.parse(s).d1_databases[0].database_name)")
 
 npx wrangler d1 list 2>&1 | grep -w "$DB_NAME"                                   # D1 created?
-grep -q 'REPLACE_WITH_OUTPUT_OF_WRANGLER_D1_CREATE' wrangler.jsonc && echo "database_id: placeholder"  # real UUID?
+(grep -qE 'REPLACE_WITH_OUTPUT_OF_WRANGLER_D1_CREATE|00000000-0000-4000-8000-000000000000' wrangler.jsonc && echo "database_id: placeholder") || echo "database_id: set"  # real UUID?
 npx wrangler deployments list --name "$WORKER" 2>&1 | head -5                    # ever deployed?
 
 LOCAL_MIGRATIONS=$(node -e "console.log(require('./drizzle/meta/_journal.json').entries.length)" 2>/dev/null || echo 0)
@@ -163,7 +163,7 @@ Capture the `database_id` UUID from stdout. Narrate: "D1 created: `<name>` (id: 
 
 ### 3.3 Populate `wrangler.jsonc` (auto)
 
-Edit the working copy `wrangler.jsonc` (materialized from `wrangler.example.jsonc` in Phase 0.1): replace `REPLACE_WITH_OUTPUT_OF_WRANGLER_D1_CREATE` with the real UUID (and apply any renames). Confirm `vars.DATABASE_PROVIDER` is `"d1"` and `migrations_dir` is `"drizzle"`. Never commit `wrangler.jsonc` — it's gitignored on purpose.
+Edit tracked `wrangler.jsonc` (create from `wrangler.example.jsonc` in Phase 0.1 only if missing): replace placeholder `database_id` (`REPLACE_WITH_OUTPUT_OF_WRANGLER_D1_CREATE` or `00000000-0000-4000-8000-000000000000`) with the real UUID (and apply any renames). Confirm `vars.DATABASE_PROVIDER` is `"d1"` and `migrations_dir` is `"drizzle"`. On a LIVE product fork, **commit** the updated `wrangler.jsonc` (real id + routes) so git matches production; never commit `.env.production` or secrets in `vars`.
 
 ## Phase 3-PG: First-time setup — Postgres + Hyperdrive variant
 
@@ -293,24 +293,31 @@ Otherwise prompt:
 
 Create/update `.env.production`(gitignored): `VITE_APP_URL=https://<worker>.workers.dev`(占位)、`VITE_APP_NAME=<from dev env>`. **Also** set the same under `wrangler.jsonc` `vars` — at runtime (nodejs_compat) Workers vars land in `process.env`, which `src/config/index.ts` falls back to when the baked `import.meta.env` value is absent; without it better-auth `trustedOrigins` breaks (403 Invalid origin). Do NOT add `routes`.
 
-### On custom domain
+### On custom domain (zone + Worker routes — primary path)
 
-Same two files but with the exact URL, plus:
+Same two files but with the exact URL, plus Worker routes using **`zone_name`** (not `custom_domain: true` as the primary path). Zone must already exist and preferably be Active:
 
 ```jsonc
-"routes": [{ "pattern": "app.example.com", "custom_domain": true }]
+"routes": [
+  { "pattern": "example.com/*", "zone_name": "example.com" },
+  { "pattern": "www.example.com/*", "zone_name": "example.com" }
+]
 ```
 
-Warn: the zone must already exist in the account, else deploy fails with "not a zone in your account".
+Commit those routes in `wrangler.jsonc` on the product fork. Warn: the zone must already exist in the account, else deploy fails with "not a zone in your account".
 
-## Phase 6: Deploy — Interruption #2 (the only confirmation)
+## Phase 6: Deploy
 
-> Ready to deploy `<worker>`:
+**Confirm only when this is the first-ever production deploy** (Phase 2: no prior deployment). When the owner already asked to ship / merge-and-deploy, or the Worker was deployed before, skip the yes and run immediately.
+
+First-ever prompt (optional interruption):
+
+> Ready to deploy `<worker>` for the first time:
 > - Account: `<name>` (`<id>`)
 > - D1: `<db>` (N migrations) · RBAC ✓ · Secrets: `<names>`
-> - This creates a live URL and replaces any previous deployment. Proceed? (yes/no)
+> - This creates a live URL. Proceed? (yes/no)
 
-On `yes`:
+Then (or immediately on redeploy):
 
 ```bash
 pnpm run cf:deploy
@@ -381,7 +388,7 @@ Just the `INSERT OR IGNORE ... SELECT` + verify from above. 0 rows → user hasn
 
 | Flag | Effect |
 |---|---|
-| (none) | Idempotent re-run; only the deploy confirmation fires |
+| (none) | Idempotent re-run; confirm only on first-ever production deploy |
 | `--admin-email=X --admin-password=Y` | Phase 9.A create-account mode |
 | `--admin=email@x.com` | Phase 9.B promote-existing mode |
 | `--domain=app.example.com` | Switch to custom domain (routes + env + redeploy); `--domain=default` reverts to workers.dev |
@@ -410,7 +417,7 @@ Just the `INSERT OR IGNORE ... SELECT` + verify from above. 0 rows → user hasn
 
 ## What this skill never does
 
-- Run the final deploy without an explicit `yes` (Phase 7's redeploy belongs to the confirmed event)
+- Ask for a redundant yes on redeploy when the owner already asked to ship, or the Worker was deployed before (Phase 7's URL-fix redeploy likewise needs no extra yes)
 - Echo secret values (generate with openssl, pipe from env files, print names only)
 - Write secrets into `wrangler.jsonc` `vars` (vars are public)
 - Hand-edit generated files (`.output/**`, `.wrangler/**`)
