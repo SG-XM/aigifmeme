@@ -1,150 +1,168 @@
 ---
 name: theme-site-launch
-description: "First launch of a NEW product fork of this Uptown template onto a new domain/Worker/D1/brand. Not for daily redeploy (use deploy-cloudflare). Covers new repo, strip parent campaign leftovers, Cloudflare Worker/D1/R2, committing wrangler.jsonc with real D1 id + zone_name routes, .env.production (gitignored), migrations and db:init-pricing, admin settings including create_reference_video_*, Dynadot nameservers, Stripe webhook, Google OAuth, GA4/Clarity, and pnpm cf:deploy. Use when forking this template or first-deploying a themed video site."
-argument-hint: "[--domain=example.com --worker=name --db=name]"
+description: "First launch of a NEW product cloned from this Uptown template onto a new domain/Worker/D1/brand. Domain→Cloudflare FIRST (Spaceship NS), then parallel brand+icons PR + D1/R2 while DNS propagates. New private GitHub repo via box GITHUB_TOKEN (create + push). Admin zh6856660@gmail.com with vault password (agent browser-tests login). Stripe keys/webhook are human. Post-deploy parallel: Google OAuth, GA4, Admin fill, CF Email Routing support@. Not for daily redeploy (use deploy-cloudflare)."
+argument-hint: "[--domain=example.com --worker=name --db=name --repo=owner/name]"
 user-invocable: true
 ---
 
 # Theme site launch — $ARGUMENTS
 
-**Fork workflow (this skill only):** first production launch of a **new product** forked from this Uptown template onto a **new domain / new Worker / new D1 / new brand**. Live parent today: Worker `uptown`, site [uptownfunkai.video](https://uptownfunkai.video). The human checklist is `docs/theme-site-launch.md`.
+**This skill only:** first production launch of a **new product** from this Uptown template onto a **new domain / new Worker / new D1 / new brand**. Live parent: Worker `uptown`, [uptownfunkai.video](https://uptownfunkai.video). Human checklist: `docs/theme-site-launch.md`.
 
-**Not this skill:** daily redeploy of an already-live Worker — that is `/deploy-cloudflare` / `pnpm cf:deploy` (Node 22+). Do not run the full fork checklist for a silent ship.
+**Not this skill:** daily redeploy of an already-live Worker → `/deploy-cloudflare` / `pnpm cf:deploy` (Node 22+).
 
-This path is D1. Postgres via Hyperdrive stays on `/deploy-cloudflare`.
+Parse `$ARGUMENTS` for `--domain=`, `--worker=`, `--db=`, `--repo=`. Otherwise ask once for domain, worker name, D1 name, and new private repo name (`owner/name`), then proceed.
 
-Human steps are only: new repo, buy the domain, Stripe KYC plus API keys, reconnect Cloudflare with Full access, Google/Clarity login or ids, and a copyright check. Everything else in this skill is an API or script the agent runs. Do not send the user to mint R2 keys, click through Resend DNS, or sign up on the site and then promote themselves.
+## Owner-agreed order (do not reorder the serial spine)
+
+1. **Domain → Cloudflare first** (zone + Spaceship NS + wait Active). DNS needs wall-clock time; start before code/infra that depends on resolution.
+2. **New private GitHub repo** isolated from the template: clone template locally → `gh repo create` private with box `GITHUB_TOKEN` → push. Not the GitHub “Fork” button.
+3. **Parallel while DNS propagates:** (A) full brand migration + 9 icon options → owner picks one → **one PR**; (B) D1 + R2 + tracked `wrangler.jsonc` + secrets + `.env.production`.
+4. **Gate:** zone Active, brand PR merged (or on the deploy branch).
+5. Migrations + pricing + **admin** `zh6856660@gmail.com` (password in vault).
+6. `pnpm cf:deploy` (Node 22+).
+7. Agent browser: vault-fill admin login test (owner does not type the password).
+8. **Parallel post-deploy (browser/API):** Google OAuth client + Admin fill; GA4 property + Admin fill; R2 keys into Admin if not already; CF Email Routing `support@<domain>` → admin inbox; Resend domain DNS if sending mail. **Stripe keys + webhook = human** — skip creating them; only note Admin keys when the owner pastes values.
+
+## Parallelism
+
+| Parallel | Serial dependency |
+| --- | --- |
+| Brand strip + icons (one PR) ∥ D1 create ∥ R2 create+token ∥ NS propagation wait | After zone exists / repo exists |
+| Google OAuth ∥ GA4 ∥ Admin config fill ∥ Email Routing ∥ Resend DNS | After Deploy + admin login works |
+| Stripe | Human-only; no agent Stripe dashboard work |
 
 ## Rules
 
-- This template product is Worker `uptown` and D1 `uptown-db`. A further fork needs a **new** Worker name and a **new** D1 name.
-- **`wrangler.jsonc` is tracked in git.** Template/main may keep placeholder `database_id` `00000000-0000-4000-8000-000000000000`. After `wrangler d1 create` on a LIVE product fork, **commit** the real `database_id` and `routes` (with `zone_name`) so box silent redeploy matches git. `.env.production` stays gitignored forever. Never commit secrets, Stripe/Dynadot/Resend keys, or secret values. Provider secrets go in admin settings or `wrangler secret put`, never in `vars` (public).
-- **DNS / routing primary path:** Cloudflare zone + Worker routes with `zone_name`, e.g. `{ "pattern": "example.com/*", "zone_name": "example.com" }` and optionally `www`. Do **not** recommend `custom_domain: true` as the primary path.
-- Create reference MP4s: Admin D1 keys `create_reference_video_url` / `create_reference_video_url_12s` / `create_reference_video_url_15s`. Probe `Range: bytes=0-1` → expect **HTTP 206** before trusting a URL. Point the new fork at **its own** media host — not parent `media.uptownfunkai.video` unless intentional.
-- Ask for secret values on the secret card. Do not echo them, do not write them into the repo, and do not put them in the transcript.
-- `pnpm cf:deploy` (`scripts/cf-deploy.sh`) requires Node 22+, sources `.env.production`, requires an `https` `VITE_APP_URL` (no localhost, no `<placeholder>`), and requires the same URL in `wrangler.jsonc` `vars.VITE_APP_URL`.
-- `getAllConfigs()` is `{ ...envConfigs, ...dbConfigs }` (`src/modules/config/service.ts`). A `config` row wins over the same key from env. Admin → Settings is where provider credentials live.
-- Uploads use admin `r2_*` fields through the S3-compatible client in `src/modules/storage/service.ts` (`R2Provider` / `aws4fetch`). The commented `r2_buckets` binding in `wrangler.example.jsonc` is unused. Env `STORAGE_*` names are not `r2_*`, so they do not configure uploads.
-- Keep the D1 binding name `DB`. `wrangler d1 create` prints a different binding name; ignore that suggestion.
-- Nitro schedules `email-recall` every five minutes (`vite.config.ts` `scheduledTasks: { '*/5 * * * *': ['email-recall'] }`, handler `src/tasks/email-recall.ts`). `pnpm cf:build` emits the Cloudflare Cron Trigger. Leave the schedule. Sends stay off until admin `email_recall_enabled` is `true`.
-- Confirm once before the **first-ever** production deploy of a brand-new Worker. When the owner already asked to ship this first launch after setup, or on later redeploys, run `pnpm cf:deploy` without a redundant yes.
-- Default `super_admin` email to seed: `admin@example.com`. Create that user while seeding RBAC. The password comes from the secret card.
+- New Worker name and new D1 name (not `uptown` / `uptown-db`). Binding stays `DB`.
+- **`GITHUB_TOKEN`:** box env already set. Use it for **both** `gh repo create` (private) and `git push`. Do not ask the owner for another PAT. Never echo the token.
+- **`wrangler.jsonc` is tracked.** After `wrangler d1 create`, **commit** real `database_id` + `routes` with `zone_name`. `.env.production` stays gitignored. Never put secrets in `vars`.
+- **DNS / routing primary path:** Cloudflare zone + Worker routes with `zone_name`. Do **not** treat `custom_domain: true` as primary. Zone must be **Active** before routes deploy.
+- **Registrar:** prefer **Spaceship** in the browser (owner usually has the domain there). Dynadot API3 `set_ns` only if the domain is on Dynadot. Spaceship login is often password-only (no Google SSO) — use vault / Secure Form / box handoff.
+- **Admin:** email **`zh6856660@gmail.com`**. Generate password with Vault `save` kind `login` for `https://<domain>/sign-in` (or sign-up URL used by the app); never invent a password; never put it in chat or the PR body. Browser login test: computerUse with vault fill references. Report only success/failure.
+- **Stripe:** human configures API keys and webhook (`https://<domain>/api/payment/notify/stripe`). Agent does not create the Stripe webhook. If the owner pastes publishable/secret/signing values, write Admin keys only — still never echo secrets.
+- Create reference MP4s: Admin `create_reference_video_url` / `_12s` / `_15s`. Probe `Range: bytes=0-1` → **206**. Own media host — not parent `media.uptownfunkai.video` unless intentional.
+- `pnpm cf:deploy` requires Node 22+, matching https `VITE_APP_URL` in `.env.production` and `wrangler.jsonc` vars.
+- Confirm once only for the **first-ever** production deploy of a brand-new Worker; if the owner already asked to ship this launch, run without a second yes.
+- Ask for secret values on the secret card / vault. Do not echo them into the repo, transcript, or chat.
 
-Parse `$ARGUMENTS` for `--domain=`, `--worker=`, `--db=`. Otherwise ask once for the domain, worker name, and D1 name, then proceed.
+---
 
-## 1. New repo
+## Phase 0 — Preconditions (human)
 
-The human creates the Git remote. Brand edits are normal commits in that repo. On the product fork, commit the real `wrangler.jsonc` (D1 id + routes) after create; keep `.env.production` gitignored.
+- Domain purchased (usually Spaceship).
+- Cloudflare account available (Full access for R2 API token create).
+- Box `GITHUB_TOKEN` present (`test -n "$GITHUB_TOKEN"`).
+- Copyright OK for new theme media.
+- Stripe KYC can finish in parallel; keys/webhook stay human.
 
-## 2. Strip template leftovers (Uptown / Bulin / Burning Bridges)
+---
 
-This template product is **Uptown / uptownfunkai.video**. A new theme must replace campaign routes, reference media, demos, and copy in code — do **not** leave bulin/bridges URLs or media hosts from the parent product. Admin `app_name` does not rewrite those paths. The human copyright check has to pass before new media ships.
+## Phase 1 — Domain into Cloudflare FIRST (serial)
 
-Checklist of parent leftovers still on `main` (strip or replace for the fork):
+Start immediately; do not wait for brand PR.
+
+```bash
+npx wrangler whoami   # account id
+```
+
+```http
+POST /zones
+{ "name": "<domain>", "account": { "id": "<account_id>" }, "type": "full" }
+```
+
+Read the two assigned Cloudflare nameservers.
+
+**Spaceship (preferred):** browser → domain DNS/nameservers → set both CF NS. Wait until Cloudflare zone status is **Active**.
+
+**Dynadot fallback:** API3 `command=set_ns` with secret-card API key (never log the key).
+
+A later deploy that says the host is not a zone means this phase is incomplete.
+
+While waiting for Active, run Phase 2 and Phase 3 in parallel.
+
+---
+
+## Phase 2 — New private GitHub repo (`GITHUB_TOKEN`)
+
+Isolate from the template history the owner wants separated:
+
+```bash
+# Example shape — adjust paths/names from $ARGUMENTS
+test -n "$GITHUB_TOKEN"
+gh auth status   # should use GITHUB_TOKEN / gh config on the box
+gh repo create <owner>/<new-repo> --private --confirm
+# Working tree: clone or copy from this template checkout into a clean directory,
+# set remote to the new private repo, push main.
+git remote set-url origin https://github.com/<owner>/<new-repo>.git
+# Prefer: GIT_ASKPASS / gh credential helper so the token is not in the remote URL.
+git push -u origin main
+```
+
+Do **not** use GitHub’s Fork button when the owner asked for a clean private push. Do **not** put `GITHUB_TOKEN` in the remote URL in transcripts or committed files.
+
+All brand/wrangler commits for the new product happen in this new repo.
+
+---
+
+## Phase 3 — Parallel while DNS propagates
+
+### 3A — Brand migration + icons (one PR)
+
+Strip parent Uptown / Bulin / Burning Bridges leftovers. Replace campaign routes, reference media, demos, and copy. Admin `app_name` does not rewrite those paths.
+
+**Icons:** generate **9** favicon/app-icon candidates (letter / mark / theme-color variants). Show the owner for review; commit only the chosen set into the same PR as brand.
+
+Checklist of parent leftovers still on template `main` (strip or replace):
 
 Routes and chrome:
 
-- `src/routes/index.tsx` — homepage
-- `src/routes/bulin-47-ai.tsx` — `/bulin-47-ai` (homepage canonical; omitted from the sitemap on purpose)
+- `src/routes/index.tsx`
+- `src/routes/bulin-47-ai.tsx` — `/bulin-47-ai`
 - `src/routes/burning-bridges-ai.tsx` — `/burning-bridges-ai`
-- `src/routes/sitemap[.]xml.ts` — `STATIC_PATHS` includes `/burning-bridges-ai`
-- `src/blocks/header.tsx`, `src/blocks/footer.tsx`, `src/blocks/home-landing.tsx`, `src/blocks/create-video.tsx` (`campaign: 'bulin' | 'bridges'`)
+- `src/routes/sitemap[.]xml.ts`
+- `src/blocks/header.tsx`, `src/blocks/footer.tsx`, `src/blocks/home-landing.tsx`, `src/blocks/create-video.tsx`
 
-Reference media (do not keep serving the parent bucket or uptownfunkai.video / media.uptownfunkai.video unless intentional; set Admin `create_reference_video_*` on the new media host after Range-206 probe):
+Reference media / demos:
 
-- `src/lib/bulin-reference.ts` — freestyle reference MP4s stay on the template `r2.dev` host (generation fetch), `/audio/bulin-reference-*.m4a`. `SOLO_DEMO` and `WEREWOLF_OFFER_MEDIA` are same-origin under `public/videos/showcase/home/`
-- `src/lib/bulin-trio-reference.ts` — trio reference video and audio stay on that host. `TRIO_DEMO` is same-origin under `public/videos/showcase/home/`
-- `src/lib/burning-bridges-reference.ts` — `https://uptownfunkai.video/videos/reference/burning-bridges-party-2m37s-15s.mp4`
+- `src/lib/bulin-reference.ts`, `src/lib/bulin-trio-reference.ts`, `src/lib/burning-bridges-reference.ts`
 - `src/lib/create-video.ts`, `src/modules/agent/tools.ts`, `src/routes/api/agent/create.ts`, `src/routes/api/agent/create-tasks.ts`
-- `src/routes/api/payment/video-retention-offer.ts` — campaign enum `bulin` | `bridges`
-- `public/audio/bulin-reference-audio.m4a`, `bulin-reference-from-4s-15s-v1.m4a`, `bulin-reference-from-7s-15s-v1.m4a`, `bulin-reference-full-46s-v1.m4a`
-- `public/audio/burning-bridges-party-2m37s-15s.m4a`
+- `src/routes/api/payment/video-retention-offer.ts`
+- `public/audio/bulin-reference-*.m4a`, `public/audio/burning-bridges-party-2m37s-15s.m4a`
 - `public/videos/reference/burning-bridges-party-2m37s-15s.mp4`
-- Homepage hero/gallery clips: `src/lib/home-demos.ts` (`HOME_HERO_DEMOS`, `HOME_GALLERY_DEMOS`). Playback files are `/videos/showcase/home/…`. Burning Bridges showcase clips are `/videos/showcase/burning-bridges/bridges-*.mp4`. Change them in code and deploy. The `home_demo_video` table is unused.
-- Chat examples: `public/videos/showcase/generated/`, `public/videos/showcase/woman.mp4`, `src/components/agent/prompt-examples.ts`
+- `src/lib/home-demos.ts` + `public/videos/showcase/home/`, `burning-bridges/`, `generated/`, `woman.mp4`
+- `src/components/agent/prompt-examples.ts`
 
-Copy and chrome that is not the admin name:
+Copy:
 
-- `messages/{en,zh,es,ar}.json` — `home.*`, `trend.*`, `effect.*`, `recast.*`, `create.bulin_*`, `create.bridges_*`, and most of `landing.*`. Add any new key to all four files.
-- `src/components/site-footer.tsx` — uptownfunkai.video directory badges
-- `src/lib/trend-page-meta.ts` — `TREND_PAGE_UPDATED_AT` is `2026-10-11`
+- `messages/{en,zh,es,ar}.json` — `home.*`, `trend.*`, `effect.*`, `recast.*`, `create.bulin_*`, `create.bridges_*`, most of `landing.*`
+- `src/components/site-footer.tsx`
+- `src/lib/trend-page-meta.ts`
 
-`systemPrompt` in `src/modules/agent/service.ts` takes the persona name from admin `app_name` (else `VITE_APP_NAME`, else `Uptown`). Change that function only when the assistant's behavior should change.
+`systemPrompt` in `src/modules/agent/service.ts` takes persona from admin `app_name`. Change behavior only when asked.
 
-Tests that pin the old media: `src/lib/create-video.test.ts`, `src/modules/agent/create-video.test.ts`, `src/routes/api/agent/-create.test.ts`.
+Open **one** PR for brand + chosen icons. Merge before (or as part of) first branded production deploy.
 
-## 3. Cloudflare Full access, then Worker, D1, and R2
+### 3B — D1, R2, wrangler, secrets
 
-The human reconnects Cloudflare with **Full access** before this step. A 401/403 that names a missing permission means stop and ask for that reconnect. Do not ask them to create an R2 API token in the dashboard.
+Needs Cloudflare Full access for R2 token create. Prefer API (not dashboard click-ops) for R2.
 
 ```bash
-npx wrangler whoami   # account id; skip login when this account is already authorized
 npx wrangler d1 create <db-name>
 ```
-
-Create the bucket with the Cloudflare API (`Workers R2 Storage Write`):
 
 ```http
 POST /accounts/<account_id>/r2/buckets
 { "name": "<bucket-name>" }
 ```
 
-`<account_id>` comes from `wrangler whoami`. It stays out of git.
-
-Then create an account API token scoped to that bucket (`Account API Tokens Write`). List groups first and use the live id whose name is `Workers R2 Storage Bucket Item Write`:
-
-```http
-GET /accounts/<account_id>/tokens/permission_groups
-POST /accounts/<account_id>/tokens
-```
-
-```json
-{
-  "name": "<product>-r2",
-  "policies": [
-    {
-      "effect": "allow",
-      "permission_groups": [{ "id": "<group id from the list>" }],
-      "resources": {
-        "com.cloudflare.edge.r2.bucket.<account_id>_default_<bucket-name>": "*"
-      }
-    }
-  ]
-}
-```
-
-From the create-token response, the S3 access key id is the token `id`. The S3 secret access key is the hex SHA-256 of the token `value`. Compute the hash locally, write both into admin `r2_access_key` and `r2_secret_key` later, and discard the token value. Do not print either secret.
-
-Turn on the managed public hostname and read it back for `r2_domain`:
-
-```http
-PUT /accounts/<account_id>/r2/buckets/<bucket-name>/domains/managed
-{ "enabled": true }
-GET /accounts/<account_id>/r2/buckets/<bucket-name>/domains/managed
-```
-
-`r2_endpoint` is `https://<account_id>.r2.cloudflarestorage.com`. `r2_domain` is `https://<r2.dev host>` with no trailing slash. These are admin fields, not a Wrangler binding.
-
-## 4. `wrangler.jsonc` and `.env.production`
+Create account API token scoped to that bucket (`Workers R2 Storage Bucket Item Write`). Access key id = token `id`. Secret access key = hex SHA-256 of token `value`. Discard the raw token value after hashing. Enable managed public hostname; set `r2_endpoint` = `https://<account_id>.r2.cloudflarestorage.com`, `r2_domain` = `https://<r2.dev host>` (no trailing slash).
 
 ```bash
 test -f wrangler.jsonc || cp wrangler.example.jsonc wrangler.jsonc
 ```
 
-Set `name`, `vars.DATABASE_PROVIDER` = `"d1"`, `vars.VITE_APP_URL` = `https://<domain>`, `vars.VITE_APP_NAME`, and:
-
-```jsonc
-"d1_databases": [{
-  "binding": "DB",
-  "database_name": "<db-name>",
-  "database_id": "<uuid from d1 create>",
-  "migrations_dir": "drizzle"
-}]
-```
-
-**Commit** that real `database_id` in `wrangler.jsonc` on the live product fork (private repo). Template/main may keep placeholder `00000000-0000-4000-8000-000000000000` until create. Never put secrets in `vars`.
-
-DNS / routing — primary path is zone + Worker routes with **`zone_name`** (zone must already be Active). Do not use `custom_domain: true` as the primary path:
+Set `name`, `database_name`, real `database_id`, `vars.DATABASE_PROVIDER` = `d1`, `vars.VITE_APP_URL`, `vars.VITE_APP_NAME`, `migrations_dir` = `drizzle`, and routes (only deploy these once zone is Active):
 
 ```jsonc
 "routes": [
@@ -153,7 +171,7 @@ DNS / routing — primary path is zone + Worker routes with **`zone_name`** (zon
 ]
 ```
 
-`.env.production` (gitignored forever), same URL. Never commit this file or secret values from it:
+**Commit** `wrangler.jsonc` on the new private repo. `.env.production` (gitignored):
 
 ```bash
 VITE_APP_URL=https://<domain>
@@ -161,140 +179,128 @@ VITE_APP_NAME=<product name>
 DATABASE_PROVIDER=d1
 ```
 
-Worker secrets, generated locally and piped. Names only in the transcript:
-
 ```bash
 openssl rand -base64 32 | npx wrangler secret put AUTH_SECRET
 openssl rand -base64 32 | npx wrangler secret put CONFIG_ENCRYPTION_KEY
 ```
 
-Keep `CONFIG_ENCRYPTION_KEY` stable. Rotating it orphans admin secrets already encrypted in `config`.
+Keep `CONFIG_ENCRYPTION_KEY` stable after first set.
 
-`auth_secret`, `database_url`, `database_provider`, and `video_credit_pricing_version` are protected: the admin UI cannot overwrite them.
+Hold Admin `r2_*` values for Phase 7/8 (no need to rebuild for Admin rows).
 
-## 5. Zone and Dynadot nameservers
+---
 
-Create the zone with the Cloudflare API (`Zone Zone Edit` / `Zone DNS Edit`):
+## Phase 4 — Gate
 
-```http
-POST /zones
-{ "name": "<domain>", "account": { "id": "<account_id>" }, "type": "full" }
-```
+Before custom-domain deploy:
 
-Read the two assigned nameservers from the zone.
+- [ ] Cloudflare zone **Active**
+- [ ] Brand+icons PR merged (or deploy branch includes it)
+- [ ] `wrangler.jsonc` committed with real D1 id + `zone_name` routes
+- [ ] `.env.production` URL matches `wrangler.jsonc` vars
 
-The human has already bought the domain. Ask for the Dynadot API key on the secret card. Set nameservers with Dynadot API3 `command=set_ns` (`ns0`, `ns1` = the Cloudflare pair). Dynadot documents that those hosts must already exist on the Dynadot account; if `set_ns` rejects them, register the hosts via the Dynadot nameserver API and retry. Do not put the API key in the query string of a logged command, in git, or in the transcript.
+---
 
-Wait until the Cloudflare zone status is Active. A deploy that says the host is not a zone in the account means this step is not done.
+## Phase 5 — Migrations, pricing, admin user
 
-## 6. Migrations, RBAC, pricing, and the admin user
-
-Apply the committed SQL in `drizzle/`. The journal currently ends at `0016_retention_name_price`. Generate a new file only after a change to `src/config/db/schema.ts`.
-
-`pnpm db:init-pricing` uses `db()`, and `DATABASE_PROVIDER=d1` only works inside a Worker. On a laptop, apply migrations remotely, then seed a **fresh** local D1 file and copy rows up. `scripts/init-pricing.ts` inserts missing product ids and never updates existing rows. Dry-run omits `--apply`. It refuses a database that has legacy financial rows and no current version gate (`video_credit_pricing_version` = `seedance-12s-v2`); that case is `pnpm pricing:update`, not this skill.
-
-Seed `admin@example.com` as `super_admin` in the same local run. Take the password from the secret card into `ADMIN_PASSWORD`. Do not write that password down.
+Journal through current tip in `drizzle/meta/_journal.json` (apply all pending).
 
 ```bash
 npx wrangler d1 migrations apply <db-name> --remote
 npx wrangler d1 migrations apply <db-name> --local
 LOCAL_D1=$(find .wrangler/state -path '*d1*' -name '*.sqlite' ! -name 'metadata.sqlite' | head -1)
-DATABASE_PROVIDER=sqlite DATABASE_URL="file:$LOCAL_D1" \
-  pnpm rbac:init --admin-email=admin@example.com --admin-password="$ADMIN_PASSWORD"
-DATABASE_PROVIDER=sqlite DATABASE_URL="file:$LOCAL_D1" pnpm db:init-pricing
-DATABASE_PROVIDER=sqlite DATABASE_URL="file:$LOCAL_D1" pnpm db:init-pricing -- --apply
-
-sqlite3 "$LOCAL_D1" ".dump role permission role_permission" \
-  | grep '^INSERT INTO' | sed 's/^INSERT INTO/INSERT OR IGNORE INTO/' > /tmp/rbac.sql
-npx wrangler d1 execute <db-name> --remote --file=/tmp/rbac.sql
-
-sqlite3 "$LOCAL_D1" ".dump credit_top_up_product subscription_plan" \
-  | grep '^INSERT INTO' | sed 's/^INSERT INTO/INSERT OR IGNORE INTO/' > /tmp/pricing.sql
-npx wrangler d1 execute <db-name> --remote --file=/tmp/pricing.sql
-npx wrangler d1 execute <db-name> --remote --command \
-  "INSERT OR IGNORE INTO config (name, value) VALUES ('video_credit_pricing_version', 'seedance-12s-v2')"
 ```
 
-Copy the new user up (user row, then account row, then `user_role` joined to the remote `super_admin` role id). Unset `ADMIN_PASSWORD` when the seed finishes. Copy pricing off a fresh local D1 only. A dirty local `config` table must not be dumped onto production.
+Vault-generate admin password for `zh6856660@gmail.com` (site `https://<domain>`). Pass into seed via env only; never echo:
 
 ```bash
-{
-  sqlite3 "$LOCAL_D1" ".dump user" | grep -E '^INSERT INTO user '
-  sqlite3 "$LOCAL_D1" ".dump account" | grep -E '^INSERT INTO account '
-} | sed 's/^INSERT INTO/INSERT OR IGNORE INTO/' > /tmp/admin-seed.sql
-npx wrangler d1 execute <db-name> --remote --file=/tmp/admin-seed.sql
-npx wrangler d1 execute <db-name> --remote --command="
-INSERT OR IGNORE INTO user_role (id, user_id, role_id)
-SELECT lower(hex(randomblob(16))), u.id, r.id
-FROM user u, role r
-WHERE u.email = 'admin@example.com' AND r.name = 'super_admin'"
+DATABASE_PROVIDER=sqlite DATABASE_URL="file:$LOCAL_D1" \
+  pnpm rbac:init --admin-email=zh6856660@gmail.com --admin-password="$ADMIN_PASSWORD"
+DATABASE_PROVIDER=sqlite DATABASE_URL="file:$LOCAL_D1" pnpm db:init-pricing
+DATABASE_PROVIDER=sqlite DATABASE_URL="file:$LOCAL_D1" pnpm db:init-pricing -- --apply
 ```
 
-## 7. `pnpm cf:deploy`
+Copy `role` / `permission` / `role_permission`, pricing tables, `config.video_credit_pricing_version` = `seedance-12s-v2`, and user + account + `user_role` for `zh6856660@gmail.com` up to remote D1 (`INSERT OR IGNORE`). Unset `ADMIN_PASSWORD` when done. Tell the owner: admin password is in the vault; agent will browser-test login — no plaintext in chat.
 
-Confirm once only for the first-ever production deploy of this brand-new Worker. If the owner already asked to ship after the setup steps above, run without a second yes:
+---
+
+## Phase 6 — Deploy
 
 ```bash
 pnpm cf:deploy
-```
-
-That build also registers the `*/5` email-recall cron. After deploy, smoke `https://<domain>/` and `https://<domain>/api/config/public` (both 200). Then:
-
-```bash
 pnpm launch:check -- https://<domain>
 ```
 
-## 8. Admin settings
+Smoke `https://<domain>/` and `https://<domain>/api/config/public`.
 
-Sign in as `admin@example.com`. Open `/admin/settings`. Keys below are the `name` fields in `src/modules/config/settings.ts`. Saving through `/admin/settings` or `POST /api/admin/config` (import: `GET /api/admin/config/import` for the empty template, guarded by `admin.settings.write`) writes the `config` table. Secrets are encrypted when `CONFIG_ENCRYPTION_KEY` is set. A saved row overrides env for that key. `saveConfigs` clears the one-hour cache in the isolate that saved; other isolates can keep the previous value for up to an hour.
+---
 
-Set `app_url` to `https://<domain>` (no path). Auth `baseURL` is admin `app_url`, then `VITE_APP_URL`.
+## Phase 7 — Admin login test (agent)
+
+computerUse: open `https://<domain>/sign-in` (or the app’s admin sign-in path), fill vault login references for `zh6856660@gmail.com`, submit, confirm `/admin` loads. Report pass/fail only. Do not paste the password.
+
+Then set baseline Admin app keys: `app_name`, `app_description`, `app_url` = `https://<domain>`.
+
+---
+
+## Phase 8 — Parallel post-deploy configuration
+
+Run these tracks in parallel after Phase 7.
+
+### 8A — Google OAuth (browser)
+
+Google Cloud Console (often already signed in as `zh6856660@gmail.com`): OAuth web client. Authorized redirect:
+
+`https://<domain>/api/auth/callback/google`
+
+JS origin: `https://<domain>`. Write Admin `google_auth_enabled`, `google_client_id`, `google_client_secret` (optional `google_one_tap_enabled`). No rebuild.
+
+### 8B — GA4 (browser)
+
+Create/select GA4 property for the new domain. Write Admin `google_analytics_id`. Optional `clarity_project_id` (alphanumeric only or empty).
+
+### 8C — R2 into Admin
+
+If not filled: `r2_access_key`, `r2_secret_key`, `r2_bucket_name`, `r2_endpoint`, `r2_domain`, optional `r2_upload_path`.
+
+### 8D — Cloudflare Email Routing (support@)
+
+Browser on the domain’s Cloudflare Email Routing: enable routing, create `support@<domain>` → forward to the admin inbox (default `zh6856660@gmail.com` unless owner says otherwise). Destination must be verified. This is **inbox forward**, not Resend transactional sending.
+
+### 8E — Resend (transactional, if used)
+
+Prefer API: create domain, publish DNS (`proxied: false` on CF), verify. Admin `resend_api_key`, `resend_sender_email`. Leave `email_recall_enabled` false until intentional.
+
+### 8F — Video provider + reference clips
+
+Admin `kie_api_key` / `apimart_api_key`, `default_video_provider`. Reference URLs on own media host after Range 206 probe.
+
+### 8G — Stripe (human)
+
+Owner configures Stripe Dashboard keys + webhook to `https://<domain>/api/payment/notify/stripe`. When they provide values, set Admin `stripe_*` and `default_payment_provider` = `stripe`. Agent does not create the webhook.
+
+---
+
+## Admin settings key map
 
 | Group | Keys |
 | --- | --- |
 | App | `app_name`, `app_description`, `app_url` |
-| Stripe | `stripe_enabled` = `true`, `stripe_publishable_key`, `stripe_secret_key`, `stripe_signing_secret`. Set `default_payment_provider` to `stripe`. Values come from the secret card after the human finishes KYC. |
-| R2 | `r2_access_key`, `r2_secret_key`, `r2_bucket_name`, `r2_endpoint`, `r2_domain`, optional `r2_upload_path`. Fill these from the API step above. |
-| Video | `kie_api_key` and/or `apimart_api_key`. Set `default_video_provider` to `kie` or `apimart`. `auto` does not select APIMart. Create refs: `create_reference_video_url`, `create_reference_video_url_12s`, `create_reference_video_url_15s` on the fork's own media host; probe `Range: bytes=0-1` → 206 before trusting. |
+| Stripe | `stripe_enabled`, `stripe_publishable_key`, `stripe_secret_key`, `stripe_signing_secret`, `default_payment_provider` = `stripe` (human-supplied) |
+| R2 | `r2_access_key`, `r2_secret_key`, `r2_bucket_name`, `r2_endpoint`, `r2_domain`, optional `r2_upload_path` |
+| Video | `kie_api_key`, `apimart_api_key`, `default_video_provider`, `create_reference_video_url`, `_12s`, `_15s` |
 | Google | `google_auth_enabled`, `google_client_id`, `google_client_secret`, optional `google_one_tap_enabled` |
-| Analytics | `google_analytics_id`. `clarity_project_id` — empty or non-alphanumeric skips the snippet (`/^[a-z0-9]+$/i` in `src/routes/__root.tsx`) |
-| Resend | `resend_api_key`, `resend_sender_email`. `email_provider` defaults to `resend`. Recall caps on the same card, not `resend_*` names: `email_recall_daily_limit` (80), `email_recall_monthly_limit` (2500), `email_recall_enabled` (leave false until you mean to send) |
+| Analytics | `google_analytics_id`, `clarity_project_id` |
+| Resend | `resend_api_key`, `resend_sender_email`; recall caps `email_recall_*` |
 
-Homepage clips: `src/lib/home-demos.ts`. Articles: `/admin/posts`.
+Saving via `/admin/settings` or `POST /api/admin/config` writes `config` (DB wins over env). Rebuild only if baked `VITE_*` changed.
 
-## 9. Resend
+---
 
-Prefer the API key. The human supplies `resend_api_key` on the secret card. Do not walk them through the Resend dashboard for DNS.
+## What this skill never does
 
-```http
-POST https://api.resend.com/domains
-Authorization: Bearer <resend_api_key>
-{ "name": "<domain>" }
-```
-
-The response lists the DNS records (name, type, value, ttl, and MX priority). Publish those records with an API, then `POST /domains/<domain_id>/verify` and poll `GET /domains/<domain_id>` until the domain is verified.
-
-- Zone already Active on Cloudflare: `POST /zones/<zone_id>/dns_records` for each record. Leave Resend TXT, MX, and CNAME records unproxied (`proxied: false`).
-- DNS still served at Dynadot: Dynadot API3 `command=set_dns2` with `add_dns_to_current_setting=1` so the call appends records. A `set_dns2` without that flag replaces the domain's DNS.
-
-`resend_sender_email` must be on that verified domain. Store the API key only as admin `resend_api_key`.
-
-## 10. Stripe webhook
-
-The human completes Stripe KYC and supplies the API keys on the secret card. Create the endpoint with the Stripe API. URL:
-
-`https://<domain>/api/payment/notify/stripe`
-
-Route: `src/routes/api/payment/notify/$provider.ts`. The handler accepts `checkout.session.completed`, `payment_intent.succeeded`, `payment_intent.payment_failed`, `invoice.payment_succeeded`, `invoice.payment_failed`, `customer.subscription.updated`, `customer.subscription.deleted`. Other types throw. Store the returned signing secret as `stripe_signing_secret`. Do not write the key into git.
-
-## 11. Google OAuth, GA4, and Clarity
-
-The human logs in or supplies the ids on the secret card. Authorized redirect URI to register:
-
-`https://<domain>/api/auth/callback/google`
-
-JavaScript origin: `https://<domain>`. better-auth is mounted at `src/routes/api/auth/$.ts` and uses `baseURL` from `app_url`.
-
-Write `google_client_id`, `google_client_secret`, `google_analytics_id`, and `clarity_project_id`. No rebuild. Database values win over env.
-
-Run `pnpm cf:deploy` again only when `VITE_APP_URL` or other baked `VITE_*` values change. Admin rows do not require a rebuild.
+- Daily silent redeploy of an already-live Worker (use `deploy-cloudflare`)
+- Echo passwords, `GITHUB_TOKEN`, Stripe/R2 secrets into chat or git
+- GitHub Fork button when the owner asked for an isolated private push
+- Create Stripe webhooks (human)
+- Deploy custom-domain routes before the zone is Active
