@@ -1,6 +1,22 @@
 #!/bin/sh
 set -eu
 
+# Vite 8 requires Node.js 22+. Box images often default to Node 20 and only
+# fail deep in the build. Exit before env checks, cache-id generation, or
+# `pnpm cf:build`.
+node_version=$(node -v 2>/dev/null || true)
+node_major=$(printf '%s' "$node_version" | tr -d 'vV' | cut -d. -f1)
+case "$node_major" in
+  ''|*[!0-9]*)
+    echo "cf:deploy requires Node.js 22 or newer (Vite 8). Current: ${node_version:-node not found}. Use Node 22+ and retry." >&2
+    exit 1
+    ;;
+esac
+if [ "$node_major" -lt 22 ]; then
+  echo "cf:deploy requires Node.js 22 or newer (Vite 8). Current: ${node_version}. Use Node 22+ and retry." >&2
+  exit 1
+fi
+
 if [ ! -f .env.production ]; then
   echo "cf:deploy requires .env.production with the production VITE_APP_URL." >&2
   exit 1

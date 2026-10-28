@@ -7,7 +7,7 @@ user-invocable: true
 
 # Deploy to Cloudflare Workers — $ARGUMENTS
 
-You are driving a Cloudflare Workers deployment of this TanStack Start project. The build pipeline is `NITRO_PRESET=cloudflare_module vite build` (nitro merges the root `wrangler.jsonc` into the generated `.output/server/wrangler.json`, plus a `.wrangler/deploy/config.json` redirect), then `wrangler deploy`. Both are wrapped in `pnpm run cf:deploy`.
+You are driving a Cloudflare Workers deployment of this TanStack Start project. The build pipeline is `NITRO_PRESET=cloudflare_module vite build` (nitro merges the root `wrangler.jsonc` into the generated `.output/server/wrangler.json`, plus a `.wrangler/deploy/config.json` redirect), then `wrangler deploy`. Both are wrapped in `pnpm run cf:deploy`. Deploy requires Node.js 22+; `scripts/cf-deploy.sh` exits immediately on older Node (Vite 8).
 
 ## Database backend: D1 (default) or Postgres via Hyperdrive
 
