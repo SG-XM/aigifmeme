@@ -19,12 +19,15 @@ export function Header({
   campaign = 'bulin',
   brandMark,
   nav = 'effects',
+  createHref,
 }: {
   campaign?: EffectCampaign;
   /** Trend wordmark on campaign landings. Nav links stay the same either way. */
   brandMark?: string;
   /** Homepage hides the other trend chips. Effect pages keep them. */
   nav?: 'effects' | 'uptown';
+  /** Overrides the Create button. Homepage and effect pages keep their own. */
+  createHref?: string;
 }) {
   const { data: session } = useSession();
   const queryClient = useQueryClient();
@@ -81,7 +84,9 @@ export function Header({
       effectsLabel={m['landing.nav.effects']()}
       brandMark={brandMark}
       primaryAction={{
-        href: uptownNav ? '/#create' : effectHash(campaign, 'create'),
+        href:
+          createHref ??
+          (uptownNav ? '/#create' : effectHash(campaign, 'create')),
         label: uptownNav ? m['home.nav.create']() : m['landing.nav.create'](),
       }}
       trending={

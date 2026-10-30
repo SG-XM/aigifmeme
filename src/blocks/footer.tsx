@@ -1,5 +1,6 @@
 import { localeNames } from '@/config/locale';
 import { AI_VIDEO_INDEX_PATH, WINDOW_PEEPER_PATH } from '@/lib/ai-video-paths';
+import { DAME_HOMBRO_PATH } from '@/lib/dame-hombro-path';
 import { isGonePath } from '@/lib/gone-paths';
 import { m } from '@/paraglide/messages.js';
 import { locales, localizeUrl, type Locale } from '@/paraglide/runtime.js';
@@ -21,6 +22,7 @@ export function Footer({
 }) {
   const uptown = focus === 'uptown';
   const sceneLinks = [
+    { label: m['dame_hombro.nav'](), href: DAME_HOMBRO_PATH },
     { label: m['ai_video.title'](), href: AI_VIDEO_INDEX_PATH },
     { label: m['effect.bridges.title'](), href: '/burning-bridges-ai' },
     { label: m['effect.peeper.title'](), href: WINDOW_PEEPER_PATH },

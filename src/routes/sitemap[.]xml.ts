@@ -14,6 +14,7 @@ const STATIC_PATHS = [
   '',
   '/pricing',
   '/blog',
+  '/dame-hombro',
   '/privacy-policy',
   '/terms-of-service',
 ].filter((path) => !isGonePath(path || '/'));

@@ -218,17 +218,17 @@ into the generated config. Database is D1.
 
 `wrangler.jsonc` is already set for this product:
 
-| Field | Value |
-| --- | --- |
-| Worker `name` | `uptown` |
-| `workers_dev` | `true` |
-| Public URL | `https://uptownfunkai.video` |
-| App name | `Uptown` |
-| D1 `database_name` | `uptown-db` |
-| Worker binding | `DB` |
-| `database_id` | `00000000-0000-4000-8000-000000000000` (placeholder) |
-| Route | `uptownfunkai.video/*` on zone `uptownfunkai.video` |
-| Media host | `https://media.uptownfunkai.video` (placeholder) |
+| Field              | Value                                                |
+| ------------------ | ---------------------------------------------------- |
+| Worker `name`      | `uptown`                                             |
+| `workers_dev`      | `true`                                               |
+| Public URL         | `https://uptownfunkai.video`                         |
+| App name           | `Uptown`                                             |
+| D1 `database_name` | `uptown-db`                                          |
+| Worker binding     | `DB`                                                 |
+| `database_id`      | `00000000-0000-4000-8000-000000000000` (placeholder) |
+| Route              | `uptownfunkai.video/*` on zone `uptownfunkai.video`  |
+| Media host         | `https://media.uptownfunkai.video` (placeholder)     |
 
 `wrangler d1 create` suggests a binding named after the database — ignore it
 and keep `"binding": "DB"`. Commit only the placeholder `database_id`.
@@ -281,7 +281,12 @@ Never put these in `vars` — that block is public.
 ```bash
 openssl rand -base64 32 | npx wrangler secret put AUTH_SECRET
 openssl rand -base64 32 | npx wrangler secret put CONFIG_ENCRYPTION_KEY
+npx wrangler secret put FREERAP_API_KEY
 ```
+
+`FREERAP_API_KEY` is only for the Dame Hombro page (`/dame-hombro`). The
+browser calls `/api/dame-hombro` and never sees the key. For local Node, put
+the same name in `.env.development`. Do not add it to `wrangler.jsonc` `vars`.
 
 ### 6. Production URL — in two places
 

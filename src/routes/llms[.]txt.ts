@@ -9,6 +9,11 @@ const STATIC_PAGES: { path: string; title: string; description: string }[] = [
   { path: '', title: 'Home', description: 'Landing page' },
   { path: '/pricing', title: 'Pricing', description: 'Pricing plans' },
   { path: '/blog', title: 'Blog', description: 'Blog posts and articles' },
+  {
+    path: '/dame-hombro',
+    title: 'Dame Hombro AI video generator',
+    description: 'Upload a center face photo and generate a Dame Hombro video.',
+  },
 ];
 
 function pagesFor(locale: string) {
@@ -17,6 +22,11 @@ function pagesFor(locale: string) {
       { path: '', title: '首页', description: '主页' },
       { path: '/pricing', title: '价格', description: '价格方案' },
       { path: '/blog', title: '博客', description: '文章与指南' },
+      {
+        path: '/dame-hombro',
+        title: 'Dame Hombro AI video generator',
+        description: '上传正中脸部照片，生成 Dame Hombro 视频。',
+      },
     ];
   }
   if (locale === 'es') {
@@ -24,6 +34,12 @@ function pagesFor(locale: string) {
       { path: '', title: 'Inicio', description: 'Página principal' },
       { path: '/pricing', title: 'Precios', description: 'Planes y precios' },
       { path: '/blog', title: 'Blog', description: 'Artículos y guías' },
+      {
+        path: '/dame-hombro',
+        title: 'Dame Hombro AI video generator',
+        description:
+          'Sube una foto del rostro al centro y genera un video Dame Hombro.',
+      },
     ];
   }
   if (locale === 'ar') {
@@ -31,6 +47,11 @@ function pagesFor(locale: string) {
       { path: '', title: 'الرئيسية', description: 'الصفحة الرئيسية' },
       { path: '/pricing', title: 'الأسعار', description: 'الخطط والأسعار' },
       { path: '/blog', title: 'المدونة', description: 'مقالات وأدلة' },
+      {
+        path: '/dame-hombro',
+        title: 'Dame Hombro AI video generator',
+        description: 'ارفع صورة الوجه في الوسط وأنشئ فيديو Dame Hombro.',
+      },
     ];
   }
   return STATIC_PAGES;
