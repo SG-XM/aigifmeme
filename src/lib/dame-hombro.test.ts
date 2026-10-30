@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import {
   buildDameHombroCreateBody,
   DAME_HOMBRO_DEFAULTS,
+  DAME_HOMBRO_EFFECTS,
   DAME_HOMBRO_PRICED_CELLS,
   dameHombroCreateUrl,
   dameHombroCredits,
@@ -67,16 +68,28 @@ describe('Dame Hombro create body', () => {
     expect(body.slots).not.toHaveProperty('left');
   });
 
-  it('drops slots for solo and ignores side photos', () => {
+  it('forces trio and keeps slots when the client sends solo', () => {
     const body = buildDameHombroCreateBody({
       centerUrl: CENTER,
       leftUrl: LEFT,
       rightUrl: RIGHT,
       effect: 'solo',
     });
-    expect(body.effect).toBe('solo');
-    expect(body).not.toHaveProperty('slots');
+    expect(DAME_HOMBRO_EFFECTS).toEqual(['trio']);
+    expect(body.effect).toBe('trio');
+    expect(body.slots).toEqual({
+      center: CENTER,
+      left: LEFT,
+      right: RIGHT,
+    });
     expect(body.reference_image_urls).toEqual([CENTER]);
+    expect(JSON.stringify(body)).not.toContain('solo');
+  });
+
+  it('rejects an effect other than trio or the legacy solo value', () => {
+    expect(() =>
+      buildDameHombroCreateBody({ centerUrl: CENTER, effect: 'duet' })
+    ).toThrow(/Unknown effect/);
   });
 
   it('never forwards prompt or reference video fields from the caller', () => {

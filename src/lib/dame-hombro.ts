@@ -10,7 +10,8 @@ export const DAME_HOMBRO_MODELS = ['basic', 'pro', 'ultra'] as const;
 export const DAME_HOMBRO_RESOLUTIONS = ['480p', '720p', '1080p'] as const;
 export const DAME_HOMBRO_DURATIONS = [12, 15] as const;
 export const DAME_HOMBRO_ASPECTS = ['9:16', '16:9', 'adaptive'] as const;
-export const DAME_HOMBRO_EFFECTS = ['solo', 'trio'] as const;
+/** FreeRap accepts only the trio effect for this template. */
+export const DAME_HOMBRO_EFFECTS = ['trio'] as const;
 export const DAME_HOMBRO_STATUSES = [
   'pending',
   'processing',
@@ -89,7 +90,7 @@ export type DameHombroSlots = {
 export type DameHombroCreateBody = {
   reference_image_urls: [string];
   effect: DameHombroEffect;
-  slots?: DameHombroSlots;
+  slots: DameHombroSlots;
   model: DameHombroModel;
   resolution: DameHombroResolution;
   duration: DameHombroDuration;
@@ -176,12 +177,7 @@ export function buildDameHombroCreateBody(
       'Center photo must be a public HTTPS URL.'
     );
   }
-  const effect = pickEnum(
-    input.effect,
-    DAME_HOMBRO_EFFECTS,
-    DAME_HOMBRO_DEFAULTS.effect,
-    'Unknown effect.'
-  );
+  const effect = resolveDameHombroEffect(input.effect);
   const model = pickEnum(
     input.model,
     DAME_HOMBRO_MODELS,
@@ -201,15 +197,6 @@ export function buildDameHombroCreateBody(
     DAME_HOMBRO_DEFAULTS.aspectRatio,
     'Unknown aspect ratio.'
   );
-  const shared = {
-    reference_image_urls: [center] as [string],
-    effect,
-    model,
-    resolution,
-    duration,
-    aspect_ratio: aspect,
-  };
-  if (effect === 'solo') return shared;
   const left = optionalImage(blankToUndefined(input.leftUrl), 'Left photo');
   const right = optionalImage(blankToUndefined(input.rightUrl), 'Right photo');
   const slots: DameHombroSlots = {
@@ -218,14 +205,25 @@ export function buildDameHombroCreateBody(
     ...(right ? { right } : {}),
   };
   return {
-    reference_image_urls: shared.reference_image_urls,
-    effect: shared.effect,
+    reference_image_urls: [center],
+    effect,
     slots,
-    model: shared.model,
-    resolution: shared.resolution,
-    duration: shared.duration,
-    aspect_ratio: shared.aspect_ratio,
+    model,
+    resolution,
+    duration,
+    aspect_ratio: aspect,
   };
+}
+
+/**
+ * Dame Hombro is trio-only. A client that still sends `solo` is coerced so
+ * Generate keeps working; any other value is rejected.
+ */
+function resolveDameHombroEffect(value: string | undefined): DameHombroEffect {
+  if (!value || value === 'trio' || value === 'solo') {
+    return 'trio';
+  }
+  throw new DameHombroRequestError('Unknown effect.');
 }
 
 export function assertDameHombroHosted(
@@ -234,9 +232,9 @@ export function assertDameHombroHosted(
 ): void {
   const urls = [
     body.reference_image_urls[0],
-    body.slots?.center,
-    body.slots?.left,
-    body.slots?.right,
+    body.slots.center,
+    body.slots.left,
+    body.slots.right,
   ].filter((url): url is string => Boolean(url));
   for (const url of urls) {
     if (!isSamePublicOrigin(url, storageSampleUrl)) {

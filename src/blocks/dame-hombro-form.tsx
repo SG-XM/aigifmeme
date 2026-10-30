@@ -8,7 +8,6 @@ import {
   DAME_HOMBRO_ASPECTS,
   DAME_HOMBRO_DEFAULTS,
   DAME_HOMBRO_DURATIONS,
-  DAME_HOMBRO_EFFECTS,
   DAME_HOMBRO_MODELS,
   DAME_HOMBRO_PATH,
   DAME_HOMBRO_POLL_MS,
@@ -18,7 +17,6 @@ import {
   isDameHombroTaskId,
   type DameHombroAspect,
   type DameHombroDuration,
-  type DameHombroEffect,
   type DameHombroModel,
   type DameHombroResolution,
   type DameHombroStatus,
@@ -65,9 +63,6 @@ export function DameHombroForm() {
   );
   const [aspectRatio, setAspectRatio] = useState<DameHombroAspect>(
     DAME_HOMBRO_DEFAULTS.aspectRatio
-  );
-  const [effect, setEffect] = useState<DameHombroEffect>(
-    DAME_HOMBRO_DEFAULTS.effect
   );
   const [taskId, setTaskId] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -173,9 +168,7 @@ export function DameHombroForm() {
     }
     setBusy(true);
     try {
-      const order: SlotName[] =
-        effect === 'trio' ? ['center', 'left', 'right'] : ['center'];
-      const chosen = order.flatMap((slot) => {
+      const chosen = SLOT_ORDER.flatMap((slot) => {
         const photo = photos[slot];
         return photo ? [{ slot, photo }] : [];
       });
@@ -195,13 +188,13 @@ export function DameHombroForm() {
       );
       const created = await apiPost<DameHombroTaskView>('/api/dame-hombro', {
         centerUrl: bySlot.get('center'),
-        leftUrl: effect === 'trio' ? bySlot.get('left') : undefined,
-        rightUrl: effect === 'trio' ? bySlot.get('right') : undefined,
+        leftUrl: bySlot.get('left'),
+        rightUrl: bySlot.get('right'),
         model,
         resolution,
         duration,
         aspectRatio,
-        effect,
+        effect: DAME_HOMBRO_DEFAULTS.effect,
       });
       if (!isDameHombroTaskId(created.taskId)) {
         throw new Error('task');
@@ -228,8 +221,6 @@ export function DameHombroForm() {
     setError('');
   }
 
-  const slots = effect === 'trio' ? SLOT_ORDER : (['center'] as const);
-
   return (
     <form
       id="create"
@@ -239,14 +230,8 @@ export function DameHombroForm() {
         void submit();
       }}
     >
-      <div
-        className={
-          effect === 'trio'
-            ? 'dame-hombro-faces'
-            : 'dame-hombro-faces dame-hombro-faces-solo'
-        }
-      >
-        {slots.map((slot) => (
+      <div className="dame-hombro-faces">
+        {SLOT_ORDER.map((slot) => (
           <FaceSlot
             key={slot}
             slot={slot}
@@ -257,19 +242,6 @@ export function DameHombroForm() {
           />
         ))}
       </div>
-      <ChoiceRow
-        label={m['dame_hombro.effect']()}
-        value={effect}
-        options={DAME_HOMBRO_EFFECTS.map((value) => ({
-          value,
-          label:
-            value === 'trio'
-              ? m['dame_hombro.effect_trio']()
-              : m['dame_hombro.effect_solo'](),
-        }))}
-        disabled={inFlight}
-        onChange={setEffect}
-      />
       <ChoiceRow
         label={m['dame_hombro.model']()}
         value={model}

@@ -146,6 +146,35 @@ describe('Dame Hombro proxy', () => {
     expect(String(init.body)).not.toContain('reference_video');
   });
 
+  it('forces trio when the client asks for solo', async () => {
+    const response = await POST({
+      request: createRequest({
+        centerUrl: CENTER,
+        leftUrl: LEFT,
+        effect: 'solo',
+      }),
+    });
+    expect(response.status).toBe(200);
+    const init = vi.mocked(fetch).mock.calls[0][1] as RequestInit;
+    const body = JSON.parse(String(init.body));
+    expect(body.effect).toBe('trio');
+    expect(body.slots).toEqual({ left: LEFT, center: CENTER });
+    expect(JSON.stringify(body)).not.toContain('solo');
+  });
+
+  it('rejects an unknown effect before calling FreeRap', async () => {
+    const response = await POST({
+      request: createRequest({
+        centerUrl: CENTER,
+        effect: 'duet',
+      }),
+    });
+    expect(response.status).toBe(400);
+    const json = await response.json();
+    expect(json.message).toBe('Unknown effect.');
+    expect(fetch).not.toHaveBeenCalled();
+  });
+
   it('refuses a photo that is not on our public storage', async () => {
     const response = await POST({
       request: createRequest({

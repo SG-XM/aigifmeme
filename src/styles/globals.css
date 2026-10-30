@@ -2997,10 +2997,6 @@ html[dir='rtl']
   gap: 8px;
   align-items: stretch;
 }
-.dame-hombro-faces-solo {
-  grid-template-columns: minmax(0, 220px);
-  justify-content: center;
-}
 .dame-hombro-faces .uptown-slot {
   flex: none;
   width: auto;
