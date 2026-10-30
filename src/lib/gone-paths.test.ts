@@ -67,6 +67,8 @@ describe('isGonePath', () => {
       '/blog/ceo-uptown-funk-ai-meme-explained',
       '/ar/blog/uptown-funk-ai-tools-how-to-choose',
       '/create',
+      '/wallpaper-peeper',
+      '/zh/wallpaper-peeper',
       '/api/im-so-sorry',
       '/images/im-so-sorry/01-dream.jpg',
       '/werewolf',

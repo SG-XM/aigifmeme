@@ -5,6 +5,9 @@
  *
  * No Werewolf page is registered. An unregistered path stays 404; add it
  * here only when a route file still matches it.
+ *
+ * `/wallpaper-peeper` is the live FreeRap dogfood page. It is not retired
+ * and must not be added here. `/window-peeper` stays 410.
  */
 
 const LOCALE_PREFIX = /^\/(zh|es|ar)(?=\/|$)/i;
