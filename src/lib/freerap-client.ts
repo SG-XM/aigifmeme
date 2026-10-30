@@ -19,9 +19,10 @@ export async function freerapFetch(
   if (parsed.origin !== FREERAP_API_ORIGIN || parsed.protocol !== 'https:') {
     throw new Error('FreeRap URL refused');
   }
+  // Workers do not implement redirect:'error' (TypeError before send).
+  // Default follow is fine: FreeRap API URLs are https absolute and non-redirecting.
   return fetch(url, {
     method: init.method,
-    redirect: 'error',
     headers: {
       Accept: 'application/json',
       Authorization: `Bearer ${key}`,

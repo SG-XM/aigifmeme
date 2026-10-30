@@ -129,7 +129,7 @@ describe('Dame Hombro proxy', () => {
       'https://freerapvideo.com/api/v1/templates/dame-hombro/generations'
     );
     expect(init.method).toBe('POST');
-    expect(init.redirect).toBe('error');
+    expect(init.redirect).toBeUndefined();
     const headers = new Headers(init.headers);
     expect(headers.get('authorization')).toBe('Bearer test-freerap-key');
     expect(headers.get('content-type')).toBe('application/json');
