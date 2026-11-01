@@ -1,4 +1,4 @@
-import { readdirSync, readFileSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
@@ -110,24 +110,27 @@ describe('retired routes', () => {
     'src/routes/window-peeper.tsx',
     'src/routes/window-peeper-ai.tsx',
     'src/routes/ai-video/window-peeper.tsx',
+    'src/routes/ai-video/index.tsx',
     'src/routes/im-so-sorry.tsx',
     'src/routes/bulin-47-ai.tsx',
-    'src/routes/ai-video/index.tsx',
+    'src/routes/dame-hombro.tsx',
+    'src/routes/dame-hombro-ai.tsx',
+    'src/routes/wallpaper-peeper.tsx',
+    'src/routes/(agent)/create.tsx',
+    'src/routes/(agent)/chat/index.tsx',
+    'src/routes/(agent)/chats.tsx',
+    'src/routes/(agent)/editor.tsx',
+    'src/routes/(agent)/library.tsx',
+    'src/routes/(agent)/route.tsx',
+    'src/routes/share/$chatId.tsx',
+    'src/routes/recall/index.tsx',
+    'src/routes/recall/unsubscribe.tsx',
   ];
 
-  it('serves campaign routes with the shared 410 handlers', () => {
+  it('does not register campaign, peeper, or agent pages', () => {
     for (const file of pageRoutes) {
-      const source = readFileSync(file, 'utf8');
-      expect(source, file).toContain('goneRouteHandlers');
-      expect(source, file).not.toContain('statusCode: 301');
-      expect(source, file).not.toContain('redirect(');
+      expect(existsSync(file), file).toBe(false);
     }
-  });
-
-  it('keeps /create pointing at the homepage generator', () => {
-    const source = readFileSync('src/routes/(agent)/create.tsx', 'utf8');
-    expect(source).toContain("hash: 'create'");
-    expect(source).toContain('statusCode: 301');
   });
 
   it('requires a werewolf route file to use the 410 handlers', () => {

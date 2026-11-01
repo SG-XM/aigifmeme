@@ -68,7 +68,7 @@ describe('homepage message shell', () => {
     const zhShell = renderCatalog('zh', shellKeys, compiled);
 
     expect(enShell).toContain(
-      'Metadata Remover for PDF, Word, Excel, and CSV | FileMeta Wipe'
+      'Metadata Remover - Remove PDF, Image & Video Metadata Free'
     );
     expect(enShell).not.toContain('Uptown Funk');
     expect(enShell).not.toContain('免费 Bulin 47 AI 视频生成器');
@@ -76,7 +76,7 @@ describe('homepage message shell', () => {
     expect(enShell).not.toContain('Credits granted');
     expect(enShell).not.toContain('const zh_');
     expect(zhShell).toContain(
-      'Metadata Remover｜PDF、Word、Excel、CSV 元数据清除 | FileMeta Wipe'
+      'Metadata Remover - 免费清除 PDF、图片和视频元数据'
     );
     expect(enRest).toContain('Credits granted');
     expect(enShell.length).toBeLessThan(enRest.length);

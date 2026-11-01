@@ -3,7 +3,6 @@ import {
   ArrowLeft,
   Coins,
   CreditCard,
-  FolderOpen,
   Home,
   LayoutDashboard,
   LifeBuoy,
@@ -30,12 +29,6 @@ function SettingsLayout() {
       href: '/settings',
       label: m['settings.nav.overview'](),
       icon: LayoutDashboard,
-      group,
-    },
-    {
-      href: '/library',
-      label: m['agent.nav.library'](),
-      icon: FolderOpen,
       group,
     },
     {
@@ -76,8 +69,8 @@ function SettingsLayout() {
   return (
     <AppLayout
       backNav={{
-        href: '/create',
-        label: m['settings.nav.back_to_create'](),
+        href: '/',
+        label: m['common.systems.home'](),
         icon: ArrowLeft,
       }}
       navItems={navItems}

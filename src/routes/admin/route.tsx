@@ -91,12 +91,6 @@ function AdminLayout() {
       items: [
         { href: '/admin/categories', label: m['admin.nav.categories']() },
         { href: '/admin/posts', label: m['admin.nav.posts']() },
-        { href: '/admin/effects', label: m['admin.nav.effects']() },
-        { href: '/admin/chats', label: m['admin.nav.chats']() },
-        {
-          href: '/admin/generations',
-          label: m['admin.nav.generations'](),
-        },
         { href: '/admin/tickets', label: m['admin.nav.tickets']() },
       ],
     },

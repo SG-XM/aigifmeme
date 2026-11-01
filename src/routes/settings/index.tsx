@@ -1,17 +1,9 @@
 import { useQuery } from '@tanstack/react-query';
 import { createFileRoute } from '@tanstack/react-router';
-import {
-  ArrowRight,
-  Coins,
-  ImageIcon,
-  MessagesSquare,
-  Sparkles,
-  TrendingUp,
-} from 'lucide-react';
+import { ArrowRight, Coins, TrendingUp } from 'lucide-react';
 
 import { useSession } from '@/core/auth/client';
 import { Link } from '@/core/i18n/navigation';
-import { settingsLibraryCountQueryKey } from '@/lib/agent-library-query';
 import { apiGet } from '@/lib/api-client';
 import { cn } from '@/lib/utils';
 import { m } from '@/paraglide/messages.js';
@@ -41,19 +33,7 @@ function DashboardPage() {
     queryFn: () =>
       apiGet<Subscription | null>('/api/user/subscriptions/current'),
   });
-  const { data: libraryData } = useQuery({
-    queryKey: settingsLibraryCountQueryKey,
-    queryFn: () => apiGet<{ images?: unknown[] }>('/api/agent/library'),
-  });
-  const { data: chatsData } = useQuery({
-    queryKey: ['agent-chats-total'],
-    queryFn: () =>
-      apiGet<{ total?: number }>('/api/agent/chats?page=1&pageSize=1'),
-  });
-
   const credits = creditsData?.balance ?? null;
-  const images = libraryData?.images?.length ?? null;
-  const chats = chatsData?.total ?? null;
   const subscription = subscriptionData ?? null;
 
   const planLabel =
@@ -63,19 +43,14 @@ function DashboardPage() {
 
   const actions = [
     {
-      href: '/chat',
-      icon: Sparkles,
-      label: m['settings.overview.action_create'](),
-    },
-    {
-      href: '/library',
-      icon: ImageIcon,
-      label: m['settings.overview.action_library'](),
-    },
-    {
       href: '/settings/billing',
       icon: TrendingUp,
       label: m['settings.overview.action_upgrade'](),
+    },
+    {
+      href: '/settings/credits',
+      icon: Coins,
+      label: m['settings.nav.credits'](),
     },
   ];
 
@@ -92,7 +67,7 @@ function DashboardPage() {
         </p>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 sm:grid-cols-2">
         <StatCard
           title={m['settings.overview.plan']()}
           icon={TrendingUp}
@@ -104,18 +79,6 @@ function DashboardPage() {
           icon={Coins}
           value={credits ?? '—'}
           description={m['settings.credits.description']()}
-        />
-        <StatCard
-          title={m['settings.overview.images']()}
-          icon={ImageIcon}
-          value={images ?? '—'}
-          description={m['settings.overview.images_description']()}
-        />
-        <StatCard
-          title={m['settings.overview.chats']()}
-          icon={MessagesSquare}
-          value={chats ?? '—'}
-          description={m['settings.overview.chats_description']()}
         />
       </div>
 
@@ -129,7 +92,7 @@ function DashboardPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid gap-3 sm:grid-cols-3">
+          <div className="grid gap-3 sm:grid-cols-2">
             {actions.map((action) => (
               <Link
                 key={action.href}

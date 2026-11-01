@@ -51,9 +51,6 @@ export function Header({
         { href: '/#formats', label: m['home.nav.formats']() },
         { href: '/pricing', label: m['landing.nav.pricing']() },
         { href: '/#faq', label: m['home.nav.faq']() },
-        ...(session?.user
-          ? [{ href: '/library', label: m['agent.nav.library']() }]
-          : []),
       ]
     : uptownNav
       ? [
@@ -61,9 +58,6 @@ export function Header({
           { href: '/#beats', label: m['home.nav.beats']() },
           { href: '/pricing', label: m['landing.nav.pricing']() },
           { href: '/#faq', label: m['home.nav.faq']() },
-          ...(session?.user
-            ? [{ href: '/library', label: m['agent.nav.library']() }]
-            : []),
         ]
       : [
           ...liveEffectNav()
@@ -79,9 +73,6 @@ export function Header({
             href: '/pricing',
             label: m['landing.nav.pricing'](),
           },
-          ...(session?.user
-            ? [{ href: '/library', label: m['agent.nav.library']() }]
-            : []),
         ];
 
   return (

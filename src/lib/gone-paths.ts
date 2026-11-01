@@ -6,20 +6,13 @@
  * No Werewolf page is registered. An unregistered path stays 404; add it
  * here only when a route file still matches it.
  *
- * `/wallpaper-peeper` is the live FreeRap dogfood page. It is not retired
- * and must not be added here. `/window-peeper` stays 410.
+ * Campaign, peeper, and agent pages are unregistered and return 404.
+ * Retired blog slugs stay 410 so those articles are not rendered.
  */
 
 const LOCALE_PREFIX = /^\/(zh|es|ar)(?=\/|$)/i;
 
 export const GONE_PATHS = [
-  '/burning-bridges-ai',
-  '/window-peeper',
-  '/window-peeper-ai',
-  '/ai-video/window-peeper',
-  '/im-so-sorry',
-  '/bulin-47-ai',
-  '/ai-video',
   '/blog/im-so-sorry-filter-tiktok',
   '/blog/im-so-sorry-photo-trend',
   '/blog/im-so-sorry-photo-trend-download',

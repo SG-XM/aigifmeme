@@ -106,29 +106,23 @@ describe('buildWallpaperPeeperCreateBody', () => {
 });
 
 describe('wallpaper peeper path', () => {
-  it('is a new public path and leaves the retired routes at 410', () => {
+  it('does not keep a public wallpaper page', () => {
     expect(WALLPAPER_PEEPER_PATH).toBe('/wallpaper-peeper');
     expect(WALLPAPER_PEEPER_POLL_MS).toBe(30_000);
     expect(isGonePath(WALLPAPER_PEEPER_PATH)).toBe(false);
-    expect(isGonePath('/window-peeper')).toBe(true);
-    expect(isGonePath('/window-peeper-ai')).toBe(true);
-    expect(isGonePath('/ai-video/window-peeper')).toBe(true);
+    expect(isGonePath('/window-peeper')).toBe(false);
+    expect(isGonePath('/window-peeper-ai')).toBe(false);
+    expect(isGonePath('/ai-video/window-peeper')).toBe(false);
     expect(isGonePath('/dame-hombro')).toBe(false);
+    expect(() =>
+      readFileSync('src/routes/wallpaper-peeper.tsx', 'utf8')
+    ).toThrow();
 
-    for (const file of [
-      'src/routes/window-peeper.tsx',
-      'src/routes/window-peeper-ai.tsx',
-      'src/routes/ai-video/window-peeper.tsx',
-    ]) {
-      expect(readFileSync(file, 'utf8')).toContain('goneRouteHandlers');
-    }
-    const page = readFileSync('src/routes/wallpaper-peeper.tsx', 'utf8');
     const block = readFileSync('src/blocks/wallpaper-peeper.tsx', 'utf8');
     const api = readFileSync(
       'src/routes/api/wallpaper-peeper/generations.ts',
       'utf8'
     );
-    expect(page).not.toContain('goneRouteHandlers');
     expect(block).not.toContain('FREERAP_API_KEY');
     expect(block).not.toMatch(/sk_/);
     expect(block).not.toContain('freerap-client');
