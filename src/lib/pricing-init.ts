@@ -78,12 +78,12 @@ export function buildTopUpProductRows(): TopUpProductRow[] {
 export function buildRetentionProductRow(): TopUpProductRow {
   return {
     productId: VIDEO_RETENTION_PRODUCT_ID,
-    name: 'Uptown Funk AI video',
+    name: 'FileMeta Wipe credits',
     description:
-      'One-time offer: 10 credits for one Uptown Funk AI video. Start checkout within 30 minutes. No subscription.',
-    nameEs: 'Video de Uptown Funk AI',
+      'One-time offer: 10 credits. Start checkout within 30 minutes. No subscription.',
+    nameEs: 'Créditos de FileMeta Wipe',
     descriptionEs:
-      'Oferta única: 10 créditos para un video de IA de Uptown Funk. Inicia el pago en 30 minutos. Sin suscripción.',
+      'Oferta única: 10 créditos. Inicia el pago en 30 minutos. Sin suscripción.',
     priceInCents: 799,
     currency: 'usd',
     credits: 10,
@@ -97,12 +97,12 @@ export function buildRetentionProductRow(): TopUpProductRow {
 export function buildRetentionNamePriceRows(): TopUpProductRow[] {
   return RETENTION_NAME_PRICE_CENTS.map((cents, index) => ({
     productId: retentionNamePriceProductId(cents),
-    name: `Uptown Funk AI video · $${(cents / 100).toFixed(2)}`,
+    name: `FileMeta Wipe credits · $${(cents / 100).toFixed(2)}`,
     description:
-      'One-time offer: 10 credits for one Uptown Funk AI video. Choose this price in the 30-minute offer. No subscription.',
-    nameEs: `Video de Uptown Funk AI · $${(cents / 100).toFixed(2)}`,
+      'One-time offer: 10 credits. Choose this price in the 30-minute offer. No subscription.',
+    nameEs: `Créditos de FileMeta Wipe · $${(cents / 100).toFixed(2)}`,
     descriptionEs:
-      'Oferta única: 10 créditos para un video de IA de Uptown Funk. Elige este precio en la oferta de 30 minutos. Sin suscripción.',
+      'Oferta única: 10 créditos. Elige este precio en la oferta de 30 minutos. Sin suscripción.',
     priceInCents: cents,
     currency: 'usd',
     credits: 10,

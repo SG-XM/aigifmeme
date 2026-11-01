@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="FileMeta document wipe, navy">
+  <rect width="512" height="512" rx="112" fill="#10243E"/>
+  <path fill="#F7F4EE" d="M150 96h150l78 78v246H150z"/>
+  <path fill="#E7D3C4" d="M300 96v78h78z"/>
+  <rect x="186" y="210" width="150" height="18" rx="9" fill="#D4783A" opacity="0.45"/>
+  <rect x="186" y="246" width="110" height="18" rx="9" fill="#D4783A" opacity="0.45"/>
+  <path d="M168 348 L344 176" stroke="#D4783A" stroke-width="28" stroke-linecap="round"/>
+</svg>

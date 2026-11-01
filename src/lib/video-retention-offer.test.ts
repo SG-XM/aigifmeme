@@ -36,14 +36,14 @@ describe('retention name-your-price chips', () => {
     expect(retentionNamePriceCents('single_retention_name_450')).toBeNull();
   });
 
-  it('names the Stripe line item as an Uptown Funk AI video', () => {
+  it('names the Stripe line item as FileMeta Wipe credits', () => {
     for (const locale of ['en', 'zh', 'es', 'ar']) {
       const fixed = retentionCheckoutLabel('single_retention_v2', locale);
       const named = retentionCheckoutLabel('single_retention_name_599', locale);
       const text = `${fixed.productName} ${fixed.description} ${named.productName} ${named.description}`;
-      expect(text.toLowerCase()).toContain('uptown funk ai');
+      expect(text.toLowerCase()).toContain('filemeta wipe');
       expect(text).not.toMatch(
-        /werewolf|bulin|seedance|window peeper|换脸|face swap|face-replace/i
+        /uptown|werewolf|bulin|seedance|window peeper|换脸|face swap|face-replace/i
       );
       expect(named.productName).toContain('5.99');
     }

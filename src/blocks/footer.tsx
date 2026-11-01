@@ -1,33 +1,27 @@
 import { localeNames } from '@/config/locale';
-import { AI_VIDEO_INDEX_PATH, WINDOW_PEEPER_PATH } from '@/lib/ai-video-paths';
-import { DAME_HOMBRO_PATH } from '@/lib/dame-hombro-path';
-import { isGonePath } from '@/lib/gone-paths';
+import { PUBLIC_SITE_ORIGIN } from '@/lib/trend-page-meta';
 import { m } from '@/paraglide/messages.js';
 import { locales, localizeUrl, type Locale } from '@/paraglide/runtime.js';
 import { SiteFooter, type FooterColumn } from '@/components/site-footer';
 import type { BlogPost } from '@/content/posts';
 
-/** Locale homes use a fixed prefix. The locale-aware Link would rewrite them. */
+/**
+ * Locale homes use a fixed prefix. The locale-aware Link would rewrite them.
+ * Strip a trailing slash so SSR and the browser emit the same href.
+ */
 function localeHomePath(locale: Locale) {
-  return localizeUrl('https://uptownfunkai.video/', { locale }).pathname;
+  const path =
+    localizeUrl(`${PUBLIC_SITE_ORIGIN}/`, { locale }).pathname || '/';
+  return path.length > 1 ? path.replace(/\/+$/, '') : '/';
 }
 
 export function Footer({
   posts = [],
-  focus,
 }: {
   posts?: Pick<BlogPost, 'slug' | 'title'>[];
-  /** Homepage product column. Effect pages keep the same scene list. */
+  /** Kept so older campaign pages can still pass it. Scene links are gone. */
   focus?: 'uptown';
 }) {
-  const uptown = focus === 'uptown';
-  const sceneLinks = [
-    { label: m['dame_hombro.nav'](), href: DAME_HOMBRO_PATH },
-    { label: m['ai_video.title'](), href: AI_VIDEO_INDEX_PATH },
-    { label: m['effect.bridges.title'](), href: '/burning-bridges-ai' },
-    { label: m['effect.peeper.title'](), href: WINDOW_PEEPER_PATH },
-    { label: m['sorry.title'](), href: '/im-so-sorry' },
-  ].filter((link) => !isGonePath(link.href));
   const homeTitle = m['home.title']();
   const languageLinks = locales.map((locale) => ({
     label: `${homeTitle} · ${localeNames[locale] ?? locale}`,
@@ -37,29 +31,14 @@ export function Footer({
   const columns: FooterColumn[] = [
     {
       title: m['landing.footer.product'](),
-      links: uptown
-        ? [
-            { label: m['home.title'](), href: '/' },
-            { label: m['home.nav.create'](), href: '/#create' },
-            { label: m['home.nav.how'](), href: '/#usage' },
-            { label: m['home.nav.beats'](), href: '/#beats' },
-            { label: m['landing.pricing.title'](), href: '/pricing' },
-          ]
-        : [
-            { label: m['home.title'](), href: '/' },
-            { label: m['landing.nav.create'](), href: '/#create' },
-            ...sceneLinks,
-            { label: m['landing.pricing.title'](), href: '/pricing' },
-          ],
+      links: [
+        { label: m['home.title'](), href: '/' },
+        { label: m['home.nav.start'](), href: '/#wipe' },
+        { label: m['home.nav.how'](), href: '/#how' },
+        { label: m['home.nav.formats'](), href: '/#formats' },
+        { label: m['landing.pricing.title'](), href: '/pricing' },
+      ],
       sections: [
-        ...(uptown && sceneLinks.length > 0
-          ? [
-              {
-                title: m['landing.footer.scenes'](),
-                links: sceneLinks,
-              },
-            ]
-          : []),
         ...(posts.length
           ? [
               {
@@ -99,12 +78,5 @@ export function Footer({
     },
   ];
 
-  return (
-    <SiteFooter
-      tagline={
-        uptown ? m['home.footer_tagline']() : m['landing.footer.tagline']()
-      }
-      columns={columns}
-    />
-  );
+  return <SiteFooter tagline={m['home.footer_tagline']()} columns={columns} />;
 }

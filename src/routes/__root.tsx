@@ -98,8 +98,8 @@ export const Route = createRootRoute({
   },
   head: ({ matches, loaderData }) => {
     // head() runs on the SSR server AND again on the client during hydration.
-    // Homepage canonical stays on https://uptownfunkai.video. Other pages use
-    // the live origin, except workers.dev and uptownfunkai.com, which are rewritten.
+    // Homepage canonical stays on https://filemetawipe.com. Other pages use
+    // the live origin, except workers.dev and the parent Uptown hosts.
     const pagePath = matches.at(-1)?.pathname || '/';
     const appUrl = canonicalOrigin(
       (typeof window !== 'undefined' && window.location?.origin) ||

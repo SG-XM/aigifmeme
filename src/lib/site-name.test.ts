@@ -11,9 +11,9 @@ describe('resolveSiteName', () => {
     expect(resolveSiteName('   ', 'Uptown')).toBe('Uptown');
     expect(resolveSiteName(undefined, 'Uptown')).toBe('Uptown');
   });
-  it('falls back to Uptown when neither is set', () => {
-    expect(resolveSiteName(undefined, undefined)).toBe('Uptown');
-    expect(resolveSiteName('', ' ')).toBe('Uptown');
+  it('falls back to FileMeta Wipe when neither is set', () => {
+    expect(resolveSiteName(undefined, undefined)).toBe('FileMeta Wipe');
+    expect(resolveSiteName('', ' ')).toBe('FileMeta Wipe');
   });
   it('trims surrounding whitespace', () => {
     expect(resolveSiteName('  Dance AI  ', 'x')).toBe('Dance AI');
