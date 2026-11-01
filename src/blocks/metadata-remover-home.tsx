@@ -1,10 +1,17 @@
 import { useRef, useState } from 'react';
 
 import {
-  formatFileSize,
-  metadataFileKind,
-  type MetadataFileKind,
-} from '@/lib/metadata-file';
+  cleanedDownloadName,
+  downloadMime,
+  inspectDocument,
+  MAX_FILE_BYTES,
+  stripDocument,
+  type DocumentKind,
+  type InspectResult,
+  type MetadataEntry,
+  type MetadataIssue,
+} from '@/lib/metadata';
+import { formatFileSize } from '@/lib/metadata-file';
 import { m } from '@/paraglide/messages.js';
 import { Footer } from '@/blocks/footer';
 import { Header } from '@/blocks/header';
@@ -13,7 +20,9 @@ import { SupportWidget } from '@/blocks/support-widget';
 const ACCEPT =
   '.pdf,.doc,.docx,.xls,.xlsx,.csv,application/pdf,text/csv,application/msword,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
 
-function noteFor(kind: MetadataFileKind) {
+const GROUPS = ['pdf', 'xmp', 'core', 'app', 'custom', 'csv'] as const;
+
+function noteFor(kind: DocumentKind) {
   if (kind === 'pdf') return m['home.note.pdf']();
   if (kind === 'ooxml') return m['home.note.ooxml']();
   if (kind === 'csv') return m['home.note.csv']();
@@ -21,29 +30,163 @@ function noteFor(kind: MetadataFileKind) {
   return m['home.note.unknown']();
 }
 
+function groupTitle(group: (typeof GROUPS)[number]) {
+  if (group === 'pdf') return m['home.group.pdf']();
+  if (group === 'xmp') return m['home.group.xmp']();
+  if (group === 'core') return m['home.group.core']();
+  if (group === 'app') return m['home.group.app']();
+  if (group === 'custom') return m['home.group.custom']();
+  return m['home.group.csv']();
+}
+
+function fieldLabel(row: MetadataEntry) {
+  if (row.id === 'title') return m['home.field.title']();
+  if (row.id === 'author') return m['home.field.author']();
+  if (row.id === 'subject') return m['home.field.subject']();
+  if (row.id === 'keywords') return m['home.field.keywords']();
+  if (row.id === 'creator') return m['home.field.creator']();
+  if (row.id === 'producer') return m['home.field.producer']();
+  if (row.id === 'created') return m['home.field.created']();
+  if (row.id === 'modified') return m['home.field.modified']();
+  if (row.id === 'company') return m['home.field.company']();
+  if (row.id === 'manager') return m['home.field.manager']();
+  if (row.id === 'application') return m['home.field.application']();
+  if (row.id === 'last-modified-by') return m['home.field.last_modified_by']();
+  if (row.id === 'revision') return m['home.field.revision']();
+  if (row.id === 'category') return m['home.field.category']();
+  if (row.id === 'template') return m['home.field.template']();
+  if (row.id === 'bom') return m['home.field.bom']();
+  if (row.id === 'separator') return m['home.field.separator']();
+  return row.label;
+}
+
+function issueText(issue: MetadataIssue) {
+  if (issue === 'encrypted') return m['home.drop.error_encrypted']();
+  if (issue === 'too-large') return m['home.drop.error_too_large']();
+  if (issue === 'unsupported') return m['home.drop.unsupported']();
+  if (issue === 'strip-failed') return m['home.drop.error_strip']();
+  return m['home.drop.error_read']();
+}
+
+function saveFile(filename: string, bytes: Uint8Array, mime: string) {
+  const blob = new Blob([new Uint8Array(bytes)], { type: mime });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = filename;
+  link.rel = 'noopener';
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  window.setTimeout(() => URL.revokeObjectURL(url), 30_000);
+}
+
+function FieldList({ entries }: { entries: MetadataEntry[] }) {
+  const groups = GROUPS.filter((group) =>
+    entries.some((row) => row.group === group)
+  );
+  return (
+    <div className="filemeta-fields">
+      {groups.map((group) => (
+        <section key={group} className="filemeta-group">
+          <h3>{groupTitle(group)}</h3>
+          <dl>
+            {entries
+              .filter((row) => row.group === group)
+              .map((row, index) => (
+                <div
+                  key={`${row.group}-${row.id}-${index}`}
+                  className="filemeta-field"
+                >
+                  <dt>{fieldLabel(row)}</dt>
+                  <dd>{row.value}</dd>
+                </div>
+              ))}
+          </dl>
+        </section>
+      ))}
+    </div>
+  );
+}
+
+type Phase =
+  | { name: 'reading' }
+  | { name: 'ready'; report: InspectResult }
+  | { name: 'stripping'; report: InspectResult }
+  | {
+      name: 'done';
+      before: InspectResult;
+      after: InspectResult;
+      filename: string;
+      bytes: Uint8Array;
+    }
+  | { name: 'error'; issue: MetadataIssue };
+
 function Dropzone() {
   const inputRef = useRef<HTMLInputElement>(null);
+  const request = useRef(0);
+  const bytesRef = useRef<Uint8Array | null>(null);
   const [file, setFile] = useState<File | null>(null);
-  const [kind, setKind] = useState<MetadataFileKind>('unknown');
   const [dragOver, setDragOver] = useState(false);
-  const [checked, setChecked] = useState(false);
+  const [phase, setPhase] = useState<Phase | null>(null);
 
-  function take(next: File | undefined) {
+  async function take(next: File | undefined) {
     if (!next) return;
-    const nextKind = metadataFileKind(next.name);
+    const id = ++request.current;
     setFile(next);
-    setKind(nextKind);
-    setChecked(false);
+    bytesRef.current = null;
+    if (next.size > MAX_FILE_BYTES) {
+      setPhase({ name: 'error', issue: 'too-large' });
+      return;
+    }
+    setPhase({ name: 'reading' });
+    const bytes = new Uint8Array(await next.arrayBuffer());
+    if (request.current !== id) return;
+    bytesRef.current = bytes;
+    const report = await inspectDocument(next.name, bytes);
+    if (request.current !== id) return;
+    setPhase(
+      report.issue
+        ? { name: 'error', issue: report.issue }
+        : { name: 'ready', report }
+    );
   }
 
   function clear() {
+    request.current += 1;
     setFile(null);
-    setKind('unknown');
-    setChecked(false);
+    setPhase(null);
+    bytesRef.current = null;
     if (inputRef.current) inputRef.current.value = '';
   }
 
-  const ready = file != null && kind !== 'unknown';
+  async function remove() {
+    if (!file || phase?.name !== 'ready' || !bytesRef.current) return;
+    const before = phase.report;
+    const id = request.current;
+    setPhase({ name: 'stripping', report: before });
+    try {
+      const cleaned = await stripDocument(file.name, bytesRef.current);
+      const after = await inspectDocument(
+        file.name,
+        cleaned.changed ? cleaned.bytes : bytesRef.current
+      );
+      if (request.current !== id) return;
+      const filename = cleanedDownloadName(file.name);
+      const bytes = cleaned.changed ? cleaned.bytes : bytesRef.current;
+      saveFile(filename, bytes, downloadMime(file.name));
+      setPhase({ name: 'done', before, after, filename, bytes });
+    } catch {
+      if (request.current !== id) return;
+      setPhase({ name: 'error', issue: 'strip-failed' });
+    }
+  }
+
+  const report =
+    phase?.name === 'ready' || phase?.name === 'stripping'
+      ? phase.report
+      : null;
+  const busy = phase?.name === 'reading' || phase?.name === 'stripping';
 
   return (
     <div id="wipe" className="filemeta-drop">
@@ -63,7 +206,7 @@ function Dropzone() {
         onDrop={(event) => {
           event.preventDefault();
           setDragOver(false);
-          take(event.dataTransfer.files?.[0]);
+          void take(event.dataTransfer.files?.[0]);
         }}
       >
         <p className="filemeta-kicker">{m['home.drop.kicker']()}</p>
@@ -75,7 +218,7 @@ function Dropzone() {
           className="sr-only"
           type="file"
           accept={ACCEPT}
-          onChange={(event) => take(event.target.files?.[0])}
+          onChange={(event) => void take(event.target.files?.[0])}
         />
         <label htmlFor="metadata-file" className="filemeta-button">
           {m['home.drop.choose']()}
@@ -85,34 +228,136 @@ function Dropzone() {
 
       {file ? (
         <div className="filemeta-file" aria-live="polite">
-          <div>
-            <p className="filemeta-file-name">{file.name}</p>
-            <p className="filemeta-file-meta">
-              {formatFileSize(file.size)}
-              {kind !== 'unknown' ? ` · ${kind}` : ''}
-            </p>
+          <div className="filemeta-file-head">
+            <div>
+              <p className="filemeta-file-name">{file.name}</p>
+              <p className="filemeta-file-meta">{formatFileSize(file.size)}</p>
+            </div>
+            <button
+              type="button"
+              className="filemeta-text-button"
+              onClick={clear}
+            >
+              {m['home.drop.clear']()}
+            </button>
           </div>
-          <button
-            type="button"
-            className="filemeta-text-button"
-            onClick={clear}
-          >
-            {m['home.drop.clear']()}
-          </button>
-          <p className="filemeta-note">{noteFor(kind)}</p>
           <p className="filemeta-local">
             {m['home.drop.local']({ name: file.name })}
           </p>
-          <button
-            type="button"
-            className="filemeta-button"
-            disabled={!ready}
-            onClick={() => setChecked(true)}
-          >
-            {m['home.drop.remove']()}
-          </button>
-          {checked && ready ? (
-            <p className="filemeta-status">{m['home.drop.preview_only']()}</p>
+          {phase?.name === 'reading' ? (
+            <p className="filemeta-status">{m['home.drop.reading']()}</p>
+          ) : null}
+          {phase?.name === 'error' ? (
+            <p className="filemeta-error">{issueText(phase.issue)}</p>
+          ) : null}
+          {report && !report.issue ? (
+            <>
+              <p className="filemeta-note">{noteFor(report.kind)}</p>
+              {report.entries.length > 0 ? (
+                <>
+                  <h3 className="filemeta-found">
+                    {m['home.drop.found_title']()}
+                  </h3>
+                  <FieldList entries={report.entries} />
+                </>
+              ) : (
+                <div className="filemeta-empty">
+                  <strong>{m['home.drop.empty_title']()}</strong>
+                  <p>{m['home.drop.empty_body']()}</p>
+                </div>
+              )}
+            </>
+          ) : null}
+          {phase?.name === 'done' ? (
+            <div className="filemeta-compare">
+              <section>
+                <h3>{m['home.compare.before']()}</h3>
+                {phase.before.entries.length > 0 ? (
+                  <FieldList entries={phase.before.entries} />
+                ) : (
+                  <p>{m['home.drop.empty_title']()}</p>
+                )}
+              </section>
+              <section>
+                <h3>{m['home.compare.after']()}</h3>
+                {phase.before.entries.length === 0 ? (
+                  <p>{m['home.drop.empty_title']()}</p>
+                ) : (
+                  <dl className="filemeta-fields">
+                    {phase.before.entries.map((row, index) => {
+                      const still = phase.after.entries.some(
+                        (item) =>
+                          item.group === row.group &&
+                          item.id === row.id &&
+                          item.value === row.value
+                      );
+                      return (
+                        <div
+                          key={`${row.group}-${row.id}-${index}`}
+                          className="filemeta-field"
+                        >
+                          <dt>{fieldLabel(row)}</dt>
+                          <dd
+                            className={still ? undefined : 'filemeta-removed'}
+                          >
+                            {still ? row.value : m['home.compare.removed']()}
+                          </dd>
+                        </div>
+                      );
+                    })}
+                  </dl>
+                )}
+              </section>
+            </div>
+          ) : null}
+          <div className="filemeta-actions">
+            {phase?.name === 'ready' && phase.report.removable ? (
+              <button
+                type="button"
+                className="filemeta-button"
+                onClick={() => void remove()}
+              >
+                {m['home.drop.remove']()}
+              </button>
+            ) : null}
+            {phase?.name === 'ready' && !phase.report.removable ? (
+              <button
+                type="button"
+                className="filemeta-button"
+                onClick={() => {
+                  if (!bytesRef.current || !file) return;
+                  saveFile(
+                    file.name.split(/[/\\]/).pop() || 'file',
+                    bytesRef.current,
+                    downloadMime(file.name)
+                  );
+                }}
+              >
+                {m['home.drop.download_original']()}
+              </button>
+            ) : null}
+            {phase?.name === 'stripping' ? (
+              <button type="button" className="filemeta-button" disabled>
+                {m['home.drop.removing']()}
+              </button>
+            ) : null}
+            {phase?.name === 'done' ? (
+              <button
+                type="button"
+                className="filemeta-button"
+                onClick={() =>
+                  saveFile(phase.filename, phase.bytes, downloadMime(file.name))
+                }
+              >
+                {m['home.drop.download']()}
+              </button>
+            ) : null}
+          </div>
+          {phase?.name === 'done' ? (
+            <p className="filemeta-status">{m['home.drop.removed']()}</p>
+          ) : null}
+          {busy ? (
+            <span className="sr-only">{m['home.drop.reading']()}</span>
           ) : null}
         </div>
       ) : null}
@@ -168,11 +413,11 @@ export function MetadataRemoverHome() {
               <span>{m['home.format.pdf']()}</span>
             </li>
             <li>
-              <strong>DOC / DOCX</strong>
+              <strong>DOCX</strong>
               <span>{m['home.format.word']()}</span>
             </li>
             <li>
-              <strong>XLS / XLSX</strong>
+              <strong>XLSX</strong>
               <span>{m['home.format.excel']()}</span>
             </li>
             <li>

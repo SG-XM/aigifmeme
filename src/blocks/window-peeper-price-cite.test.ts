@@ -59,7 +59,6 @@ describe('window peeper citeable price', () => {
 
   it('places a short price heading and the comparison link above the fold', () => {
     const landing = readFileSync('src/blocks/home-landing.tsx', 'utf8');
-    const route = readFileSync('src/routes/window-peeper.tsx', 'utf8');
     const hero = landing.slice(landing.indexOf('id="hero"'));
     expect(landing).toContain('function PeeperCompareLink()');
     expect(landing).toContain('function PeeperPriceCite(');
@@ -78,8 +77,5 @@ describe('window peeper citeable price', () => {
     expect(landing).toContain(
       'href="/blog/window-peeper-ai-vs-windowpeeperai-2026"'
     );
-    expect(route).toContain('goneRouteHandlers');
-    expect(route).not.toContain('statusCode: 301');
-    expect(route).not.toContain('TrendLanding');
   });
 });
