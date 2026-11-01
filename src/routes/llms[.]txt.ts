@@ -6,52 +6,47 @@ import { m } from '@/paraglide/messages.js';
 import { getLocale, localizeUrl, type Locale } from '@/paraglide/runtime.js';
 
 const STATIC_PAGES: { path: string; title: string; description: string }[] = [
-  { path: '', title: 'Home', description: 'Landing page' },
+  {
+    path: '',
+    title: 'Metadata Remover',
+    description: 'Remove metadata from PDF, DOC, DOCX, Excel, and CSV files.',
+  },
   { path: '/pricing', title: 'Pricing', description: 'Pricing plans' },
   { path: '/blog', title: 'Blog', description: 'Blog posts and articles' },
-  {
-    path: '/dame-hombro',
-    title: 'Dame Hombro AI video generator',
-    description: 'Upload a center face photo and generate a Dame Hombro video.',
-  },
 ];
 
 function pagesFor(locale: string) {
   if (locale === 'zh') {
     return [
-      { path: '', title: '首页', description: '主页' },
+      {
+        path: '',
+        title: 'Metadata Remover',
+        description: '清除 PDF、DOC、DOCX、Excel 和 CSV 的元数据。',
+      },
       { path: '/pricing', title: '价格', description: '价格方案' },
       { path: '/blog', title: '博客', description: '文章与指南' },
-      {
-        path: '/dame-hombro',
-        title: 'Dame Hombro AI video generator',
-        description: '上传正中脸部照片，生成 Dame Hombro 视频。',
-      },
     ];
   }
   if (locale === 'es') {
     return [
-      { path: '', title: 'Inicio', description: 'Página principal' },
+      {
+        path: '',
+        title: 'Metadata Remover',
+        description: 'Quita metadatos de PDF, DOC, DOCX, Excel y CSV.',
+      },
       { path: '/pricing', title: 'Precios', description: 'Planes y precios' },
       { path: '/blog', title: 'Blog', description: 'Artículos y guías' },
-      {
-        path: '/dame-hombro',
-        title: 'Dame Hombro AI video generator',
-        description:
-          'Sube una foto del rostro al centro y genera un video Dame Hombro.',
-      },
     ];
   }
   if (locale === 'ar') {
     return [
-      { path: '', title: 'الرئيسية', description: 'الصفحة الرئيسية' },
+      {
+        path: '',
+        title: 'Metadata Remover',
+        description: 'إزالة البيانات الوصفية من PDF وDOC وDOCX وExcel وCSV.',
+      },
       { path: '/pricing', title: 'الأسعار', description: 'الخطط والأسعار' },
       { path: '/blog', title: 'المدونة', description: 'مقالات وأدلة' },
-      {
-        path: '/dame-hombro',
-        title: 'Dame Hombro AI video generator',
-        description: 'ارفع صورة الوجه في الوسط وأنشئ فيديو Dame Hombro.',
-      },
     ];
   }
   return STATIC_PAGES;

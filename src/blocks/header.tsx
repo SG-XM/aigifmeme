@@ -18,14 +18,14 @@ import { SiteHeader, type NavLink } from '@/components/site-header';
 export function Header({
   campaign = 'bulin',
   brandMark,
-  nav = 'effects',
+  nav = 'product',
   createHref,
 }: {
   campaign?: EffectCampaign;
   /** Trend wordmark on campaign landings. Nav links stay the same either way. */
   brandMark?: string;
-  /** Homepage hides the other trend chips. Effect pages keep them. */
-  nav?: 'effects' | 'uptown';
+  /** Product nav is the FileMeta Wipe default. Effect pages opt into chips. */
+  nav?: 'effects' | 'uptown' | 'product';
   /** Overrides the Create button. Homepage and effect pages keep their own. */
   createHref?: string;
 }) {
@@ -44,34 +44,45 @@ export function Header({
   }, [queryClient]);
 
   const uptownNav = nav === 'uptown';
-  const navLinks: NavLink[] = uptownNav
+  const productNav = nav === 'product';
+  const navLinks: NavLink[] = productNav
     ? [
-        { href: '/#usage', label: m['home.nav.how']() },
-        { href: '/#beats', label: m['home.nav.beats']() },
+        { href: '/#how', label: m['home.nav.how']() },
+        { href: '/#formats', label: m['home.nav.formats']() },
         { href: '/pricing', label: m['landing.nav.pricing']() },
         { href: '/#faq', label: m['home.nav.faq']() },
         ...(session?.user
           ? [{ href: '/library', label: m['agent.nav.library']() }]
           : []),
       ]
-    : [
-        ...liveEffectNav()
-          .filter((effect) => !isGonePath(effect.href))
-          .map((effect) => ({
-            href: effect.href,
-            label: effect.title,
-            shortLabel: effect.shortTitle,
-            chipLabel: effect.chipLabel,
-            isCurrent: effect.isCurrent,
-          })),
-        {
-          href: '/pricing',
-          label: m['landing.nav.pricing'](),
-        },
-        ...(session?.user
-          ? [{ href: '/library', label: m['agent.nav.library']() }]
-          : []),
-      ];
+    : uptownNav
+      ? [
+          { href: '/#usage', label: m['home.nav.how']() },
+          { href: '/#beats', label: m['home.nav.beats']() },
+          { href: '/pricing', label: m['landing.nav.pricing']() },
+          { href: '/#faq', label: m['home.nav.faq']() },
+          ...(session?.user
+            ? [{ href: '/library', label: m['agent.nav.library']() }]
+            : []),
+        ]
+      : [
+          ...liveEffectNav()
+            .filter((effect) => !isGonePath(effect.href))
+            .map((effect) => ({
+              href: effect.href,
+              label: effect.title,
+              shortLabel: effect.shortTitle,
+              chipLabel: effect.chipLabel,
+              isCurrent: effect.isCurrent,
+            })),
+          {
+            href: '/pricing',
+            label: m['landing.nav.pricing'](),
+          },
+          ...(session?.user
+            ? [{ href: '/library', label: m['agent.nav.library']() }]
+            : []),
+        ];
 
   return (
     <SiteHeader
@@ -86,11 +97,19 @@ export function Header({
       primaryAction={{
         href:
           createHref ??
-          (uptownNav ? '/#create' : effectHash(campaign, 'create')),
-        label: uptownNav ? m['home.nav.create']() : m['landing.nav.create'](),
+          (productNav
+            ? '/#wipe'
+            : uptownNav
+              ? '/#create'
+              : effectHash(campaign, 'create')),
+        label: productNav
+          ? m['home.nav.start']()
+          : uptownNav
+            ? m['home.nav.create']()
+            : m['landing.nav.create'](),
       }}
       trending={
-        uptownNav
+        uptownNav || productNav
           ? undefined
           : {
               button: m['trending.button'](),

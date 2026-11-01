@@ -33,13 +33,12 @@ describe('homepage message shell', () => {
   it('keeps first-paint copy and defers other surfaces', () => {
     const keys = collectShellMessageKeys(root);
     for (const key of [
-      'recast.bulin.summary',
       'home.meta_title',
-      'create.title',
+      'home.title',
+      'home.nav.start',
+      'home.drop.remove',
       'landing.pricing.title',
       'common.support.open_label',
-      'settings.credits.credits',
-      'common.video.mute',
       'common.not_found.message',
     ]) {
       expect(keys.has(key), key).toBe(true);
@@ -69,14 +68,15 @@ describe('homepage message shell', () => {
     const zhShell = renderCatalog('zh', shellKeys, compiled);
 
     expect(enShell).toContain(
-      'Uptown Funk AI Video Generator | Create Viral Dance Videos'
+      'Metadata Remover for PDF, Word, Excel, and CSV | FileMeta Wipe'
     );
+    expect(enShell).not.toContain('Uptown Funk');
     expect(enShell).not.toContain('免费 Bulin 47 AI 视频生成器');
     expect(enShell).not.toContain('一张照片，站到舞团最前面');
     expect(enShell).not.toContain('Credits granted');
     expect(enShell).not.toContain('const zh_');
     expect(zhShell).toContain(
-      'Uptown Funk AI Video Generator｜一张照片，领衔街舞'
+      'Metadata Remover｜PDF、Word、Excel、CSV 元数据清除 | FileMeta Wipe'
     );
     expect(enRest).toContain('Credits granted');
     expect(enShell.length).toBeLessThan(enRest.length);

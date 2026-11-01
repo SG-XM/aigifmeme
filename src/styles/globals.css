@@ -1731,6 +1731,248 @@ html[dir='rtl'] .lucide-arrow-right {
   }
 }
 
+.filemeta-site {
+  color-scheme: light;
+  --trend-ink: #f4f1ea;
+  --trend-scene-panel: #fffdf8;
+  --trend-scene-paper: #14221f;
+  --trend-scene-muted: #5c675f;
+  --trend-scene-stroke: #14221f;
+  --trend-panel: #fffdf8;
+  --trend-panel-raised: #e7efe9;
+  --trend-paper: #14221f;
+  --trend-muted: #5c675f;
+  --trend-orange: #0e6b64;
+  --trend-orange-hover: #0b574f;
+  --trend-line: rgb(20 34 31 / 12%);
+  --trend-shadow: #0e6b64;
+  --background: #f4f1ea;
+  --foreground: #14221f;
+  --card: #fffdf8;
+  --card-foreground: #14221f;
+  --muted: #e7efe9;
+  --muted-foreground: #3e4a45;
+  --primary: #0e6b64;
+  --primary-foreground: #f7f4ee;
+  --border: rgb(20 34 31 / 14%);
+  --ring: #0e6b64;
+  background:
+    radial-gradient(
+      900px 420px at 10% -10%,
+      rgb(14 107 100 / 16%),
+      transparent 60%
+    ),
+    #f4f1ea;
+  color: #14221f;
+  font-family: var(--font-sans);
+}
+.filemeta-site > header {
+  background: rgb(244 241 234 / 92%);
+  border-bottom: 1px solid rgb(20 34 31 / 8%);
+  color: #14221f;
+}
+.filemeta-site header nav a[aria-current='page'],
+.filemeta-site header nav a:hover {
+  color: #0e6b64;
+}
+.filemeta-site .trend-header-create {
+  background: #0e6b64;
+  color: #f7f4ee;
+}
+.filemeta-site footer {
+  background: #14221f;
+  border-top: 4px solid #0e6b64;
+  color: #f4f1ea;
+}
+.filemeta-site footer > div > p {
+  font-family: var(--font-sans);
+  font-style: normal;
+  font-weight: 560;
+  letter-spacing: -0.03em;
+}
+.filemeta-hero,
+.filemeta-section {
+  width: min(1080px, calc(100% - 2rem));
+  margin-inline: auto;
+}
+.filemeta-hero {
+  padding: 4.5rem 0 2rem;
+}
+.filemeta-section {
+  padding: 2.5rem 0;
+}
+.filemeta-kicker {
+  margin: 0 0 0.75rem;
+  color: #0e6b64;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+.filemeta-hero h1,
+.filemeta-section h2 {
+  margin: 0;
+  font-family: var(--font-serif);
+  font-weight: 560;
+  letter-spacing: -0.03em;
+  line-height: 1.05;
+}
+.filemeta-hero h1 {
+  max-width: 16ch;
+  font-size: clamp(3rem, 8vw, 5.5rem);
+}
+.filemeta-lead,
+.filemeta-section > p {
+  max-width: 42rem;
+  color: #3e4a45;
+  font-size: 1.05rem;
+}
+.filemeta-lead {
+  margin: 1.25rem 0 2rem;
+  font-size: 1.2rem;
+  line-height: 1.5;
+}
+.filemeta-drop-well,
+.filemeta-file,
+.filemeta-privacy,
+.filemeta-format-grid li,
+.filemeta-steps li,
+.filemeta-faq details {
+  background: #fffdf8;
+  border: 1px solid rgb(20 34 31 / 10%);
+  border-radius: 1.25rem;
+}
+.filemeta-drop-well {
+  position: relative;
+  padding: 2rem 1.25rem;
+  text-align: center;
+  border-style: dashed;
+}
+.filemeta-drop-well.is-over {
+  border-color: #0e6b64;
+  background: #e7f3f1;
+}
+.filemeta-drop-well h2 {
+  font-family: var(--font-serif);
+  font-size: 2rem;
+  font-weight: 560;
+}
+.filemeta-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.75rem;
+  margin-top: 1rem;
+  padding: 0.7rem 1.2rem;
+  border: 0;
+  border-radius: 999px;
+  background: #0e6b64;
+  color: #f7f4ee;
+  font-weight: 650;
+  cursor: pointer;
+}
+.filemeta-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+.filemeta-formats,
+.filemeta-file-meta,
+.filemeta-local,
+.filemeta-status {
+  color: #5c675f;
+  font-size: 0.92rem;
+}
+.filemeta-file {
+  display: grid;
+  gap: 0.75rem;
+  margin-top: 1rem;
+  padding: 1.25rem;
+  text-align: start;
+}
+.filemeta-file-name {
+  margin: 0;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+.filemeta-note,
+.filemeta-status {
+  margin: 0;
+  line-height: 1.5;
+}
+.filemeta-status {
+  color: #0e6b64;
+  font-weight: 650;
+}
+.filemeta-text-button {
+  justify-self: start;
+  border: 0;
+  background: transparent;
+  color: #0e6b64;
+  font-weight: 650;
+  cursor: pointer;
+}
+.filemeta-format-grid,
+.filemeta-steps,
+.filemeta-removes {
+  display: grid;
+  gap: 0.75rem;
+  margin: 1.25rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+.filemeta-format-grid,
+.filemeta-steps {
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+}
+.filemeta-format-grid li,
+.filemeta-steps li {
+  display: grid;
+  gap: 0.4rem;
+  padding: 1rem 1.1rem;
+}
+.filemeta-format-grid span,
+.filemeta-steps span,
+.filemeta-privacy p,
+.filemeta-faq p {
+  color: #3e4a45;
+  line-height: 1.5;
+}
+.filemeta-removes li {
+  padding: 0.85rem 0;
+  border-bottom: 1px solid rgb(20 34 31 / 10%);
+}
+.filemeta-privacy {
+  margin-top: 1.5rem;
+  padding: 1.25rem 1.3rem;
+}
+.filemeta-privacy h2,
+.filemeta-faq summary {
+  font-size: 1.15rem;
+}
+.filemeta-faq {
+  display: grid;
+  gap: 0.6rem;
+  margin-top: 1rem;
+}
+.filemeta-faq details {
+  padding: 0.9rem 1.1rem;
+}
+.filemeta-faq summary {
+  cursor: pointer;
+  font-weight: 680;
+}
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;

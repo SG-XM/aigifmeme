@@ -5,12 +5,12 @@ import { locales, localizeUrl, type Locale } from '@/paraglide/runtime.js';
 /** Actual content revision date, shared with the visible page update line. */
 export const TREND_PAGE_UPDATED_AT = '2026-10-11';
 
-/** Public homepage origin. Never a workers.dev host or the .com domain. */
-export const PUBLIC_SITE_ORIGIN = 'https://uptownfunkai.video';
+/** Public homepage origin. Never a workers.dev host or the parent video domain. */
+export const PUBLIC_SITE_ORIGIN = 'https://filemetawipe.com';
 
 /**
  * Homepage canonical stays on the public domain. Other pages keep a real
- * configured origin, but workers.dev and uptownfunkai.com are rewritten.
+ * configured origin, but workers.dev and the parent Uptown hosts are rewritten.
  */
 export function canonicalOrigin(configured: string, path = '') {
   const home = path === '/' || path === '';
@@ -21,6 +21,8 @@ export function canonicalOrigin(configured: string, path = '') {
     const blocked =
       host === 'uptownfunkai.com' ||
       host.endsWith('.uptownfunkai.com') ||
+      host === 'uptownfunkai.video' ||
+      host.endsWith('.uptownfunkai.video') ||
       host === 'workers.dev' ||
       host.endsWith('.workers.dev');
     if (blocked) return PUBLIC_SITE_ORIGIN;

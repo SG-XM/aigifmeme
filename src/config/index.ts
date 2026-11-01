@@ -16,10 +16,10 @@ const publicEnv = (key: string) => metaEnv[key] ?? procEnv[key];
 export const envConfigs: Record<string, string> = {
   // App (public)
   app_url: publicEnv('VITE_APP_URL') ?? 'http://localhost:3000',
-  app_name: publicEnv('VITE_APP_NAME') ?? 'Uptown',
+  app_name: publicEnv('VITE_APP_NAME') ?? 'FileMeta Wipe',
   app_description:
     publicEnv('VITE_APP_DESCRIPTION') ??
-    'Create and refine AI video clips through conversation.',
+    'Metadata Remover for PDF, DOC, DOCX, Excel, and CSV files.',
   app_logo: publicEnv('VITE_APP_LOGO') ?? '/logo.png',
 
   // Database

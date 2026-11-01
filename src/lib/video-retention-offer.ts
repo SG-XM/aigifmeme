@@ -51,36 +51,35 @@ export function retentionCheckoutLabel(productId: string, locale: string) {
   if (locale === 'zh') {
     return {
       productName: price
-        ? `Uptown Funk AI 视频 · ${price}`
-        : 'Uptown Funk AI 视频',
-      description:
-        '一次购买：10 积分，用于生成一条 Uptown Funk AI 视频。请在 30 分钟内开始付款。没有订阅。',
+        ? `FileMeta Wipe 积分 · ${price}`
+        : 'FileMeta Wipe 积分',
+      description: '一次购买：10 积分。请在 30 分钟内开始付款。没有订阅。',
     };
   }
   if (locale === 'es') {
     return {
       productName: price
-        ? `Video de Uptown Funk AI · ${price}`
-        : 'Video de Uptown Funk AI',
+        ? `Créditos de FileMeta Wipe · ${price}`
+        : 'Créditos de FileMeta Wipe',
       description:
-        'Oferta única: 10 créditos para un video de IA de Uptown Funk. Inicia el pago en 30 minutos. Sin suscripción.',
+        'Oferta única: 10 créditos. Inicia el pago en 30 minutos. Sin suscripción.',
     };
   }
   if (locale === 'ar') {
     return {
       productName: price
-        ? `فيديو Uptown Funk AI · ${price}`
-        : 'فيديو Uptown Funk AI',
+        ? `أرصدة FileMeta Wipe · ${price}`
+        : 'أرصدة FileMeta Wipe',
       description:
-        'شراء لمرة واحدة: 10 أرصدة لفيديو Uptown Funk AI واحد. ابدأ الدفع خلال 30 دقيقة. بدون اشتراك.',
+        'شراء لمرة واحدة: 10 أرصدة. ابدأ الدفع خلال 30 دقيقة. بدون اشتراك.',
     };
   }
   return {
     productName: price
-      ? `Uptown Funk AI video · ${price}`
-      : 'Uptown Funk AI video',
+      ? `FileMeta Wipe credits · ${price}`
+      : 'FileMeta Wipe credits',
     description:
-      'One-time offer: 10 credits for one Uptown Funk AI video. Start checkout within 30 minutes. No subscription.',
+      'One-time offer: 10 credits. Start checkout within 30 minutes. No subscription.',
   };
 }
 
