@@ -1,4 +1,5 @@
 import { inspectCsv, stripCsv } from './csv';
+import { inspectImage, sniffImage, stripImage } from './image';
 import { inspectOoxml, stripOoxml } from './ooxml';
 import { inspectPdf, stripPdf } from './pdf';
 import {
@@ -30,6 +31,25 @@ export function documentKind(name: string): DocumentKind {
   if (ext === 'docx' || ext === 'xlsx') return 'ooxml';
   if (ext === 'csv') return 'csv';
   if (ext === 'doc' || ext === 'xls') return 'legacy';
+  if (
+    ext === 'jpg' ||
+    ext === 'jpeg' ||
+    ext === 'png' ||
+    ext === 'webp' ||
+    ext === 'gif'
+  ) {
+    return 'image';
+  }
+  if (
+    ext === 'mp4' ||
+    ext === 'm4v' ||
+    ext === 'mov' ||
+    ext === 'webm' ||
+    ext === 'mkv' ||
+    ext === 'avi'
+  ) {
+    return 'video';
+  }
   return 'unknown';
 }
 
@@ -68,6 +88,11 @@ export async function inspectDocument(
       return await inspectOoxml(bytes);
     }
     if (kind === 'csv') return inspectCsv(bytes);
+    if (kind === 'image' || sniffImage(bytes)) {
+      if (!sniffImage(bytes)) return issueResult('image', 'parse');
+      return inspectImage(bytes);
+    }
+    if (kind === 'video') return issueResult('video', 'video');
     if (kind === 'legacy') return issueResult('legacy', 'unsupported');
     return issueResult('unknown', 'unsupported');
   } catch (error) {
@@ -86,6 +111,11 @@ export async function stripDocument(
   }
   if (kind === 'ooxml') return stripOoxml(bytes);
   if (kind === 'csv') return stripCsv(bytes);
+  if (kind === 'image' || sniffImage(bytes)) {
+    const cleaned = stripImage(bytes);
+    if (!cleaned) throw new Error('strip');
+    return cleaned;
+  }
   return { bytes, changed: false };
 }
 
@@ -110,5 +140,9 @@ export function downloadMime(name: string): string {
     return 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
   }
   if (ext === 'csv') return 'text/csv';
+  if (ext === 'jpg' || ext === 'jpeg') return 'image/jpeg';
+  if (ext === 'png') return 'image/png';
+  if (ext === 'webp') return 'image/webp';
+  if (ext === 'gif') return 'image/gif';
   return 'application/octet-stream';
 }

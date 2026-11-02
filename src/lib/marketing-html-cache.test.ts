@@ -8,6 +8,7 @@ import {
   marketingHtmlCacheDecision,
   marketingHtmlCacheStorageKey,
   marketingHtmlCacheToken,
+  marketingHtmlIsCompleteDocument,
   marketingHtmlStoreHeaders,
   scheduleEdgeCacheWrite,
 } from './marketing-html-cache';
@@ -26,6 +27,19 @@ function request(
 }
 
 describe('marketing homepage cache', () => {
+  it('refuses to treat a JS-only shell as a cached document', () => {
+    expect(
+      marketingHtmlIsCompleteDocument(
+        '<html><head><title>Metadata Remover</title></head><body></body></html>'
+      )
+    ).toBe(false);
+    expect(
+      marketingHtmlIsCompleteDocument(
+        '<html><body><h1>Metadata Remover</h1><p>FAQ</p></body></html>'
+      )
+    ).toBe(true);
+  });
+
   it('caches anonymous document gets for each locale home', () => {
     for (const path of ['/', '/zh', '/es', '/ar', '/zh/']) {
       const decision = marketingHtmlCacheDecision(

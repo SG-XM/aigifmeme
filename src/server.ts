@@ -9,6 +9,7 @@ import {
   MARKETING_HTML_PRIVATE_CONTROL,
   marketingHtmlCacheableResponse,
   marketingHtmlCacheDecision,
+  marketingHtmlIsCompleteDocument,
   marketingHtmlStoreHeaders,
   pickEdgeWaitUntil,
   scheduleEdgeCacheWrite,
@@ -114,13 +115,32 @@ export default {
       }
     }
 
-    const rendered = await paraglideMiddleware(req, async () => {
+    let rendered = await paraglideMiddleware(req, async () => {
       await ensureRequestMessages();
       return handler.fetch(req);
     });
+    // Read the document before deciding to cache it. A streaming shell can
+    // otherwise be stored for a day with a title and no article.
+    let documentHtml: string | null = null;
+    if (
+      decision.cache &&
+      req.method === 'GET' &&
+      rendered.status === 200 &&
+      (rendered.headers.get('content-type') || '').includes('text/html')
+    ) {
+      documentHtml = await rendered.text();
+      rendered = new Response(documentHtml, {
+        status: rendered.status,
+        statusText: rendered.statusText,
+        headers: rendered.headers,
+      });
+    }
+    const complete =
+      documentHtml != null && marketingHtmlIsCompleteDocument(documentHtml);
     const cacheableDocument =
       decision.cache &&
       req.method === 'GET' &&
+      complete &&
       marketingHtmlCacheableResponse(rendered);
     // Clone before attribution cookies are appended. The stored copy must not
     // carry Set-Cookie, or the edge cache will refuse it.
@@ -129,6 +149,9 @@ export default {
 
     if (decision.home && decision.session) {
       response.headers.set('Cache-Control', MARKETING_HTML_PRIVATE_CONTROL);
+    } else if (documentHtml && !complete) {
+      response.headers.set('Cache-Control', MARKETING_HTML_PRIVATE_CONTROL);
+      response.headers.set('x-html-cache', 'SKIP');
     } else if (cacheableDocument) {
       response.headers.set('Cache-Control', MARKETING_HTML_CACHE_CONTROL);
       response.headers.set('x-html-cache', storeSnapshot ? 'MISS' : 'BYPASS');

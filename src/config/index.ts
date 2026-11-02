@@ -19,7 +19,7 @@ export const envConfigs: Record<string, string> = {
   app_name: publicEnv('VITE_APP_NAME') ?? 'FileMeta Wipe',
   app_description:
     publicEnv('VITE_APP_DESCRIPTION') ??
-    'Metadata Remover for PDF, DOC, DOCX, Excel, and CSV files.',
+    'Free Metadata Remover for PDF, JPEG, PNG, WebP, Word, Excel, and CSV. Clears author, GPS, camera, and timestamps in the browser. Nothing is uploaded.',
   app_logo: publicEnv('VITE_APP_LOGO') ?? '/logo.png',
 
   // Database
