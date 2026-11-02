@@ -104,6 +104,7 @@ export async function stripDocument(
   name: string,
   bytes: Uint8Array
 ): Promise<{ bytes: Uint8Array; changed: boolean }> {
+  if (bytes.byteLength > MAX_FILE_BYTES) throw new RangeError('too-large');
   const kind = documentKind(name);
   if (kind === 'pdf') {
     const next = await stripPdf(bytes);

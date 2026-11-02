@@ -1,6 +1,7 @@
 /** Browser-local metadata inspection. Nothing here uploads the file. */
 
-export const MAX_FILE_BYTES = 64 * 1024 * 1024;
+/** Decimal megabytes, matching the public 10 MB limit. */
+export const MAX_FILE_BYTES = 10_000_000;
 
 export type MetadataGroup =
   | 'pdf'

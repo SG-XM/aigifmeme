@@ -42,10 +42,10 @@ export function SiteFooter({
   const year = new Date().getFullYear();
 
   return (
-    <footer className="bg-neutral-950 text-neutral-100">
+    <footer className="filemeta-footer text-foreground">
       <div className="mx-auto max-w-6xl px-4 pt-14 pb-6 sm:px-6 sm:pt-16">
         {tagline && (
-          <p className="mb-12 max-w-2xl font-serif text-3xl leading-[1.15] tracking-tight text-neutral-100 italic sm:text-4xl">
+          <p className="text-foreground mb-12 max-w-2xl font-serif text-3xl leading-[1.15] tracking-tight italic sm:text-4xl">
             {tagline}
           </p>
         )}
@@ -63,7 +63,7 @@ export function SiteFooter({
           >
             {columns.map((col) => (
               <div key={col.title} className="space-y-5">
-                <p className="text-[13px] font-semibold tracking-wide text-neutral-100">
+                <p className="text-foreground text-[13px] font-semibold tracking-wide">
                   {col.title}
                 </p>
                 <ul className="space-y-2">
@@ -74,14 +74,14 @@ export function SiteFooter({
                           href={withUtmSource(link.href)}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-sm text-neutral-400 transition-colors hover:text-neutral-100"
+                          className="text-muted-foreground hover:text-foreground text-sm transition-colors"
                         >
                           {link.label}
                         </a>
                       ) : link.literal ? (
                         <a
                           href={link.href}
-                          className="text-sm text-neutral-400 transition-colors hover:text-neutral-100"
+                          className="text-muted-foreground hover:text-foreground text-sm transition-colors"
                         >
                           {link.label}
                         </a>
@@ -89,7 +89,7 @@ export function SiteFooter({
                         <Link
                           href={link.href}
                           target={link.external ? '_blank' : undefined}
-                          className="text-sm text-neutral-400 transition-colors hover:text-neutral-100"
+                          className="text-muted-foreground hover:text-foreground text-sm transition-colors"
                         >
                           {link.label}
                         </Link>
@@ -99,7 +99,7 @@ export function SiteFooter({
                 </ul>
                 {col.sections?.map((section) => (
                   <div key={section.title} className="space-y-3 pt-1">
-                    <p className="text-[13px] font-semibold tracking-wide text-neutral-100">
+                    <p className="text-foreground text-[13px] font-semibold tracking-wide">
                       {section.title}
                     </p>
                     <ul className="max-h-64 space-y-2 overflow-y-auto pr-1">
@@ -107,7 +107,7 @@ export function SiteFooter({
                         <li key={link.label}>
                           <Link
                             href={link.href}
-                            className="text-sm text-neutral-400 transition-colors hover:text-neutral-100"
+                            className="text-muted-foreground hover:text-foreground text-sm transition-colors"
                           >
                             {link.label}
                           </Link>
@@ -133,7 +133,7 @@ export function SiteFooter({
                     aria-label={s.label}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-neutral-300 transition-colors hover:text-neutral-100"
+                    className="text-muted-foreground hover:text-foreground transition-colors"
                   >
                     <s.icon className="size-[18px]" />
                   </a>
@@ -142,7 +142,7 @@ export function SiteFooter({
                     key={s.label}
                     href={s.href}
                     aria-label={s.label}
-                    className="text-neutral-300 transition-colors hover:text-neutral-100"
+                    className="text-muted-foreground hover:text-foreground transition-colors"
                   >
                     <s.icon className="size-[18px]" />
                   </Link>
@@ -159,8 +159,8 @@ export function SiteFooter({
         </div>
 
         {/* Bottom bar */}
-        <div className="mt-6 flex flex-col gap-3 border-t border-neutral-800 pt-5 sm:flex-row sm:items-center sm:justify-between">
-          <span className="text-sm text-neutral-400">
+        <div className="border-border mt-6 flex flex-col gap-3 border-t pt-5 sm:flex-row sm:items-center sm:justify-between">
+          <span className="text-muted-foreground text-sm">
             {copyright ?? (
               <>
                 © {year}{' '}

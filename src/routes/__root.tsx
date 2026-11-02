@@ -252,11 +252,10 @@ function RootComponent() {
 
   return (
     <QueryClientProvider client={getQueryClient()}>
-      {/* The video workspace opens like an editing room with the lights down.
-          A visitor's explicit theme choice still persists in localStorage. */}
+      {/* Match the homepage by default; preserve an explicit theme preference. */}
       <ThemeProvider
         attribute="class"
-        defaultTheme="dark"
+        defaultTheme="light"
         enableSystem
         disableTransitionOnChange
       >

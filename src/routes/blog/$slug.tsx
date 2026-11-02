@@ -101,10 +101,10 @@ function BlogPostPage() {
   const { locale, post, posts } = Route.useLoaderData();
 
   return (
-    <div className="bg-background text-foreground flex min-h-screen flex-col">
-      <Header />
+    <div className="filemeta-site bg-background text-foreground flex min-h-screen flex-col">
+      <Header brandMark="filemeta" />
       <main className="flex-1 px-6 py-12 md:px-8 md:py-16">
-        <article className="mx-auto max-w-3xl">
+        <article className="filemeta-article mx-auto max-w-3xl">
           <Link
             href="/blog"
             className="text-muted-foreground hover:text-foreground inline-flex items-center gap-2 text-sm font-medium transition-colors"

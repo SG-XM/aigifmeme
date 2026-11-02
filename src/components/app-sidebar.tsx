@@ -144,7 +144,7 @@ export function AppSidebar({
                 alt={envConfigs.app_name}
                 className="size-6 shrink-0"
               />
-              <span className="flex-1 font-serif text-lg leading-none italic">
+              <span className="flex-1 font-sans text-lg leading-none font-semibold tracking-tight">
                 {brand}
               </span>
             </Link>

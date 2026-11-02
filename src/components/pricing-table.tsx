@@ -131,17 +131,17 @@ export function PricingTable({
                 className={cn(
                   'flex min-h-11 items-center gap-1.5 rounded-full px-4 text-sm font-medium transition-colors sm:px-5',
                   sceneCard
-                    ? 'cursor-pointer text-[var(--trend-scene-muted)] hover:bg-white/10 hover:text-[var(--trend-scene-paper)] data-[active=true]:bg-white data-[active=true]:text-[var(--trend-price-dark)] data-[active=true]:hover:bg-white data-[active=true]:hover:text-[var(--trend-price-dark)]'
+                    ? 'data-[active=true]:bg-primary data-[active=true]:hover:bg-primary/90 cursor-pointer text-[var(--trend-scene-muted)] hover:bg-white/10 hover:text-[var(--trend-scene-paper)] data-[active=true]:text-[var(--trend-price-dark)] data-[active=true]:hover:text-[var(--trend-price-dark)]'
                     : tone === 'cinematic'
                       ? 'cursor-pointer text-[var(--trend-price-muted)] data-[active=true]:text-[var(--trend-price-ink)]'
                       : null,
                   !sceneCard &&
                     (activeGroup === group.key
                       ? tone === 'cinematic'
-                        ? 'bg-white text-[var(--trend-price-ink)] shadow-[0_2px_7px_rgba(23,27,39,0.14)]'
+                        ? 'bg-card text-[var(--trend-price-ink)] shadow-sm'
                         : 'bg-background text-foreground shadow-sm'
                       : tone === 'cinematic'
-                        ? 'hover:bg-white/70 hover:text-[var(--trend-price-ink)]'
+                        ? 'hover:bg-accent hover:text-[var(--trend-price-ink)]'
                         : 'text-muted-foreground hover:text-foreground')
                 )}
                 data-active={activeGroup === group.key}
@@ -384,7 +384,7 @@ export function PricingTable({
                     'h-11 w-full cursor-pointer text-sm font-semibold',
                     sceneCard
                       ? cn(
-                          'rounded-full border-2 border-[var(--trend-stroke)] bg-transparent font-sans text-[var(--trend-paper)] hover:bg-[var(--trend-panel-raised)] disabled:bg-[#3a3f4a] disabled:text-[#c5c9d1] disabled:opacity-100 dark:border-[var(--trend-stroke)] dark:bg-transparent dark:text-[var(--trend-paper)] dark:hover:bg-[var(--trend-panel-raised)]',
+                          'disabled:bg-muted disabled:text-muted-foreground rounded-full border-2 border-[var(--trend-stroke)] bg-transparent font-sans text-[var(--trend-paper)] hover:bg-[var(--trend-panel-raised)] disabled:opacity-100 dark:border-[var(--trend-stroke)] dark:bg-transparent dark:text-[var(--trend-paper)] dark:hover:bg-[var(--trend-panel-raised)]',
                           featured &&
                             !isCurrent(plan) &&
                             'border-[var(--trend-orange)] bg-[var(--trend-orange)] text-[var(--trend-price-dark)] hover:bg-[var(--trend-orange-hover)] dark:border-[var(--trend-orange)] dark:bg-[var(--trend-orange)] dark:text-[var(--trend-price-dark)] dark:hover:bg-[var(--trend-orange-hover)]'
@@ -394,7 +394,7 @@ export function PricingTable({
                             ? 'h-11 rounded-xl text-sm'
                             : 'rounded-full',
                           tone === 'cinematic' &&
-                            'border-2 border-[var(--trend-price-line)] bg-[var(--trend-price-panel)] text-[var(--trend-price-ink)] hover:bg-[var(--trend-price-hover)] disabled:bg-[#e5e8ed] disabled:text-[#596170] disabled:opacity-100 dark:border-[var(--trend-price-line)] dark:bg-[var(--trend-price-panel)] dark:hover:bg-[var(--trend-price-hover)]',
+                            'disabled:bg-muted disabled:text-muted-foreground border-2 border-[var(--trend-price-line)] bg-[var(--trend-price-panel)] text-[var(--trend-price-ink)] hover:bg-[var(--trend-price-hover)] disabled:opacity-100 dark:border-[var(--trend-price-line)] dark:bg-[var(--trend-price-panel)] dark:hover:bg-[var(--trend-price-hover)]',
                           tone === 'cinematic' &&
                             featured &&
                             !isCurrent(plan) &&
@@ -403,7 +403,7 @@ export function PricingTable({
                             compact &&
                             featured &&
                             !isCurrent(plan) &&
-                            'shadow-[0_8px_16px_rgba(244,91,0,0.32)] hover:-translate-y-0.5 hover:bg-[#de4e00] hover:text-[var(--trend-price-dark)] hover:shadow-[0_12px_22px_rgba(244,91,0,0.42)] active:translate-y-px active:shadow-[0_4px_10px_rgba(244,91,0,0.24)] active:hover:translate-y-px dark:hover:bg-[#de4e00]'
+                            'hover:bg-primary/90 dark:hover:bg-primary/90 shadow-sm hover:-translate-y-0.5 hover:text-[var(--trend-price-dark)] hover:shadow-md active:translate-y-px active:shadow-sm active:hover:translate-y-px'
                         )
                   )}
                   onClick={() => onCheckout(plan)}

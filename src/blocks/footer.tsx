@@ -1,4 +1,5 @@
 import { localeNames } from '@/config/locale';
+import { isHiddenPublicPath } from '@/lib/public-page-visibility';
 import { PUBLIC_SITE_ORIGIN } from '@/lib/trend-page-meta';
 import { m } from '@/paraglide/messages.js';
 import { locales, localizeUrl, type Locale } from '@/paraglide/runtime.js';
@@ -37,7 +38,7 @@ export function Footer({
         { label: m['home.nav.how'](), href: '/#how' },
         { label: m['home.nav.formats'](), href: '/#formats' },
         { label: m['landing.pricing.title'](), href: '/pricing' },
-      ],
+      ].filter((link) => !isHiddenPublicPath(link.href)),
       sections: [
         ...(posts.length
           ? [

@@ -138,7 +138,7 @@ function StaticPage() {
           {m['common.pages.last_updated']()}: {meta.updated_at}
         </p>
       </header>
-      <div className="text-foreground/90 text-[15px] leading-7">
+      <div className="text-foreground/90 text-base leading-7">
         <Content />
       </div>
     </article>

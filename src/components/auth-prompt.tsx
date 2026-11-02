@@ -189,14 +189,14 @@ function AuthPromptDialog({ request }: { request: StoredRequest }) {
       }}
     >
       <DialogPrimitive.Portal>
-        <DialogPrimitive.Backdrop className="data-open:animate-in data-open:fade-in-0 data-closed:animate-out data-closed:fade-out-0 fixed inset-0 z-[80] bg-black/70" />
+        <DialogPrimitive.Backdrop className="data-open:animate-in data-open:fade-in-0 data-closed:animate-out data-closed:fade-out-0 bg-foreground/40 fixed inset-0 z-[80]" />
         <DialogPrimitive.Popup
-          className="data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 fixed top-1/2 left-1/2 z-[80] w-full max-w-[calc(100%-2rem)] -translate-x-1/2 -translate-y-1/2 rounded-3xl bg-white p-6 text-zinc-900 shadow-2xl outline-none sm:max-w-sm"
+          className="data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 bg-card text-foreground fixed top-1/2 left-1/2 z-[80] w-full max-w-[calc(100%-2rem)] -translate-x-1/2 -translate-y-1/2 rounded-3xl p-6 shadow-2xl outline-none sm:max-w-sm"
           aria-describedby="auth-prompt-description"
         >
           <DialogPrimitive.Close
             aria-label="Close"
-            className="absolute top-3 right-3 flex size-8 items-center justify-center rounded-full text-zinc-500 hover:bg-zinc-100"
+            className="text-muted-foreground hover:bg-accent absolute top-3 right-3 flex size-8 items-center justify-center rounded-full"
           >
             <X className="size-4" />
           </DialogPrimitive.Close>
@@ -228,7 +228,7 @@ function AuthPromptDialog({ request }: { request: StoredRequest }) {
           </DialogPrimitive.Title>
           <DialogPrimitive.Description
             id="auth-prompt-description"
-            className="mt-2 text-center text-sm text-zinc-500"
+            className="text-muted-foreground mt-2 text-center text-sm"
           >
             {m['common.sign.sign_in_description']()}
           </DialogPrimitive.Description>
@@ -244,7 +244,7 @@ function AuthPromptDialog({ request }: { request: StoredRequest }) {
             )}
 
             {!ready ? (
-              <div className="text-center text-sm text-zinc-500">…</div>
+              <div className="text-muted-foreground text-center text-sm">…</div>
             ) : (
               <>
                 {googleEnabled && (
@@ -252,7 +252,7 @@ function AuthPromptDialog({ request }: { request: StoredRequest }) {
                     type="button"
                     disabled={pending}
                     onClick={() => void continueWith('google')}
-                    className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-[#e6b325] text-base font-semibold text-[#1a1206] transition-colors hover:bg-[#f0c44a] disabled:opacity-60"
+                    className="bg-primary text-primary-foreground hover:bg-primary/90 flex h-12 w-full items-center justify-center gap-2 rounded-full text-base font-semibold transition-colors disabled:opacity-60"
                   >
                     <GoogleMark />
                     {m['common.sign.google_sign_in']()}
@@ -263,7 +263,7 @@ function AuthPromptDialog({ request }: { request: StoredRequest }) {
                     type="button"
                     disabled={pending}
                     onClick={() => void continueWith('github')}
-                    className="flex h-12 w-full items-center justify-center rounded-full border border-zinc-200 text-sm font-medium"
+                    className="border-input flex h-12 w-full items-center justify-center rounded-full border text-sm font-medium"
                   >
                     {m['common.sign.github_sign_in']()}
                   </button>
@@ -273,7 +273,7 @@ function AuthPromptDialog({ request }: { request: StoredRequest }) {
                   !showEmailForm && (
                     <button
                       type="button"
-                      className="block w-full py-1 text-center text-sm text-zinc-700 underline underline-offset-4"
+                      className="text-muted-foreground block w-full py-1 text-center text-sm underline underline-offset-4"
                       onClick={() => setEmailOpen(true)}
                     >
                       {m['common.sign.use_email']()}
@@ -288,7 +288,7 @@ function AuthPromptDialog({ request }: { request: StoredRequest }) {
                     }}
                   >
                     <label className="block space-y-1 text-sm">
-                      <span className="font-medium text-zinc-800">
+                      <span className="text-foreground font-medium">
                         {m['common.sign.email_title']()}
                       </span>
                       <input
@@ -298,16 +298,16 @@ function AuthPromptDialog({ request }: { request: StoredRequest }) {
                         value={email}
                         onChange={(event) => setEmail(event.target.value)}
                         placeholder={m['common.sign.email_placeholder']()}
-                        className="h-11 w-full rounded-lg border border-zinc-200 bg-white px-3 text-zinc-900 outline-none focus-visible:ring-2 focus-visible:ring-[#c8962c]"
+                        className="border-input bg-card text-foreground focus-visible:ring-ring h-11 w-full rounded-lg border px-3 outline-none focus-visible:ring-2"
                       />
                     </label>
                     <label className="block space-y-1 text-sm">
-                      <span className="flex items-center justify-between font-medium text-zinc-800">
+                      <span className="text-foreground flex items-center justify-between font-medium">
                         {m['common.sign.password_title']()}
                         {passwordResetEnabled && (
                           <button
                             type="button"
-                            className="text-xs font-normal text-zinc-500 underline underline-offset-4"
+                            className="text-muted-foreground text-xs font-normal underline underline-offset-4"
                             onClick={() => void leaveFor('/forgot-password')}
                           >
                             {m['common.sign.forgot_password']()}
@@ -321,21 +321,21 @@ function AuthPromptDialog({ request }: { request: StoredRequest }) {
                         value={password}
                         onChange={(event) => setPassword(event.target.value)}
                         placeholder={m['common.sign.password_placeholder']()}
-                        className="h-11 w-full rounded-lg border border-zinc-200 bg-white px-3 text-zinc-900 outline-none focus-visible:ring-2 focus-visible:ring-[#c8962c]"
+                        className="border-input bg-card text-foreground focus-visible:ring-ring h-11 w-full rounded-lg border px-3 outline-none focus-visible:ring-2"
                       />
                     </label>
                     <button
                       type="submit"
                       disabled={pending}
-                      className="flex h-11 w-full items-center justify-center rounded-full bg-zinc-950 text-sm font-semibold text-white disabled:opacity-60"
+                      className="bg-primary text-primary-foreground flex h-11 w-full items-center justify-center rounded-full text-sm font-semibold disabled:opacity-60"
                     >
                       {pending ? '…' : m['common.sign.sign_in_title']()}
                     </button>
-                    <p className="text-center text-sm text-zinc-500">
+                    <p className="text-muted-foreground text-center text-sm">
                       {m['common.sign.no_account']()}{' '}
                       <button
                         type="button"
-                        className="text-zinc-800 underline underline-offset-4"
+                        className="text-foreground underline underline-offset-4"
                         onClick={() => void leaveFor(signUpHref)}
                       >
                         {m['common.sign.sign_up_title']()}
@@ -344,7 +344,7 @@ function AuthPromptDialog({ request }: { request: StoredRequest }) {
                     {(googleEnabled || githubEnabled) && (
                       <button
                         type="button"
-                        className="block w-full text-center text-sm text-zinc-500 underline underline-offset-4"
+                        className="text-muted-foreground block w-full text-center text-sm underline underline-offset-4"
                         onClick={() => setEmailOpen(false)}
                       >
                         {m['common.sign.back_to_sign_in']()}
@@ -357,7 +357,7 @@ function AuthPromptDialog({ request }: { request: StoredRequest }) {
                     type="button"
                     disabled={pending}
                     onClick={() => void continueWith('github')}
-                    className="block w-full text-center text-sm text-zinc-500 underline underline-offset-4"
+                    className="text-muted-foreground block w-full text-center text-sm underline underline-offset-4"
                   >
                     {m['common.sign.github_sign_in']()}
                   </button>

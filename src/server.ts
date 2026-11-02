@@ -15,6 +15,7 @@ import {
   pickEdgeWaitUntil,
   scheduleEdgeCacheWrite,
 } from './lib/marketing-html-cache';
+import { isHiddenPublicPath } from './lib/public-page-visibility';
 import { overwriteServerAsyncLocalStorage } from './paraglide/runtime.js';
 import { paraglideMiddleware } from './paraglide/server.js';
 
@@ -90,6 +91,16 @@ export default {
     // Retired campaign and blog URLs, including locale prefixes. This runs
     // before routing so a page route cannot answer 200 or 301 instead.
     if (isGonePath(new URL(req.url).pathname)) return goneResponse(req.method);
+    if (isHiddenPublicPath(new URL(req.url).pathname)) {
+      return new Response(req.method === 'HEAD' ? null : 'Not Found\n', {
+        status: 404,
+        headers: {
+          'Content-Type': 'text/plain; charset=utf-8',
+          'Cache-Control': 'private, no-store',
+          'X-Robots-Tag': 'noindex',
+        },
+      });
+    }
 
     await ensureCloudflareEnv();
     const decision = marketingHtmlCacheDecision(req);

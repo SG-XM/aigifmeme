@@ -3,6 +3,7 @@ import { createFileRoute } from '@tanstack/react-router';
 import { envConfigs } from '@/config';
 import { FILEMETA_UPDATED_AT } from '@/lib/filemeta-content';
 import { isGonePath } from '@/lib/gone-paths';
+import { isHiddenPublicPath } from '@/lib/public-page-visibility';
 import {
   baseLocale,
   locales,
@@ -18,7 +19,9 @@ const STATIC_PATHS = [
   '/terms-of-service',
   '/about',
   '/contact',
-].filter((path) => !isGonePath(path || '/'));
+].filter(
+  (path) => !isGonePath(path || '/') && !isHiddenPublicPath(path || '/')
+);
 // Retired campaign URLs are omitted. Private app/auth routes stay omitted.
 
 type Entry = {

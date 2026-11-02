@@ -88,7 +88,7 @@ function RedeemPage() {
   })();
 
   return (
-    <main className="flex min-h-[70vh] items-center justify-center p-4">
+    <main className="filemeta-auth bg-background flex min-h-svh items-center justify-center p-4">
       <Card className="w-full max-w-md">
         <CardHeader>
           <CardTitle>{m['redeem.title']()}</CardTitle>

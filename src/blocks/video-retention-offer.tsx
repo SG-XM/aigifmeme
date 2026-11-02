@@ -78,7 +78,7 @@ function boldProofFigures(text: string, highlights: string[]) {
   const parts = text.split(new RegExp(`(${escaped.join('|')})`, 'g'));
   return parts.map((part, i) =>
     tokens.includes(part) ? (
-      <strong key={i} className="font-bold text-[#171b27]">
+      <strong key={i} className="text-foreground font-bold">
         {part}
       </strong>
     ) : (
@@ -144,22 +144,19 @@ function RetentionLauncher({
     return (
       <aside
         aria-label={m['retention.title']()}
-        className="fixed bottom-[max(1rem,env(safe-area-inset-bottom))] left-4 z-40 flex max-w-[calc(100vw-2rem)] items-center rounded-2xl border border-[#e2e5ea] bg-white text-[#171b27] shadow-lg"
+        className="border-border bg-card text-foreground fixed bottom-[max(1rem,env(safe-area-inset-bottom))] left-4 z-40 flex max-w-[calc(100vw-2rem)] items-center rounded-2xl border shadow-lg"
       >
         <button
           type="button"
           onClick={onOpen}
-          className="flex min-h-14 min-w-0 items-center gap-3 rounded-l-2xl px-4 py-3 text-left focus-visible:outline-2 focus-visible:outline-[#c8962c]"
+          className="focus-visible:outline-ring flex min-h-14 min-w-0 items-center gap-3 rounded-l-2xl px-4 py-3 text-left focus-visible:outline-2"
         >
-          <Clock3
-            className="size-5 shrink-0 text-[#7c5408]"
-            aria-hidden="true"
-          />
+          <Clock3 className="text-primary size-5 shrink-0" aria-hidden="true" />
           <span className="min-w-0">
             <span className="block truncate text-sm font-semibold">
               {m['retention.floating']({ price })}
             </span>
-            <span className="block text-xs text-[#555d6b] tabular-nums">
+            <span className="text-muted-foreground block text-xs tabular-nums">
               {m['retention.remaining']({ time: timer })}
             </span>
           </span>
@@ -168,7 +165,7 @@ function RetentionLauncher({
           type="button"
           onClick={onCollapse}
           aria-label={m['retention.collapse']()}
-          className="mr-1 flex size-11 shrink-0 items-center justify-center rounded-xl hover:bg-[#f7f7f8] focus-visible:outline-2 focus-visible:outline-[#c8962c]"
+          className="hover:bg-accent focus-visible:outline-ring mr-1 flex size-11 shrink-0 items-center justify-center rounded-xl focus-visible:outline-2"
         >
           <X className="size-4" />
         </button>
@@ -180,11 +177,11 @@ function RetentionLauncher({
       type="button"
       onClick={onOpen}
       aria-label={m['retention.pill']({ price, time: timer })}
-      className="fixed bottom-[max(1rem,env(safe-area-inset-bottom))] left-4 z-40 inline-flex min-h-11 max-w-[calc(100vw-2rem)] items-center gap-2 rounded-full border border-[#e2e5ea] bg-white px-3.5 text-sm font-semibold text-[#171b27] shadow-lg focus-visible:outline-2 focus-visible:outline-[#c8962c]"
+      className="border-border bg-card text-foreground focus-visible:outline-ring fixed bottom-[max(1rem,env(safe-area-inset-bottom))] left-4 z-40 inline-flex min-h-11 max-w-[calc(100vw-2rem)] items-center gap-2 rounded-full border px-3.5 text-sm font-semibold shadow-lg focus-visible:outline-2"
     >
-      <Clock3 className="size-4 shrink-0 text-[#7c5408]" aria-hidden="true" />
+      <Clock3 className="text-primary size-4 shrink-0" aria-hidden="true" />
       <span className="truncate">{price}</span>
-      <span className="shrink-0 text-xs font-medium text-[#555d6b] tabular-nums">
+      <span className="text-muted-foreground shrink-0 text-xs font-medium tabular-nums">
         {m['retention.remaining']({ time: timer })}
       </span>
     </button>
@@ -213,8 +210,8 @@ function RetentionCompare({
 }) {
   return (
     <div className="grid grid-cols-[4.5rem_1fr] items-stretch gap-3 sm:grid-cols-2">
-      <figure className="relative overflow-hidden rounded-2xl border-2 border-[#c9ced8] bg-white">
-        <span className="absolute top-2 left-2 z-10 rounded-full bg-white/90 px-2.5 py-1 text-[11px] font-semibold text-[#171b27] shadow-sm">
+      <figure className="border-border bg-card relative overflow-hidden rounded-2xl border-2">
+        <span className="bg-card/90 text-foreground absolute top-2 left-2 z-10 rounded-full px-2.5 py-1 text-[11px] font-semibold shadow-sm">
           {m['retention.compare_original']()}
         </span>
         <img
@@ -223,8 +220,8 @@ function RetentionCompare({
           className="aspect-[9/16] h-full max-h-52 w-full object-contain"
         />
       </figure>
-      <figure className="relative overflow-hidden rounded-2xl border-2 border-[#171b27] bg-black shadow-[4px_4px_0_#171b27]">
-        <span className="absolute top-2 left-2 z-10 rounded-full bg-[#e6b325] px-2.5 py-1 text-[11px] font-semibold text-[#1a1206] shadow-sm">
+      <figure className="border-foreground relative overflow-hidden rounded-2xl border-2 bg-black shadow-[4px_4px_0_#171b27]">
+        <span className="bg-primary text-primary-foreground absolute top-2 left-2 z-10 rounded-full px-2.5 py-1 text-[11px] font-semibold shadow-sm">
           {m['retention.compare_result']()}
         </span>
         <video
@@ -299,21 +296,21 @@ function ControlRetentionOffer({
       <OfferDialog
         open={open}
         onOpenChange={onOpenChange}
-        className="flex max-h-[calc(100dvh-2rem)] w-[calc(100%-2rem)] max-w-md flex-col gap-0 overflow-hidden border-0 bg-white p-0 text-[#171b27]"
+        className="bg-card text-foreground flex max-h-[calc(100dvh-2rem)] w-[calc(100%-2rem)] max-w-md flex-col gap-0 overflow-hidden border-0 p-0"
       >
         <button
           type="button"
           onClick={onCollapse}
           aria-label={m['retention.minimize']()}
-          className="absolute top-3 right-3 z-30 flex size-11 items-center justify-center rounded-xl bg-white/80 hover:bg-[#f7f7f8] focus-visible:outline-2 focus-visible:outline-[#c8962c]"
+          className="bg-card/80 hover:bg-accent focus-visible:outline-ring absolute top-3 right-3 z-30 flex size-11 items-center justify-center rounded-xl focus-visible:outline-2"
         >
           <X className="size-5" />
         </button>
-        <DialogHeader className="flex-none border-b border-[#e2e5ea] px-6 pt-5 pr-16 pb-4">
+        <DialogHeader className="border-border flex-none border-b px-6 pt-5 pr-16 pb-4">
           <DialogTitle className="text-2xl font-semibold tracking-tight">
             {m['retention.title']()}
           </DialogTitle>
-          <DialogDescription className="text-sm text-[#555d6b]">
+          <DialogDescription className="text-muted-foreground text-sm">
             {m['retention.description']()}
           </DialogDescription>
         </DialogHeader>
@@ -321,13 +318,14 @@ function ControlRetentionOffer({
             .retention-buy-marquee {
               border-radius: 14px;
               padding: 2px;
-              background: linear-gradient(110deg, #c8962c, #f0d48a, #c8962c, #ffc24d, #c8962c);
+              background: var(--primary);
               background-size: 220% 100%;
-              box-shadow: 0 10px 26px rgb(200 150 44 / 0.35);
-              animation: retention-buy-marquee 2.4s linear infinite;
+              box-shadow: 0 4px 16px color-mix(in oklch, var(--primary) 15%, transparent);
+              animation: none;
             }
             .retention-buy-shine {
-              animation: retention-buy-shine 2.8s ease-in-out infinite;
+              animation: none;
+              display: none;
             }
             @keyframes retention-buy-marquee {
               to { background-position: 220% 0; }
@@ -345,8 +343,8 @@ function ControlRetentionOffer({
           <div className="space-y-5 p-5">
             <section className="space-y-3">
               <div className="grid grid-cols-2 items-stretch gap-3">
-                <figure className="relative overflow-hidden rounded-2xl border-2 border-[#c9ced8] bg-white">
-                  <span className="absolute top-12 left-2 z-10 rounded-full bg-white/90 px-2.5 py-1 text-[11px] font-semibold text-[#171b27] shadow-sm sm:top-2">
+                <figure className="border-border bg-card relative overflow-hidden rounded-2xl border-2">
+                  <span className="bg-card/90 text-foreground absolute top-12 left-2 z-10 rounded-full px-2.5 py-1 text-[11px] font-semibold shadow-sm sm:top-2">
                     {m['retention.compare_original']()}
                   </span>
                   <img
@@ -355,8 +353,8 @@ function ControlRetentionOffer({
                     className="aspect-[9/16] h-full w-full object-contain"
                   />
                 </figure>
-                <figure className="relative overflow-hidden rounded-2xl border-2 border-[#c8962c] bg-black shadow-[0_8px_24px_rgb(200_150_44/0.25)]">
-                  <span className="absolute top-12 left-2 z-10 rounded-full bg-[#e6b325] px-2.5 py-1 text-[11px] font-semibold text-[#1a1206] shadow-sm sm:top-2">
+                <figure className="border-primary relative overflow-hidden rounded-2xl border-2 bg-black shadow-sm">
+                  <span className="bg-primary text-primary-foreground absolute top-12 left-2 z-10 rounded-full px-2.5 py-1 text-[11px] font-semibold shadow-sm sm:top-2">
                     {m['retention.compare_result']()}
                   </span>
                   <video
@@ -376,7 +374,7 @@ function ControlRetentionOffer({
               </div>
             </section>
             <section className="space-y-3">
-              <p className="text-sm leading-relaxed text-[#3d4452]">
+              <p className="text-foreground text-sm leading-relaxed">
                 {boldProofFigures(
                   m['proof.quality']({
                     videos: formatProofNumber(QUALITY_PROOF_VIDEOS, locale),
@@ -390,14 +388,14 @@ function ControlRetentionOffer({
                 )}
               </p>
               {typeof generatedCount === 'number' && (
-                <p className="text-sm font-semibold text-[#7c5408]">
+                <p className="text-primary text-sm font-semibold">
                   {m['proof.generated']({
                     count: formatProofNumber(generatedCount, locale),
                   })}
                 </p>
               )}
             </section>
-            <section className="rounded-2xl border-2 border-[#c8962c] bg-[#fff6dc] p-4 shadow-sm">
+            <section className="border-primary bg-accent rounded-2xl border-2 p-4 shadow-sm">
               <div className="flex items-center gap-4">
                 {image ? (
                   <img
@@ -406,41 +404,38 @@ function ControlRetentionOffer({
                     className="size-20 shrink-0 rounded-xl object-cover"
                   />
                 ) : (
-                  <div className="flex size-20 shrink-0 items-center justify-center rounded-xl bg-white">
-                    <Video
-                      className="size-7 text-[#7c5408]"
-                      aria-hidden="true"
-                    />
+                  <div className="bg-card flex size-20 shrink-0 items-center justify-center rounded-xl">
+                    <Video className="text-primary size-7" aria-hidden="true" />
                   </div>
                 )}
                 <div className="min-w-0">
                   <p className="text-3xl font-semibold tracking-tight">
                     {price}
                   </p>
-                  <p className="mt-1 text-sm text-[#555d6b]">
+                  <p className="text-muted-foreground mt-1 text-sm">
                     {m['retention.allowance']({ credits: offer.credits })}
                   </p>
                 </div>
                 <div className="ml-auto shrink-0 text-right">
-                  <p className="text-xs text-[#555d6b]">
+                  <p className="text-muted-foreground text-xs">
                     {m['retention.time_label']()}
                   </p>
                   <p
                     role="timer"
                     aria-label={m['retention.remaining']({ time: timer })}
-                    className="text-2xl font-semibold text-[#7c5408] tabular-nums"
+                    className="text-primary text-2xl font-semibold tabular-nums"
                   >
                     {timer}
                   </p>
                 </div>
               </div>
-              <p className="mt-4 text-sm leading-relaxed font-medium text-[#171b27]">
+              <p className="text-foreground mt-4 text-sm leading-relaxed font-medium">
                 {m['retention.recommend']()}
               </p>
-              <p className="mt-2 text-xs leading-relaxed text-[#555d6b]">
+              <p className="text-muted-foreground mt-2 text-xs leading-relaxed">
                 {m['retention.terms']()}
               </p>
-              <p className="mt-1 text-xs leading-relaxed text-[#555d6b]">
+              <p className="text-muted-foreground mt-1 text-xs leading-relaxed">
                 {offer.creditsValidDays > 0
                   ? m['settings.credits.topup_valid_days']({
                       days: offer.creditsValidDays,
@@ -450,7 +445,7 @@ function ControlRetentionOffer({
             </section>
           </div>
         </div>
-        <div className="flex-none border-t border-[#e2e5ea] bg-white px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] shadow-[0_-8px_24px_rgb(23_27_39/0.08)]">
+        <div className="border-border bg-card flex-none border-t px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] shadow-[0_-8px_24px_rgb(23_27_39/0.08)]">
           <div className="flex items-center gap-3">
             <div className="shrink-0">
               <p className="text-lg leading-none font-bold tracking-tight">
@@ -458,7 +453,7 @@ function ControlRetentionOffer({
               </p>
               <p
                 aria-hidden="true"
-                className="mt-1 text-[11px] font-semibold text-[#7c5408] tabular-nums"
+                className="text-primary mt-1 text-[11px] font-semibold tabular-nums"
               >
                 {timer}
               </p>
@@ -466,13 +461,13 @@ function ControlRetentionOffer({
             <PayActionRow className="min-w-0 flex-1">
               <div className="retention-buy-marquee">
                 <Button
-                  className="relative h-12 w-full overflow-hidden rounded-[12px] bg-[#e6b325] text-base font-semibold text-[#1a1206] hover:bg-[#c49212]"
+                  className="bg-primary text-primary-foreground hover:bg-primary/90 relative h-12 w-full overflow-hidden rounded-[12px] text-base font-semibold"
                   disabled={checkout.isPending}
                   onClick={() => checkout.mutate(VIDEO_RETENTION_PRODUCT_ID)}
                 >
                   <span
                     aria-hidden="true"
-                    className="retention-buy-shine pointer-events-none absolute inset-y-0 left-0 w-1/3 bg-white/25 blur-[2px]"
+                    className="retention-buy-shine bg-card/25 pointer-events-none absolute inset-y-0 left-0 w-1/3 blur-[2px]"
                   />
                   <span className="relative flex items-center gap-2">
                     {checkout.isPending ? (
@@ -506,7 +501,7 @@ function ControlRetentionOffer({
           <button
             type="button"
             onClick={onCollapse}
-            className="mt-1 min-h-8 w-full rounded-lg text-xs text-[#555d6b] underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-[#c8962c]"
+            className="text-muted-foreground focus-visible:outline-ring mt-1 min-h-8 w-full rounded-lg text-xs underline underline-offset-4 focus-visible:outline-2"
           >
             {m['retention.later']()}
           </button>
@@ -563,33 +558,33 @@ function NamePriceRetentionOffer(props: OfferViewProps) {
       <OfferDialog
         open={props.open}
         onOpenChange={props.onOpenChange}
-        className="flex max-h-[calc(100dvh-2rem)] w-[calc(100%-2rem)] max-w-md flex-col gap-0 overflow-hidden rounded-[28px] border-2 border-[#171b27] bg-white p-0 text-[#171b27] shadow-[6px_6px_0_#171b27]"
+        className="border-foreground bg-card text-foreground flex max-h-[calc(100dvh-2rem)] w-[calc(100%-2rem)] max-w-md flex-col gap-0 overflow-hidden rounded-[28px] border-2 p-0 shadow-[6px_6px_0_#171b27]"
       >
         <button
           type="button"
           onClick={props.onCollapse}
           aria-label={m['retention.minimize']()}
-          className="absolute top-3 right-3 z-30 flex size-11 items-center justify-center rounded-xl hover:bg-[#f7f7f8] focus-visible:outline-2 focus-visible:outline-[#c8962c]"
+          className="hover:bg-accent focus-visible:outline-ring absolute top-3 right-3 z-30 flex size-11 items-center justify-center rounded-xl focus-visible:outline-2"
         >
           <X className="size-5" />
         </button>
         <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 pt-5 pb-4">
-          <div className="inline-flex items-center gap-1.5 rounded-full border-2 border-[#171b27] bg-[#e6b325] px-3 py-1 text-[11px] font-black tracking-wide text-[#1a1206] uppercase shadow-[3px_3px_0_#171b27]">
+          <div className="border-foreground bg-primary text-primary-foreground inline-flex items-center gap-1.5 rounded-full border-2 px-3 py-1 text-[11px] font-black tracking-wide uppercase shadow-[3px_3px_0_#171b27]">
             <Sparkles className="size-3.5" aria-hidden="true" />
             {m['retention.name_price.badge']()}
           </div>
           <DialogHeader className="mt-4 gap-2 p-0 text-left">
-            <DialogTitle className="text-[1.65rem] leading-tight font-semibold tracking-tight text-[#171b27]">
+            <DialogTitle className="text-foreground text-[1.65rem] leading-tight font-semibold tracking-tight">
               {m['retention.name_price.title']()}
             </DialogTitle>
-            <DialogDescription className="text-sm leading-relaxed text-[#555d6b]">
+            <DialogDescription className="text-muted-foreground text-sm leading-relaxed">
               {m['retention.name_price.description']()}
             </DialogDescription>
           </DialogHeader>
           <p
             role="timer"
             aria-label={m['retention.remaining']({ time: props.timer })}
-            className="mt-3 text-sm font-semibold text-[#7c5408] tabular-nums"
+            className="text-primary mt-3 text-sm font-semibold tabular-nums"
           >
             {m['retention.time_label']()} {props.timer}
           </p>
@@ -610,10 +605,10 @@ function NamePriceRetentionOffer(props: OfferViewProps) {
                   role="radio"
                   aria-checked={selected}
                   onClick={() => select(amount)}
-                  className={`h-11 rounded-full border-2 text-sm font-semibold focus-visible:outline-2 focus-visible:outline-[#c8962c] ${
+                  className={`focus-visible:outline-ring h-11 rounded-full border-2 text-sm font-semibold focus-visible:outline-2 ${
                     selected
-                      ? 'border-[#c8962c] text-[#7c5408]'
-                      : 'border-[#e6e8ee] text-[#171b27] hover:border-[#c9ced8]'
+                      ? 'border-primary text-primary'
+                      : 'text-foreground hover:border-border border-[#e6e8ee]'
                   }`}
                 >
                   {formatUsd(amount, locale)}
@@ -621,10 +616,10 @@ function NamePriceRetentionOffer(props: OfferViewProps) {
               );
             })}
           </div>
-          <label className="mt-4 block text-sm font-medium text-[#171b27]">
+          <label className="text-foreground mt-4 block text-sm font-medium">
             {m['retention.name_price.price_label']()}
             <span className="mt-2 flex h-12 items-center gap-2 rounded-2xl border border-[#e6e8ee] bg-[#f7f7f8] px-3">
-              <span aria-hidden="true" className="text-[#555d6b]">
+              <span aria-hidden="true" className="text-muted-foreground">
                 $
               </span>
               <input
@@ -638,7 +633,7 @@ function NamePriceRetentionOffer(props: OfferViewProps) {
               />
             </span>
           </label>
-          <p className="mt-3 text-xs leading-relaxed text-[#555d6b]">
+          <p className="text-muted-foreground mt-3 text-xs leading-relaxed">
             {m['retention.allowance']({ credits: props.offer.credits })}
             {' · '}
             {props.offer.creditsValidDays > 0
@@ -648,10 +643,10 @@ function NamePriceRetentionOffer(props: OfferViewProps) {
               : m['settings.credits.topup_never_expires']()}
           </p>
         </div>
-        <div className="flex-none space-y-2 bg-white px-5 pt-2 pb-[max(1rem,env(safe-area-inset-bottom))]">
+        <div className="bg-card flex-none space-y-2 px-5 pt-2 pb-[max(1rem,env(safe-area-inset-bottom))]">
           <PayActionRow>
             <Button
-              className="h-14 w-full rounded-full border-2 border-[#171b27] bg-[#e6b325] text-base font-bold text-[#1a1206] shadow-[4px_4px_0_#171b27] hover:bg-[#c49212]"
+              className="border-foreground bg-primary text-primary-foreground hover:bg-primary/90 h-14 w-full rounded-full border-2 text-base font-bold shadow-[4px_4px_0_#171b27]"
               disabled={checkout.isPending}
               onClick={() =>
                 checkout.mutate(retentionNamePriceProductId(commitDraft()))
@@ -682,7 +677,7 @@ function NamePriceRetentionOffer(props: OfferViewProps) {
           <button
             type="button"
             onClick={props.onCollapse}
-            className="mt-3 min-h-8 w-full text-sm text-[#555d6b] underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-[#c8962c]"
+            className="text-muted-foreground focus-visible:outline-ring mt-3 min-h-8 w-full text-sm underline underline-offset-4 focus-visible:outline-2"
           >
             {m['retention.name_price.dismiss']()}
           </button>

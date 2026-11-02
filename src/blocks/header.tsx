@@ -11,6 +11,7 @@ import { apiGet } from '@/lib/api-client';
 import { CREDITS_CHANGED_EVENT } from '@/lib/credits-changed';
 import { isGonePath } from '@/lib/gone-paths';
 import { liveEffectNav } from '@/lib/live-effect-nav';
+import { isHiddenPublicPath } from '@/lib/public-page-visibility';
 import { trendingEffects } from '@/lib/trending-effects';
 import { m } from '@/paraglide/messages.js';
 import { SiteHeader, type NavLink } from '@/components/site-header';
@@ -78,7 +79,7 @@ export function Header({
 
   return (
     <SiteHeader
-      navLinks={navLinks}
+      navLinks={navLinks.filter((link) => !isHiddenPublicPath(link.href))}
       creditBalance={credits.data?.balance}
       creditLabel={m['agent.plan.credits']()}
       signInLabel={m['common.nav.sign_in']()}

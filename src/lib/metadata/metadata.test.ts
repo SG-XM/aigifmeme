@@ -3,7 +3,12 @@ import { PDFDocument, PDFName, StandardFonts } from 'pdf-lib';
 import { describe, expect, it } from 'vitest';
 
 import { inspectCsv, stripCsv } from './csv';
-import { cleanedDownloadName, inspectDocument, stripDocument } from './index';
+import {
+  cleanedDownloadName,
+  inspectDocument,
+  MAX_FILE_BYTES,
+  stripDocument,
+} from './index';
 import { inspectOoxml, stripOoxml } from './ooxml';
 import { readZip, writeZip } from './zip';
 
@@ -263,5 +268,37 @@ describe('unsupported files', () => {
     const report = await inspectDocument('old.doc', new Uint8Array([1, 2, 3]));
     expect(report.issue).toBe('unsupported');
     expect(report.removable).toBe(false);
+  });
+});
+
+describe('input size limit', () => {
+  it('accepts exactly 10 MB for inspection and cleanup', async () => {
+    expect(MAX_FILE_BYTES).toBe(10_000_000);
+    const bytes = new Uint8Array(10_000_000);
+    expect(
+      (await inspectDocument('boundary.csv', bytes)).issue
+    ).toBeUndefined();
+    expect((await stripDocument('boundary.csv', bytes)).changed).toBe(false);
+  });
+
+  it('rejects files one byte over the limit before any format is processed', async () => {
+    const bytes = new Uint8Array(10_000_001);
+    for (const extension of [
+      'pdf',
+      'docx',
+      'xlsx',
+      'csv',
+      'jpg',
+      'png',
+      'webp',
+      'gif',
+    ]) {
+      expect(
+        (await inspectDocument(`oversized.${extension}`, bytes)).issue
+      ).toBe('too-large');
+      await expect(
+        stripDocument(`oversized.${extension}`, bytes)
+      ).rejects.toThrow('too-large');
+    }
   });
 });

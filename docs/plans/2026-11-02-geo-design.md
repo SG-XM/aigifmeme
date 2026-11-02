@@ -14,7 +14,7 @@ About/Contact pages, and connect truthful schema entities. Commit and push to ma
   before accepting a cached response or storing a newly rendered one. Invalid
   documents must not be publicly cached. Keep authenticated requests private.
 - Keep the existing homepage appearance and local file processing. State the
-  real document/image support, 64 MiB input limit, and limitations. Add a
+  real document/image support, 10 MB input limit, and limitations. Add a
   capability table, explicit sample before/after values, verification steps,
   and primary-source references. Do not claim anonymization or redaction.
 - Add About/Contact using the existing localized MDX page factory and support

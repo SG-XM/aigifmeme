@@ -1,9 +1,10 @@
-import { createFileRoute } from '@tanstack/react-router';
+import { createFileRoute, notFound } from '@tanstack/react-router';
 
 import { envConfigs } from '@/config';
 import { creditPackStartsLine } from '@/lib/credit-pack-starts';
 import { leadCreditPack } from '@/lib/public-credit-packs';
 import { getPublicCreditPacksFn } from '@/lib/public-credit-packs-fn';
+import { isHiddenPublicPath } from '@/lib/public-page-visibility';
 import { m } from '@/paraglide/messages.js';
 import { getLocale, locales, localizeUrl } from '@/paraglide/runtime.js';
 import { Footer } from '@/blocks/footer';
@@ -12,6 +13,9 @@ import { Pricing } from '@/blocks/pricing';
 import { getBlogPostsFn } from '@/content/posts/server';
 
 export const Route = createFileRoute('/pricing')({
+  beforeLoad: () => {
+    if (isHiddenPublicPath('/pricing')) throw notFound();
+  },
   // Catalog currency can be EUR for a euro-area request, and prices change
   // in admin. A shared cache would reuse the wrong HTML.
   headers: () => ({ 'Cache-Control': 'private, no-store' }),
@@ -63,8 +67,8 @@ export const Route = createFileRoute('/pricing')({
 function PricingPage() {
   const { posts, packs } = Route.useLoaderData();
   return (
-    <div className="trend-site flex min-h-screen flex-col">
-      <Header brandMark="trend" />
+    <div className="trend-site filemeta-site flex min-h-screen flex-col">
+      <Header brandMark="filemeta" />
       <main className="flex-1">
         <Pricing
           headingLevel={1}

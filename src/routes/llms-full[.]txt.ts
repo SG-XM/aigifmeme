@@ -2,6 +2,7 @@ import { createFileRoute } from '@tanstack/react-router';
 
 import { envConfigs } from '@/config';
 import { isGonePath, isRetiredBlogSlug } from '@/lib/gone-paths';
+import { isHiddenPublicPath } from '@/lib/public-page-visibility';
 import { getSiteNameFn } from '@/lib/site-name-server';
 import { m } from '@/paraglide/messages.js';
 import { getLocale, localizeUrl, type Locale } from '@/paraglide/runtime.js';
@@ -101,7 +102,11 @@ export const Route = createFileRoute('/llms-full.txt')({
             title: m['home.contact_link']({}, { locale }),
             description: '',
           },
-        ].filter((page) => !isGonePath(page.path || '/'));
+        ].filter(
+          (page) =>
+            !isGonePath(page.path || '/') &&
+            !isHiddenPublicPath(page.path || '/')
+        );
 
         const lines: string[] = [
           `# ${app_name}`,

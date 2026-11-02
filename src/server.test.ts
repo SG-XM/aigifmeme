@@ -36,6 +36,23 @@ describe('homepage cache response path', () => {
   });
   afterEach(() => vi.unstubAllGlobals());
 
+  it('hides localized pricing URLs before rendering or accessing the cache', async () => {
+    for (const prefix of ['', '/zh', '/es', '/ar']) {
+      for (const method of ['GET', 'HEAD']) {
+        const response = await server.fetch(
+          new Request(`https://filemetawipe.com${prefix}/pricing`, { method })
+        );
+        expect(response.status).toBe(404);
+        expect(response.headers.get('x-robots-tag')).toBe('noindex');
+        expect(response.headers.get('cache-control')).toBe('private, no-store');
+        if (method === 'HEAD') expect(response.body).toBeNull();
+      }
+    }
+    expect(render).not.toHaveBeenCalled();
+    expect(match).not.toHaveBeenCalled();
+    expect(put).not.toHaveBeenCalled();
+  });
+
   it('replaces a cached 200 fallback with complete server-rendered HTML', async () => {
     match.mockResolvedValue(document(fallback));
     render.mockResolvedValue(document(complete));

@@ -789,12 +789,12 @@ export function Pricing({
             <p className="text-center">{m['settings.credits.topup_empty']()}</p>
           )}
           <div className="space-y-4 pt-1 text-center">
-            <p className="text-center text-xs leading-relaxed text-[#596170] sm:text-sm">
+            <p className="text-muted-foreground text-center text-xs leading-relaxed sm:text-sm">
               {m['landing.pricing.secure_checkout']()}
             </p>
             <button
               type="button"
-              className="cursor-pointer text-sm font-medium text-[#4f5868] underline decoration-1 underline-offset-4 transition-colors hover:text-[#171b27] sm:text-base"
+              className="text-muted-foreground hover:text-foreground cursor-pointer text-sm font-medium underline decoration-1 underline-offset-4 transition-colors sm:text-base"
               onClick={() => setShowAllOffers(true)}
             >
               {m['landing.pricing.see_every']()}
@@ -805,7 +805,7 @@ export function Pricing({
         <>
           {planSection(fullGroups, true, true)}
           {packSection(prioritizedPackPlans, true, true)}
-          <p className="pt-1 text-center text-xs leading-relaxed text-[#596170] sm:text-sm">
+          <p className="text-muted-foreground pt-1 text-center text-xs leading-relaxed sm:text-sm">
             {m['landing.pricing.secure_checkout']()}
           </p>
         </>

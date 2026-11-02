@@ -536,7 +536,6 @@ export function MetadataRemoverHome({ siteName }: { siteName: string }) {
         <section id="formats" className="filemeta-section">
           <h2>{m['home.formats_title']()}</h2>
           <p>{m['home.formats_body']()}</p>
-          <p>{m['home.formats_video']()}</p>
           <div
             className="filemeta-table-scroll"
             tabIndex={0}

@@ -34,7 +34,7 @@ export const MARKETING_HTML_PRIVATE_CONTROL = 'private, no-store';
  * that would drop them. Query strings are part of the key (`ignoreSearch`
  * is unsupported).
  */
-export const MARKETING_HTML_CACHE_EPOCH = '20261102b';
+export const MARKETING_HTML_CACHE_EPOCH = '20261102c';
 
 /**
  * Homepage HTML is worth caching only when the article actually rendered.
