@@ -1,8 +1,16 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="FileMeta document wipe, teal">
-  <rect width="512" height="512" rx="112" fill="#0E6B64"/>
-  <path fill="#F7F4EE" d="M150 96h150l78 78v246H150z"/>
-  <path fill="#D7E7E4" d="M300 96v78h78z"/>
-  <rect x="186" y="210" width="150" height="18" rx="9" fill="#F7F4EE" opacity="0.45"/>
-  <rect x="186" y="246" width="110" height="18" rx="9" fill="#F7F4EE" opacity="0.45"/>
-  <path d="M168 348 L344 176" stroke="#F7F4EE" stroke-width="28" stroke-linecap="round"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 908 908" role="img" aria-label="FileMeta">
+  <defs>
+    <linearGradient id="filemeta-bg" x1="0" y1="0" x2="908" y2="908" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#009DA6"/>
+      <stop offset="1" stop-color="#26DAE9"/>
+    </linearGradient>
+  </defs>
+  <rect width="908" height="908" rx="192" fill="url(#filemeta-bg)"/>
+  <path fill="#ffffff" fill-opacity="0.34" d="M396 192H585L706 309V619a39 39 0 0 1-39 39H396a39 39 0 0 1-39-39V231a39 39 0 0 1 39-39z"/>
+  <path fill="#ffffff" fill-opacity="0.5" d="M585 192L706 309L667 349L546 232Z"/>
+  <g fill="none" stroke="#ffffff" stroke-linecap="round">
+    <path d="M345.5 290.5V667.5" stroke-width="101"/>
+    <path d="M345.5 286H576" stroke-width="92"/>
+    <path d="M345.5 467H541" stroke-width="92"/>
+  </g>
 </svg>
