@@ -1,8 +1,8 @@
 import { createFileRoute } from '@tanstack/react-router';
 
 import { envConfigs } from '@/config';
+import { FILEMETA_UPDATED_AT } from '@/lib/filemeta-content';
 import { isGonePath } from '@/lib/gone-paths';
-import { TREND_PAGE_UPDATED_AT } from '@/lib/trend-page-meta';
 import {
   baseLocale,
   locales,
@@ -16,6 +16,8 @@ const STATIC_PATHS = [
   '/blog',
   '/privacy-policy',
   '/terms-of-service',
+  '/about',
+  '/contact',
 ].filter((path) => !isGonePath(path || '/'));
 // Retired campaign URLs are omitted. Private app/auth routes stay omitted.
 
@@ -112,7 +114,9 @@ export const Route = createFileRoute('/sitemap.xml')({
                 path,
                 {
                   path,
-                  lastModified: path === '' ? TREND_PAGE_UPDATED_AT : undefined,
+                  lastModified: ['', '/about', '/contact'].includes(path)
+                    ? FILEMETA_UPDATED_AT
+                    : undefined,
                 },
               ]
             )

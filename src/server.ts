@@ -9,6 +9,7 @@ import {
   MARKETING_HTML_PRIVATE_CONTROL,
   marketingHtmlCacheableResponse,
   marketingHtmlCacheDecision,
+  marketingHtmlHasContent,
   marketingHtmlIsCompleteDocument,
   marketingHtmlStoreHeaders,
   pickEdgeWaitUntil,
@@ -97,7 +98,7 @@ export default {
     if (cache && decision.cache) {
       try {
         const hit = await cache.match(decision.key);
-        if (hit) {
+        if (hit && (await marketingHtmlHasContent(hit))) {
           const headers = new Headers(hit.headers);
           headers.set('Cache-Control', MARKETING_HTML_CACHE_CONTROL);
           headers.set('x-html-cache', 'HIT');
@@ -147,11 +148,11 @@ export default {
     const storeSnapshot = cache && cacheableDocument ? rendered.clone() : null;
     const response = applyAttribution(req, rendered);
 
-    if (decision.home && decision.session) {
+    if (decision.home && (decision.session || !cacheableDocument)) {
       response.headers.set('Cache-Control', MARKETING_HTML_PRIVATE_CONTROL);
-    } else if (documentHtml && !complete) {
-      response.headers.set('Cache-Control', MARKETING_HTML_PRIVATE_CONTROL);
-      response.headers.set('x-html-cache', 'SKIP');
+      if (documentHtml != null && !complete) {
+        response.headers.set('x-html-cache', 'SKIP');
+      }
     } else if (cacheableDocument) {
       response.headers.set('Cache-Control', MARKETING_HTML_CACHE_CONTROL);
       response.headers.set('x-html-cache', storeSnapshot ? 'MISS' : 'BYPASS');

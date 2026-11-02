@@ -1,0 +1,26 @@
+export const meta = {
+  title: 'Acerca de FileMeta Wipe',
+  description:
+    'Funciones, límites y soporte del eliminador de metadatos local.',
+  updated_at: '2026-11-02',
+};
+
+## Qué hace el producto
+
+FileMeta Wipe elimina metadatos de documentos en el navegador. Lee PDF, DOCX, XLSX, CSV, JPEG, PNG, WebP y GIF localmente y crea una copia descargable sin subir el documento a nuestro servidor. Esta limpieza local no requiere cuenta.
+
+En PDF trata el diccionario Info y el flujo XMP del documento. En DOCX y XLSX vacía propiedades básicas, extendidas y personalizadas de docProps. En CSV elimina un BOM UTF-8 y una línea inicial sep= de Excel; conserva los valores de las celdas. En imágenes elimina metadatos incrustados compatibles según la imagen, conservando píxeles y perfiles de color.
+
+## Límites
+
+Limpiar metadatos no anonimiza ni censura contenido. Pueden quedar datos personales en texto, comentarios, revisiones, hojas ocultas y adjuntos. También permanecen caras, texto y lugares visibles en las imágenes. El límite es 64 MiB por archivo; no se admiten DOC/XLS antiguos, vídeos ni PDF cifrados. Revisa la copia antes de compartirla.
+
+## Cómo verificarlo
+
+Los [pasos de verificación](/#verify) explican una prueba DOCX sin datos sensibles y una revisión independiente. Presentamos límites junto a las funciones. La fecha de revisión indica un cambio en la explicación, no una certificación ni una auditoría.
+
+## Responsabilidad y soporte
+
+Este sitio presenta el producto FileMeta Wipe. Para preguntas, correcciones o solicitudes de privacidad, utiliza el canal existente de tickets descrito en [Contacto](/contact). No afirmamos certificaciones de terceros ni afiliación con Microsoft o Adobe.
+
+Consulta la [política de privacidad](/privacy-policy) y los [términos](/terms-of-service). El procesamiento local no implica ausencia de conexiones: las funciones de cuenta, soporte y analítica pueden comunicarse con servidores.

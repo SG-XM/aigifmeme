@@ -95,8 +95,10 @@ export function trendPageMeta({
                   ? 'ar'
                   : 'en',
           dateModified,
+          author: { '@id': `${baseUrl}/#organization` },
           isPartOf: {
             '@type': 'WebSite',
+            '@id': `${baseUrl}/#website`,
             name: resolveSiteName(siteName, envConfigs.app_name),
             url: `${baseUrl}/`,
           },

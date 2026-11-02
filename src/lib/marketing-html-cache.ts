@@ -34,7 +34,7 @@ export const MARKETING_HTML_PRIVATE_CONTROL = 'private, no-store';
  * that would drop them. Query strings are part of the key (`ignoreSearch`
  * is unsupported).
  */
-export const MARKETING_HTML_CACHE_EPOCH = '20261102a';
+export const MARKETING_HTML_CACHE_EPOCH = '20261102b';
 
 /**
  * Homepage HTML is worth caching only when the article actually rendered.
@@ -42,7 +42,12 @@ export const MARKETING_HTML_CACHE_EPOCH = '20261102a';
  * store the shell — title and JSON-LD, no H1 — for a day.
  */
 export function marketingHtmlIsCompleteDocument(html: string): boolean {
-  return /<h1[\s>]/i.test(html) && /<\/html>/i.test(html);
+  return (
+    html.includes('data-filemeta-home="true"') &&
+    /<h1\b[^>]*>[^<]*\S[^<]*<\/h1>/.test(html) &&
+    html.includes('</main>') &&
+    /<\/html>/i.test(html)
+  );
 }
 
 const CACHE_KEY_PART = /^[A-Za-z0-9._-]{1,80}$/;
@@ -211,4 +216,17 @@ export function marketingHtmlCacheableResponse(response: Response): boolean {
   if (!type.includes('text/html')) return false;
   if (responseSetsCookie(response)) return false;
   return true;
+}
+
+/** A 200 response can still be React's empty client-render fallback. */
+export async function marketingHtmlHasContent(
+  response: Response
+): Promise<boolean> {
+  if (!marketingHtmlCacheableResponse(response)) return false;
+  try {
+    const html = await response.clone().text();
+    return marketingHtmlIsCompleteDocument(html);
+  } catch {
+    return false;
+  }
 }

@@ -2,6 +2,7 @@ import type { ComponentType } from 'react';
 import { notFound, useLoaderData } from '@tanstack/react-router';
 
 import { envConfigs } from '@/config';
+import { canonicalOrigin } from '@/lib/trend-page-meta';
 import { m } from '@/paraglide/messages.js';
 import {
   baseLocale,
@@ -59,7 +60,8 @@ export function staticPageRouteOptions(slug: string) {
     head: ({ loaderData }: { loaderData?: LoaderData }) => {
       if (!loaderData) return {};
       const { meta, locale } = loaderData;
-      const canonical = localizeUrl(`${envConfigs.app_url}/${slug}`, {
+      const origin = canonicalOrigin(envConfigs.app_url, `/${slug}`);
+      const canonical = localizeUrl(`${origin}/${slug}`, {
         locale: locale as ReturnType<typeof getLocale>,
       }).href;
       return {
@@ -75,16 +77,40 @@ export function staticPageRouteOptions(slug: string) {
           ...getPageLocales(slug).map((language) => ({
             rel: 'alternate',
             hrefLang: language,
-            href: localizeUrl(`${envConfigs.app_url}/${slug}`, {
+            href: localizeUrl(`${origin}/${slug}`, {
               locale: language,
             }).href,
           })),
           {
             rel: 'alternate',
             hrefLang: 'x-default',
-            href: localizeUrl(`${envConfigs.app_url}/${slug}`, {
+            href: localizeUrl(`${origin}/${slug}`, {
               locale: baseLocale,
             }).href,
+          },
+        ],
+        scripts: [
+          {
+            type: 'application/ld+json',
+            children: JSON.stringify({
+              '@context': 'https://schema.org',
+              '@type':
+                slug === 'about'
+                  ? 'AboutPage'
+                  : slug === 'contact'
+                    ? 'ContactPage'
+                    : 'WebPage',
+              '@id': `${canonical}#webpage`,
+              url: canonical,
+              name: meta.title,
+              description: meta.description,
+              inLanguage: locale,
+              dateModified: meta.updated_at,
+              isPartOf: { '@id': `${origin}/#website` },
+              ...(slug === 'about' || slug === 'contact'
+                ? { about: { '@id': `${origin}/#organization` } }
+                : {}),
+            }).replace(/</g, '\\u003c'),
           },
         ],
       };

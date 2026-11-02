@@ -54,7 +54,11 @@ export function Footer({
     },
     {
       title: m['landing.nav.guides'](),
-      links: [{ label: m['blog.title'](), href: '/blog' }],
+      links: [
+        { label: m['blog.title'](), href: '/blog' },
+        { label: m['home.about_link'](), href: '/about' },
+        { label: m['home.contact_link'](), href: '/contact' },
+      ],
     },
     {
       title: m['landing.footer.account'](),

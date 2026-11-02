@@ -1800,6 +1800,7 @@ html[dir='rtl'] .lucide-arrow-right {
 }
 .filemeta-section {
   padding: 2.5rem 0;
+  scroll-margin-top: 5.5rem;
 }
 .filemeta-kicker {
   margin: 0 0 0.75rem;
@@ -1820,6 +1821,16 @@ html[dir='rtl'] .lucide-arrow-right {
 .filemeta-hero h1 {
   max-width: 16ch;
   font-size: clamp(3rem, 8vw, 5.5rem);
+}
+.filemeta-section h2 {
+  font-size: clamp(1.5rem, 3vw, 2.25rem);
+  line-height: 1.2;
+}
+.filemeta-summary {
+  max-width: 48rem;
+  margin-top: 1.5rem;
+  color: #3e4a45;
+  line-height: 1.6;
 }
 .filemeta-lead,
 .filemeta-section > p {
@@ -2071,6 +2082,42 @@ html[dir='rtl'] .lucide-arrow-right {
 .filemeta-faq summary {
   cursor: pointer;
   font-weight: 680;
+}
+.filemeta-table-scroll {
+  margin-top: 1.25rem;
+  overflow-x: auto;
+  border: 1px solid rgb(20 34 31 / 15%);
+  border-radius: 0.75rem;
+}
+.filemeta-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: start;
+  font-size: 0.95rem;
+  line-height: 1.6;
+}
+.filemeta-table caption {
+  padding: 0.9rem 1rem;
+  text-align: start;
+  font-weight: 600;
+}
+.filemeta-table th,
+.filemeta-table td {
+  padding: 0.8rem 1rem;
+  border-top: 1px solid rgb(20 34 31 / 12%);
+  vertical-align: top;
+  min-width: 8rem;
+}
+.filemeta-table thead {
+  background: rgb(20 34 31 / 4%);
+}
+.filemeta-section a {
+  color: #0e6b64;
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+.filemeta-provenance {
+  border-top: 1px solid rgb(20 34 31 / 12%);
 }
 .sr-only {
   position: absolute;

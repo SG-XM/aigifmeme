@@ -175,16 +175,29 @@ export const Route = createRootRoute({
           type: 'application/ld+json',
           children: JSON.stringify({
             '@context': 'https://schema.org',
-            '@type': 'WebSite',
-            name: appName,
-            description: siteDescription,
-            url: appUrl,
-            publisher: {
-              '@type': 'Organization',
-              name: appName,
-              logo: ogImage,
-            },
-          }),
+            '@graph': [
+              {
+                '@type': 'Organization',
+                '@id': `${appUrl}/#organization`,
+                name: appName,
+                url: `${appUrl}/`,
+                logo: `${appUrl}/logo.png`,
+                contactPoint: {
+                  '@type': 'ContactPoint',
+                  contactType: 'customer support',
+                  url: `${appUrl}/contact`,
+                },
+              },
+              {
+                '@type': 'WebSite',
+                '@id': `${appUrl}/#website`,
+                name: appName,
+                description: siteDescription,
+                url: `${appUrl}/`,
+                publisher: { '@id': `${appUrl}/#organization` },
+              },
+            ],
+          }).replace(/</g, '\\u003c'),
         },
       ],
     };

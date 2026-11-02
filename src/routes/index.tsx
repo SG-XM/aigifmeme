@@ -1,13 +1,11 @@
 import { createFileRoute } from '@tanstack/react-router';
 
+import { FILEMETA_UPDATED_AT } from '@/lib/filemeta-content';
 import { getSiteNameFn } from '@/lib/site-name-server';
 import { trendPageMeta } from '@/lib/trend-page-meta';
 import { m } from '@/paraglide/messages.js';
 import { getLocale, type Locale } from '@/paraglide/runtime.js';
 import { MetadataRemoverHome } from '@/blocks/metadata-remover-home';
-
-/** Homepage copy revision. Other trend pages keep TREND_PAGE_UPDATED_AT. */
-const HOME_UPDATED_AT = '2026-11-02';
 
 function jsonLd(data: unknown) {
   return JSON.stringify(data).replace(/</g, '\\u003c');
@@ -91,7 +89,7 @@ export const Route = createFileRoute('/')({
     const meta = trendPageMeta({
       ...loaderData,
       path: '/',
-      dateModified: HOME_UPDATED_AT,
+      dateModified: FILEMETA_UPDATED_AT,
     });
     return {
       ...meta,
@@ -106,5 +104,6 @@ export const Route = createFileRoute('/')({
 });
 
 function HomePage() {
-  return <MetadataRemoverHome />;
+  const { siteName } = Route.useLoaderData();
+  return <MetadataRemoverHome siteName={siteName} />;
 }

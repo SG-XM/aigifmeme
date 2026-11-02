@@ -1,5 +1,5 @@
 import { execSync } from 'node:child_process';
-import { existsSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 
@@ -67,15 +67,17 @@ describe('homepage message shell', () => {
     const enRest = renderCatalog('en', restKeys, compiled);
     const zhShell = renderCatalog('zh', shellKeys, compiled);
 
-    expect(enShell).toContain(
-      'Metadata Remover - Remove PDF & Image Metadata Free'
-    );
+    const titleFor = (locale: string) =>
+      JSON.parse(
+        readFileSync(path.join(root, `messages/${locale}.json`), 'utf8')
+      )['home.meta_title'];
+    expect(enShell).toContain(titleFor('en'));
     expect(enShell).not.toContain('Uptown Funk');
     expect(enShell).not.toContain('免费 Bulin 47 AI 视频生成器');
     expect(enShell).not.toContain('一张照片，站到舞团最前面');
     expect(enShell).not.toContain('Credits granted');
     expect(enShell).not.toContain('const zh_');
-    expect(zhShell).toContain('Metadata Remover - 免费清除 PDF 和图片元数据');
+    expect(zhShell).toContain(titleFor('zh'));
     expect(enRest).toContain('Credits granted');
     expect(enShell.length).toBeLessThan(enRest.length);
     expect(shellKeys.length).toBeGreaterThan(50);

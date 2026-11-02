@@ -8,6 +8,7 @@ import {
   marketingHtmlCacheDecision,
   marketingHtmlCacheStorageKey,
   marketingHtmlCacheToken,
+  marketingHtmlHasContent,
   marketingHtmlIsCompleteDocument,
   marketingHtmlStoreHeaders,
   scheduleEdgeCacheWrite,
@@ -35,11 +36,71 @@ describe('marketing homepage cache', () => {
     ).toBe(false);
     expect(
       marketingHtmlIsCompleteDocument(
-        '<html><body><h1>Metadata Remover</h1><p>FAQ</p></body></html>'
+        '<html><body><main data-filemeta-home="true"><h1>Metadata Remover</h1><p>FAQ</p></main></body></html>'
       )
     ).toBe(true);
   });
 
+  it('rejects React fallback shells even when the response is 200 HTML', async () => {
+    const document = (html: string) =>
+      new Response(html, { headers: { 'content-type': 'text/html' } });
+    expect(
+      await marketingHtmlHasContent(
+        document(
+          '<html><head><title>Metadata Remover</title></head><body><!--$!--><template></template><!--/$--></body></html>'
+        )
+      )
+    ).toBe(false);
+    expect(
+      await marketingHtmlHasContent(
+        document('<main data-filemeta-home="true"><h1>Metadata Remover</h1>')
+      )
+    ).toBe(false);
+    expect(
+      await marketingHtmlHasContent(
+        document('<main data-filemeta-home="true"><h1> </h1></main>')
+      )
+    ).toBe(false);
+  });
+
+  it('accepts completed localized homepages without consuming the source body', async () => {
+    for (const title of [
+      'Metadata Remover',
+      '元数据清除工具',
+      'Eliminar metadatos',
+      'إزالة البيانات الوصفية',
+    ]) {
+      const html = `<html><body><main data-filemeta-home="true"><h1>${title}</h1><section>Supported formats</section></main></body></html>`;
+      const response = new Response(html, {
+        headers: { 'content-type': 'text/html' },
+      });
+      expect(await marketingHtmlHasContent(response)).toBe(true);
+      expect(await response.text()).toBe(html);
+    }
+  });
+
+  it('does not cache failed or personalized documents even when the content is complete', async () => {
+    const html =
+      '<main data-filemeta-home="true"><h1>Metadata Remover</h1></main>';
+    expect(
+      await marketingHtmlHasContent(
+        new Response(html, {
+          status: 500,
+          headers: { 'content-type': 'text/html' },
+        })
+      )
+    ).toBe(false);
+    expect(
+      await marketingHtmlHasContent(
+        new Response(html, {
+          headers: {
+            'content-type': 'text/html',
+            'set-cookie': 'session=private',
+          },
+        })
+      )
+    ).toBe(false);
+  });
   it('caches anonymous document gets for each locale home', () => {
     for (const path of ['/', '/zh', '/es', '/ar', '/zh/']) {
       const decision = marketingHtmlCacheDecision(

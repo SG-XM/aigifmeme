@@ -1,5 +1,7 @@
 import { Component, useRef, useState, type ReactNode } from 'react';
 
+import { Link } from '@/core/i18n/navigation';
+import { FILEMETA_UPDATED_AT } from '@/lib/filemeta-content';
 import { formatFileSize } from '@/lib/metadata-file';
 import {
   MAX_FILE_BYTES,
@@ -24,7 +26,7 @@ function loadMetadata() {
 }
 
 const ACCEPT =
-  '.pdf,.doc,.docx,.xls,.xlsx,.csv,.jpg,.jpeg,.png,.webp,.gif,application/pdf,text/csv,image/jpeg,image/png,image/webp,image/gif,application/msword,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+  '.pdf,.docx,.xlsx,.csv,.jpg,.jpeg,.png,.webp,.gif,application/pdf,text/csv,image/jpeg,image/png,image/webp,image/gif,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
 
 const GROUPS = ['pdf', 'xmp', 'core', 'app', 'custom', 'csv', 'exif'] as const;
 
@@ -505,11 +507,11 @@ class ToolBoundary extends Component<
   }
 }
 
-export function MetadataRemoverHome() {
+export function MetadataRemoverHome({ siteName }: { siteName: string }) {
   return (
     <div className="trend-site filemeta-site min-h-screen">
       <Header nav="product" brandMark="filemeta" />
-      <main>
+      <main data-filemeta-home="true">
         <section className="filemeta-hero">
           <p className="filemeta-kicker">{m['home.eyebrow']()}</p>
           <h1>{m['home.title']()}</h1>
@@ -521,6 +523,7 @@ export function MetadataRemoverHome() {
           <ToolBoundary>
             <Dropzone />
           </ToolBoundary>
+          <p className="filemeta-summary">{m['home.summary']()}</p>
         </section>
 
         <section id="check" className="filemeta-section">
@@ -534,36 +537,51 @@ export function MetadataRemoverHome() {
           <h2>{m['home.formats_title']()}</h2>
           <p>{m['home.formats_body']()}</p>
           <p>{m['home.formats_video']()}</p>
-          <ul className="filemeta-format-grid">
-            <li>
-              <strong>PDF</strong>
-              <span>{m['home.format.pdf']()}</span>
-            </li>
-            <li>
-              <strong>JPEG</strong>
-              <span>{m['home.format.jpeg']()}</span>
-            </li>
-            <li>
-              <strong>PNG</strong>
-              <span>{m['home.format.png']()}</span>
-            </li>
-            <li>
-              <strong>WebP</strong>
-              <span>{m['home.format.webp']()}</span>
-            </li>
-            <li>
-              <strong>DOCX</strong>
-              <span>{m['home.format.word']()}</span>
-            </li>
-            <li>
-              <strong>XLSX</strong>
-              <span>{m['home.format.excel']()}</span>
-            </li>
-            <li>
-              <strong>CSV</strong>
-              <span>{m['home.format.csv']()}</span>
-            </li>
-          </ul>
+          <div
+            className="filemeta-table-scroll"
+            tabIndex={0}
+            role="region"
+            aria-label={m['home.formats_title']()}
+          >
+            <table className="filemeta-table">
+              <caption>{m['home.capabilities_caption']()}</caption>
+              <thead>
+                <tr>
+                  <th scope="col">{m['home.table.format']()}</th>
+                  <th scope="col">{m['home.table.removes']()}</th>
+                  <th scope="col">{m['home.table.limit']()}</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <th scope="row">PDF</th>
+                  <td>{m['home.format.pdf']()}</td>
+                  <td>{m['home.limit.pdf']()}</td>
+                </tr>
+                <tr>
+                  <th scope="row">DOCX</th>
+                  <td>{m['home.format.word']()}</td>
+                  <td>{m['home.limit.word']()}</td>
+                </tr>
+                <tr>
+                  <th scope="row">XLSX</th>
+                  <td>{m['home.format.excel']()}</td>
+                  <td>{m['home.limit.excel']()}</td>
+                </tr>
+                <tr>
+                  <th scope="row">CSV</th>
+                  <td>{m['home.format.csv']()}</td>
+                  <td>{m['home.limit.csv']()}</td>
+                </tr>
+                <tr>
+                  <th scope="row">JPEG / PNG / WebP / GIF</th>
+                  <td>{m['home.table.image_removes']()}</td>
+                  <td>{m['home.limit.image']()}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <p>{m['home.support_limits']()}</p>
         </section>
 
         <section id="how" className="filemeta-section">
@@ -616,6 +634,73 @@ export function MetadataRemoverHome() {
           <p>{m['home.uses_p3']()}</p>
         </section>
 
+        <section id="verify" className="filemeta-section">
+          <h2>{m['home.verify_title']()}</h2>
+          <p>{m['home.verify_body']()}</p>
+          <div
+            className="filemeta-table-scroll"
+            tabIndex={0}
+            role="region"
+            aria-label={m['home.example_caption']()}
+          >
+            <table className="filemeta-table">
+              <caption>{m['home.example_caption']()}</caption>
+              <thead>
+                <tr>
+                  <th scope="col">{m['home.example.field']()}</th>
+                  <th scope="col">{m['home.compare.before']()}</th>
+                  <th scope="col">{m['home.compare.after']()}</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <th scope="row">{m['home.field.author']()}</th>
+                  <td>Example Author</td>
+                  <td>{m['home.compare.removed']()}</td>
+                </tr>
+                <tr>
+                  <th scope="row">{m['home.field.company']()}</th>
+                  <td>Example Company</td>
+                  <td>{m['home.compare.removed']()}</td>
+                </tr>
+                <tr>
+                  <th scope="row">{m['home.example.body_field']()}</th>
+                  <td>Hello document</td>
+                  <td>Hello document</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <ol className="filemeta-steps">
+            <li>{m['home.verify.step1']()}</li>
+            <li>{m['home.verify.step2']()}</li>
+            <li>{m['home.verify.step3']()}</li>
+          </ol>
+          <p>
+            {m['home.verify_independent']()}{' '}
+            <a href="https://support.microsoft.com/en-us/office/remove-hidden-data-and-personal-information-by-inspecting-documents-presentations-or-workbooks-356b7b5d-77af-44fe-a07f-9aa4d085966f">
+              {m['home.source.microsoft']()}
+            </a>
+            .
+          </p>
+        </section>
+
+        <section className="filemeta-section">
+          <h2>{m['home.boundaries_title']()}</h2>
+          <p>{m['home.boundaries_body']()}</p>
+          <p>
+            {m['home.source.office_body']()}{' '}
+            <a href="https://support.microsoft.com/en-us/office/remove-hidden-data-and-personal-information-by-inspecting-documents-presentations-or-workbooks-356b7b5d-77af-44fe-a07f-9aa4d085966f">
+              {m['home.source.microsoft']()}
+            </a>
+            .
+          </p>
+          <p>
+            {m['home.source.csv_body']()}{' '}
+            <a href="https://www.rfc-editor.org/rfc/rfc4180">RFC 4180</a>.
+          </p>
+        </section>
+
         <section id="faq" className="filemeta-section">
           <h2>{m['home.faq_title']()}</h2>
           <div className="filemeta-faq">
@@ -626,6 +711,17 @@ export function MetadataRemoverHome() {
               </details>
             ))}
           </div>
+        </section>
+        <section className="filemeta-section filemeta-provenance">
+          <p>
+            {m['home.maintained_by']({ name: siteName })} ·{' '}
+            {m['common.pages.last_updated']()}:{' '}
+            <time dateTime={FILEMETA_UPDATED_AT}>{FILEMETA_UPDATED_AT}</time>
+          </p>
+          <p>
+            <Link href="/about">{m['home.about_link']()}</Link> ·{' '}
+            <Link href="/contact">{m['home.contact_link']()}</Link>
+          </p>
         </section>
       </main>
       <Footer />
