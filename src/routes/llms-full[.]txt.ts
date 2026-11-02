@@ -9,7 +9,8 @@ const STATIC_PAGES: { path: string; title: string; description: string }[] = [
   {
     path: '',
     title: 'Metadata Remover',
-    description: 'Remove metadata from PDF, DOC, DOCX, Excel, and CSV files.',
+    description:
+      'Remove metadata from PDF, JPEG, PNG, WebP, Word, Excel, and CSV files.',
   },
   { path: '/pricing', title: 'Pricing', description: 'Pricing plans' },
   { path: '/blog', title: 'Blog', description: 'Blog posts and articles' },
@@ -21,7 +22,7 @@ function pagesFor(locale: string) {
       {
         path: '',
         title: 'Metadata Remover',
-        description: '清除 PDF、DOC、DOCX、Excel 和 CSV 的元数据。',
+        description: '清除 PDF、JPEG、PNG、WebP、Word、Excel 和 CSV 的元数据。',
       },
       { path: '/pricing', title: '价格', description: '价格方案' },
       { path: '/blog', title: '博客', description: '文章与指南' },
@@ -32,7 +33,8 @@ function pagesFor(locale: string) {
       {
         path: '',
         title: 'Metadata Remover',
-        description: 'Quita metadatos de PDF, DOC, DOCX, Excel y CSV.',
+        description:
+          'Quita metadatos de PDF, JPEG, PNG, WebP, Word, Excel y CSV.',
       },
       { path: '/pricing', title: 'Precios', description: 'Planes y precios' },
       { path: '/blog', title: 'Blog', description: 'Artículos y guías' },
@@ -43,7 +45,8 @@ function pagesFor(locale: string) {
       {
         path: '',
         title: 'Metadata Remover',
-        description: 'إزالة البيانات الوصفية من PDF وDOC وDOCX وExcel وCSV.',
+        description:
+          'إزالة البيانات الوصفية من PDF وJPEG وPNG وWebP وWord وExcel وCSV.',
       },
       { path: '/pricing', title: 'الأسعار', description: 'الخطط والأسعار' },
       { path: '/blog', title: 'المدونة', description: 'مقالات وأدلة' },

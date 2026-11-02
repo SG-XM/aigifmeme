@@ -108,7 +108,7 @@ export const Route = createRootRoute({
       pagePath
     );
     const pageData = matches.at(-1)?.loaderData as
-      | { post?: { localizedLocales?: string[] } }
+      | { description?: string; post?: { localizedLocales?: string[] } }
       | undefined;
     const pageLocales = pageData?.post?.localizedLocales;
     const alternateLocales = pageLocales
@@ -122,7 +122,9 @@ export const Route = createRootRoute({
     const ogImage = `${appUrl}/og.png`;
     const appName = loaderData?.appName || envConfigs.app_name;
     const siteDescription =
-      loaderData?.appDescription || envConfigs.app_description;
+      (pagePath === '/' && pageData?.description) ||
+      loaderData?.appDescription ||
+      envConfigs.app_description;
     return {
       meta: [
         { charSet: 'utf-8' },

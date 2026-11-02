@@ -1,33 +1,60 @@
-import { useRef, useState } from 'react';
+import { Component, useRef, useState, type ReactNode } from 'react';
 
+import { formatFileSize } from '@/lib/metadata-file';
 import {
-  cleanedDownloadName,
-  downloadMime,
-  inspectDocument,
   MAX_FILE_BYTES,
-  stripDocument,
   type DocumentKind,
   type InspectResult,
   type MetadataEntry,
   type MetadataIssue,
-} from '@/lib/metadata';
-import { formatFileSize } from '@/lib/metadata-file';
+} from '@/lib/metadata/types';
 import { m } from '@/paraglide/messages.js';
 import { Footer } from '@/blocks/footer';
 import { Header } from '@/blocks/header';
 import { SupportWidget } from '@/blocks/support-widget';
 
-const ACCEPT =
-  '.pdf,.doc,.docx,.xls,.xlsx,.csv,application/pdf,text/csv,application/msword,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+/**
+ * pdf-lib's Workers chunk throws while evaluating tslib (`__extends` is
+ * undefined). A static import from this module blanks the whole homepage
+ * SSR and the marketing cache then stores that shell. Load the strip engine
+ * only after the visitor picks a file.
+ */
+function loadMetadata() {
+  return import('@/lib/metadata');
+}
 
-const GROUPS = ['pdf', 'xmp', 'core', 'app', 'custom', 'csv'] as const;
+const ACCEPT =
+  '.pdf,.doc,.docx,.xls,.xlsx,.csv,.jpg,.jpeg,.png,.webp,.gif,application/pdf,text/csv,image/jpeg,image/png,image/webp,image/gif,application/msword,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+
+const GROUPS = ['pdf', 'xmp', 'core', 'app', 'custom', 'csv', 'exif'] as const;
+
+const TABS = ['pdf', 'word', 'excel', 'csv', 'image'] as const;
+type FormatTab = (typeof TABS)[number];
 
 function noteFor(kind: DocumentKind) {
   if (kind === 'pdf') return m['home.note.pdf']();
   if (kind === 'ooxml') return m['home.note.ooxml']();
   if (kind === 'csv') return m['home.note.csv']();
   if (kind === 'legacy') return m['home.note.legacy']();
+  if (kind === 'image') return m['home.note.image']();
+  if (kind === 'video') return m['home.note.video']();
   return m['home.note.unknown']();
+}
+
+function tabLabel(tab: FormatTab) {
+  if (tab === 'pdf') return m['home.tab.pdf']();
+  if (tab === 'word') return m['home.tab.word']();
+  if (tab === 'excel') return m['home.tab.excel']();
+  if (tab === 'csv') return m['home.tab.csv']();
+  return m['home.tab.image']();
+}
+
+function tabHint(tab: FormatTab) {
+  if (tab === 'pdf') return m['home.tab.pdf_hint']();
+  if (tab === 'word') return m['home.tab.word_hint']();
+  if (tab === 'excel') return m['home.tab.excel_hint']();
+  if (tab === 'csv') return m['home.tab.csv_hint']();
+  return m['home.tab.image_hint']();
 }
 
 function groupTitle(group: (typeof GROUPS)[number]) {
@@ -36,6 +63,7 @@ function groupTitle(group: (typeof GROUPS)[number]) {
   if (group === 'core') return m['home.group.core']();
   if (group === 'app') return m['home.group.app']();
   if (group === 'custom') return m['home.group.custom']();
+  if (group === 'exif') return m['home.group.exif']();
   return m['home.group.csv']();
 }
 
@@ -57,6 +85,19 @@ function fieldLabel(row: MetadataEntry) {
   if (row.id === 'template') return m['home.field.template']();
   if (row.id === 'bom') return m['home.field.bom']();
   if (row.id === 'separator') return m['home.field.separator']();
+  if (row.id === 'make') return m['home.field.make']();
+  if (row.id === 'model') return m['home.field.model']();
+  if (row.id === 'software') return m['home.field.software']();
+  if (row.id === 'artist') return m['home.field.artist']();
+  if (row.id === 'copyright') return m['home.field.copyright']();
+  if (row.id === 'datetime' || row.id === 'created')
+    return m['home.field.created']();
+  if (row.id === 'description') return m['home.field.description']();
+  if (row.id === 'latitude' || row.id === 'longitude' || row.id === 'gps') {
+    return m['home.field.gps']();
+  }
+  if (row.id === 'credentials') return m['home.field.credentials']();
+  if (row.id === 'comment') return m['home.field.comment']();
   return row.label;
 }
 
@@ -65,6 +106,7 @@ function issueText(issue: MetadataIssue) {
   if (issue === 'too-large') return m['home.drop.error_too_large']();
   if (issue === 'unsupported') return m['home.drop.unsupported']();
   if (issue === 'strip-failed') return m['home.drop.error_strip']();
+  if (issue === 'video') return m['home.drop.error_video']();
   return m['home.drop.error_read']();
 }
 
@@ -129,6 +171,7 @@ function Dropzone() {
   const [file, setFile] = useState<File | null>(null);
   const [dragOver, setDragOver] = useState(false);
   const [phase, setPhase] = useState<Phase | null>(null);
+  const [tab, setTab] = useState<FormatTab>('pdf');
 
   async function take(next: File | undefined) {
     if (!next) return;
@@ -143,6 +186,7 @@ function Dropzone() {
     const bytes = new Uint8Array(await next.arrayBuffer());
     if (request.current !== id) return;
     bytesRef.current = bytes;
+    const { inspectDocument } = await loadMetadata();
     const report = await inspectDocument(next.name, bytes);
     if (request.current !== id) return;
     setPhase(
@@ -166,6 +210,12 @@ function Dropzone() {
     const id = request.current;
     setPhase({ name: 'stripping', report: before });
     try {
+      const {
+        inspectDocument,
+        stripDocument,
+        cleanedDownloadName,
+        downloadMime,
+      } = await loadMetadata();
       const cleaned = await stripDocument(file.name, bytesRef.current);
       const after = await inspectDocument(
         file.name,
@@ -191,6 +241,23 @@ function Dropzone() {
   return (
     <div id="wipe" className="filemeta-drop">
       <div
+        className="filemeta-tabs"
+        role="tablist"
+        aria-label={m['home.tabs_label']()}
+      >
+        {TABS.map((item) => (
+          <button
+            key={item}
+            type="button"
+            role="tab"
+            aria-selected={tab === item}
+            onClick={() => setTab(item)}
+          >
+            {tabLabel(item)}
+          </button>
+        ))}
+      </div>
+      <div
         className={
           dragOver ? 'filemeta-drop-well is-over' : 'filemeta-drop-well'
         }
@@ -211,7 +278,7 @@ function Dropzone() {
       >
         <p className="filemeta-kicker">{m['home.drop.kicker']()}</p>
         <h2>{m['home.drop.title']()}</h2>
-        <p>{m['home.drop.hint']()}</p>
+        <p>{tabHint(tab)}</p>
         <input
           ref={inputRef}
           id="metadata-file"
@@ -326,11 +393,11 @@ function Dropzone() {
                 className="filemeta-button"
                 onClick={() => {
                   if (!bytesRef.current || !file) return;
-                  saveFile(
-                    file.name.split(/[/\\]/).pop() || 'file',
-                    bytesRef.current,
-                    downloadMime(file.name)
-                  );
+                  const bytes = bytesRef.current;
+                  const name = file.name.split(/[/\\]/).pop() || 'file';
+                  void loadMetadata().then(({ downloadMime }) => {
+                    saveFile(name, bytes, downloadMime(name));
+                  });
                 }}
               >
                 {m['home.drop.download_original']()}
@@ -345,9 +412,14 @@ function Dropzone() {
               <button
                 type="button"
                 className="filemeta-button"
-                onClick={() =>
-                  saveFile(phase.filename, phase.bytes, downloadMime(file.name))
-                }
+                onClick={() => {
+                  const filename = phase.filename;
+                  const bytes = phase.bytes;
+                  const name = file.name;
+                  void loadMetadata().then(({ downloadMime }) => {
+                    saveFile(filename, bytes, downloadMime(name));
+                  });
+                }}
               >
                 {m['home.drop.download']()}
               </button>
@@ -373,6 +445,10 @@ const FAQ = [
   ['home.faq_q5', 'home.faq_a5'],
   ['home.faq_q6', 'home.faq_a6'],
   ['home.faq_q7', 'home.faq_a7'],
+  ['home.faq_q8', 'home.faq_a8'],
+  ['home.faq_q9', 'home.faq_a9'],
+  ['home.faq_q10', 'home.faq_a10'],
+  ['home.faq_q11', 'home.faq_a11'],
 ] as const;
 
 function faqText(key: (typeof FAQ)[number][0] | (typeof FAQ)[number][1]) {
@@ -389,7 +465,44 @@ function faqText(key: (typeof FAQ)[number][0] | (typeof FAQ)[number][1]) {
   if (key === 'home.faq_q6') return m['home.faq_q6']();
   if (key === 'home.faq_a6') return m['home.faq_a6']();
   if (key === 'home.faq_q7') return m['home.faq_q7']();
-  return m['home.faq_a7']();
+  if (key === 'home.faq_a7') return m['home.faq_a7']();
+  if (key === 'home.faq_q8') return m['home.faq_q8']();
+  if (key === 'home.faq_a8') return m['home.faq_a8']();
+  if (key === 'home.faq_q9') return m['home.faq_q9']();
+  if (key === 'home.faq_a9') return m['home.faq_a9']();
+  if (key === 'home.faq_q10') return m['home.faq_q10']();
+  if (key === 'home.faq_a10') return m['home.faq_a10']();
+  if (key === 'home.faq_q11') return m['home.faq_q11']();
+  return m['home.faq_a11']();
+}
+
+function DropzoneShell() {
+  return (
+    <div id="wipe" className="filemeta-drop">
+      <div className="filemeta-drop-well">
+        <p className="filemeta-kicker">{m['home.drop.kicker']()}</p>
+        <h2>{m['home.drop.title']()}</h2>
+        <p>{m['home.drop.hint']()}</p>
+        <p className="filemeta-formats">{m['home.drop.formats']()}</p>
+      </div>
+    </div>
+  );
+}
+
+class ToolBoundary extends Component<
+  { children: ReactNode },
+  { failed: boolean }
+> {
+  state = { failed: false };
+
+  static getDerivedStateFromError() {
+    return { failed: true };
+  }
+
+  render() {
+    if (this.state.failed) return <DropzoneShell />;
+    return this.props.children;
+  }
 }
 
 export function MetadataRemoverHome() {
@@ -401,16 +514,42 @@ export function MetadataRemoverHome() {
           <p className="filemeta-kicker">{m['home.eyebrow']()}</p>
           <h1>{m['home.title']()}</h1>
           <p className="filemeta-lead">{m['home.description']()}</p>
-          <Dropzone />
+          <ul className="filemeta-promises">
+            <li>{m['home.promise.screen']()}</li>
+            <li>{m['home.promise.device']()}</li>
+          </ul>
+          <ToolBoundary>
+            <Dropzone />
+          </ToolBoundary>
+        </section>
+
+        <section id="check" className="filemeta-section">
+          <h2>{m['home.check_title']()}</h2>
+          <p>{m['home.check_p1']()}</p>
+          <p>{m['home.check_p2']()}</p>
+          <p>{m['home.check_p3']()}</p>
         </section>
 
         <section id="formats" className="filemeta-section">
           <h2>{m['home.formats_title']()}</h2>
           <p>{m['home.formats_body']()}</p>
+          <p>{m['home.formats_video']()}</p>
           <ul className="filemeta-format-grid">
             <li>
               <strong>PDF</strong>
               <span>{m['home.format.pdf']()}</span>
+            </li>
+            <li>
+              <strong>JPEG</strong>
+              <span>{m['home.format.jpeg']()}</span>
+            </li>
+            <li>
+              <strong>PNG</strong>
+              <span>{m['home.format.png']()}</span>
+            </li>
+            <li>
+              <strong>WebP</strong>
+              <span>{m['home.format.webp']()}</span>
             </li>
             <li>
               <strong>DOCX</strong>
@@ -448,16 +587,33 @@ export function MetadataRemoverHome() {
 
         <section className="filemeta-section">
           <h2>{m['home.removes_title']()}</h2>
+          <p>{m['home.removes_intro']()}</p>
           <ul className="filemeta-removes">
             <li>{m['home.removes_author']()}</li>
             <li>{m['home.removes_company']()}</li>
             <li>{m['home.removes_dates']()}</li>
             <li>{m['home.removes_office']()}</li>
+            <li>{m['home.removes_camera']()}</li>
+            <li>{m['home.removes_gps']()}</li>
           </ul>
           <div className="filemeta-privacy">
             <h2>{m['home.privacy_title']()}</h2>
             <p>{m['home.privacy_body']()}</p>
+            <p>{m['home.privacy_account']()}</p>
           </div>
+        </section>
+
+        <section className="filemeta-section">
+          <h2>{m['home.leaves_title']()}</h2>
+          <p>{m['home.leaves_p1']()}</p>
+          <p>{m['home.leaves_p2']()}</p>
+        </section>
+
+        <section className="filemeta-section">
+          <h2>{m['home.uses_title']()}</h2>
+          <p>{m['home.uses_p1']()}</p>
+          <p>{m['home.uses_p2']()}</p>
+          <p>{m['home.uses_p3']()}</p>
         </section>
 
         <section id="faq" className="filemeta-section">

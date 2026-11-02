@@ -7,7 +7,7 @@ import { getLocale, type Locale } from '@/paraglide/runtime.js';
 import { MetadataRemoverHome } from '@/blocks/metadata-remover-home';
 
 /** Homepage copy revision. Other trend pages keep TREND_PAGE_UPDATED_AT. */
-const HOME_UPDATED_AT = '2026-11-01';
+const HOME_UPDATED_AT = '2026-11-02';
 
 function jsonLd(data: unknown) {
   return JSON.stringify(data).replace(/</g, '\\u003c');
@@ -23,6 +23,10 @@ function homeFaqLd(locale: Locale) {
     [m['home.faq_q5']({}, copy), m['home.faq_a5']({}, copy)],
     [m['home.faq_q6']({}, copy), m['home.faq_a6']({}, copy)],
     [m['home.faq_q7']({}, copy), m['home.faq_a7']({}, copy)],
+    [m['home.faq_q8']({}, copy), m['home.faq_a8']({}, copy)],
+    [m['home.faq_q9']({}, copy), m['home.faq_a9']({}, copy)],
+    [m['home.faq_q10']({}, copy), m['home.faq_a10']({}, copy)],
+    [m['home.faq_q11']({}, copy), m['home.faq_a11']({}, copy)],
   ];
   return jsonLd({
     '@context': 'https://schema.org',

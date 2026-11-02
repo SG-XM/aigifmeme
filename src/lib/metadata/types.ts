@@ -2,7 +2,14 @@
 
 export const MAX_FILE_BYTES = 64 * 1024 * 1024;
 
-export type MetadataGroup = 'pdf' | 'xmp' | 'core' | 'app' | 'custom' | 'csv';
+export type MetadataGroup =
+  | 'pdf'
+  | 'xmp'
+  | 'core'
+  | 'app'
+  | 'custom'
+  | 'csv'
+  | 'exif';
 
 export type MetadataEntry = {
   group: MetadataGroup;
@@ -17,9 +24,17 @@ export type MetadataIssue =
   | 'encrypted'
   | 'too-large'
   | 'parse'
-  | 'strip-failed';
+  | 'strip-failed'
+  | 'video';
 
-export type DocumentKind = 'pdf' | 'ooxml' | 'csv' | 'legacy' | 'unknown';
+export type DocumentKind =
+  | 'pdf'
+  | 'ooxml'
+  | 'csv'
+  | 'legacy'
+  | 'image'
+  | 'video'
+  | 'unknown';
 
 export type InspectResult = {
   kind: DocumentKind;

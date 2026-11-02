@@ -34,7 +34,16 @@ export const MARKETING_HTML_PRIVATE_CONTROL = 'private, no-store';
  * that would drop them. Query strings are part of the key (`ignoreSearch`
  * is unsupported).
  */
-export const MARKETING_HTML_CACHE_EPOCH = '20261026a';
+export const MARKETING_HTML_CACHE_EPOCH = '20261102a';
+
+/**
+ * Homepage HTML is worth caching only when the article actually rendered.
+ * A Workers SSR crash (for example pdf-lib failing to evaluate) used to
+ * store the shell — title and JSON-LD, no H1 — for a day.
+ */
+export function marketingHtmlIsCompleteDocument(html: string): boolean {
+  return /<h1[\s>]/i.test(html) && /<\/html>/i.test(html);
+}
 
 const CACHE_KEY_PART = /^[A-Za-z0-9._-]{1,80}$/;
 
