@@ -1,0 +1,195 @@
+{
+  "scope": "article",
+  "scope_elements": {
+    "article": 1,
+    "main": 0
+  },
+  "title": ["How to Remove Metadata from Files | FileMeta Wipe"],
+  "description": [
+    "Learn how to remove metadata from images, PDFs, Word and Excel files without uploading them, then verify the cleaned copy and check what remains."
+  ],
+  "canonical": [],
+  "robots_meta": {},
+  "og_title": [],
+  "headings": [
+    {
+      "level": "h1",
+      "text": "How to Remove Metadata from Images, PDFs and Office Files"
+    },
+    {
+      "level": "h2",
+      "text": "What should you check before you remove metadata?"
+    },
+    {
+      "level": "h2",
+      "text": "How to remove metadata without uploading your file"
+    },
+    {
+      "level": "h3",
+      "text": "1. Keep the original and choose the final version"
+    },
+    {
+      "level": "h3",
+      "text": "2. Inspect the file before clearing anything"
+    },
+    {
+      "level": "h3",
+      "text": "3. Remove metadata and download the copy"
+    },
+    {
+      "level": "h3",
+      "text": "4. Verify the downloaded file"
+    },
+    {
+      "level": "h2",
+      "text": "What changes when you remove metadata from a PDF?"
+    },
+    {
+      "level": "h2",
+      "text": "How do you verify a file after you remove metadata?"
+    },
+    {
+      "level": "h3",
+      "text": "Images and PDFs: read the metadata independently"
+    },
+    {
+      "level": "h3",
+      "text": "Word and Excel: inspect more than properties"
+    },
+    {
+      "level": "h2",
+      "text": "Why does some information still appear?"
+    },
+    {
+      "level": "h2",
+      "text": "Frequently asked questions"
+    },
+    {
+      "level": "h3",
+      "text": "Can I remove metadata online for free?"
+    },
+    {
+      "level": "h3",
+      "text": "Can I remove metadata without reducing image quality?"
+    },
+    {
+      "level": "h3",
+      "text": "Does clearing metadata make a file anonymous?"
+    },
+    {
+      "level": "h3",
+      "text": "Do clear metadata, delete metadata and remove metadata mean different things?"
+    },
+    {
+      "level": "h2",
+      "text": "Before you share the cleaned copy"
+    }
+  ],
+  "content_metrics": {
+    "latin_word_units": 1304,
+    "cjk_characters": 0,
+    "non_whitespace_characters": 6935
+  },
+  "lead_window": "first 150 whitespace-separated units",
+  "keywords": [
+    {
+      "keyword_original": "remove metadata",
+      "title_occurrences": 1,
+      "description_occurrences": 1,
+      "h1_occurrences": 1,
+      "h2_occurrences": 4,
+      "lead_occurrences": 3,
+      "content_occurrences": 14,
+      "matched_blocks": [
+        {
+          "block": 1,
+          "occurrences": 1
+        },
+        {
+          "block": 2,
+          "occurrences": 1
+        },
+        {
+          "block": 4,
+          "occurrences": 1
+        },
+        {
+          "block": 22,
+          "occurrences": 1
+        },
+        {
+          "block": 28,
+          "occurrences": 1
+        },
+        {
+          "block": 30,
+          "occurrences": 1
+        },
+        {
+          "block": 31,
+          "occurrences": 1
+        },
+        {
+          "block": 36,
+          "occurrences": 1
+        },
+        {
+          "block": 37,
+          "occurrences": 1
+        },
+        {
+          "block": 54,
+          "occurrences": 1
+        },
+        {
+          "block": 79,
+          "occurrences": 1
+        },
+        {
+          "block": 81,
+          "occurrences": 1
+        },
+        {
+          "block": 85,
+          "occurrences": 1
+        },
+        {
+          "block": 93,
+          "occurrences": 1
+        }
+      ],
+      "phrase_occurrences_per_100_latin_word_units": 1.074,
+      "matched_character_share_percent": 2.826
+    },
+    {
+      "keyword_original": "metadata remover",
+      "title_occurrences": 0,
+      "description_occurrences": 0,
+      "h1_occurrences": 0,
+      "h2_occurrences": 0,
+      "lead_occurrences": 0,
+      "content_occurrences": 2,
+      "matched_blocks": [
+        {
+          "block": 27,
+          "occurrences": 1
+        },
+        {
+          "block": 53,
+          "occurrences": 1
+        }
+      ],
+      "phrase_occurrences_per_100_latin_word_units": 0.153,
+      "matched_character_share_percent": 0.433
+    }
+  ],
+  "findings": [
+    "No canonical link found in head; verify intended URL configuration."
+  ],
+  "limits": [
+    "Local HTML only; no JavaScript rendering, CSS visibility or network/index status checks.",
+    "Counts use NFKC, casefold and collapsed whitespace; original keywords are preserved in the report.",
+    "Content statistics include visible headings and tables within the selected scope.",
+    "No universal keyword-density or ranking threshold is applied; review Short Answer and meaning manually."
+  ]
+}
