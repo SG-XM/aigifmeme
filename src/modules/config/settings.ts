@@ -240,8 +240,7 @@ export function getSettingGroups(): SettingGroup[] {
     {
       name: 'adsense',
       title: 'Google AdSense',
-      description:
-        'Inject the AdSense script sitewide and serve /ads.txt from the configured publisher ID',
+      description: 'Inject the AdSense script sitewide',
       tab: 'ads',
     },
 
@@ -1083,7 +1082,7 @@ export function getSettings(): Setting[] {
       title: 'Publisher ID',
       type: 'text',
       placeholder: 'ca-pub-XXXXXXXXXXXXXXXX',
-      tip: 'Your AdSense publisher ID — also used to generate /ads.txt',
+      tip: 'Your AdSense publisher ID',
       group: 'adsense',
       tab: 'ads',
     },
