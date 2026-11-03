@@ -48,6 +48,7 @@ export function Header({
   const productNav = nav === 'product';
   const navLinks: NavLink[] = productNav
     ? [
+        { href: '/pdf-metadata-remover', label: m['pdf.nav']() },
         { href: '/#check', label: m['home.nav.check']() },
         { href: '/#how', label: m['home.nav.how']() },
         { href: '/#formats', label: m['home.nav.formats']() },

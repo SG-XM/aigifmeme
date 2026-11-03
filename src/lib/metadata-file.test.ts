@@ -19,7 +19,8 @@ describe('metadataFileKind', () => {
 describe('formatFileSize', () => {
   it('uses bytes, kilobytes, and megabytes', () => {
     expect(formatFileSize(12)).toBe('12 B');
-    expect(formatFileSize(2048)).toBe('2.0 KB');
-    expect(formatFileSize(2.5 * 1024 * 1024)).toBe('2.5 MB');
+    expect(formatFileSize(10_000_000)).toBe('10.0 MB');
+    expect(formatFileSize(2000)).toBe('2.0 KB');
+    expect(formatFileSize(2_500_000)).toBe('2.5 MB');
   });
 });

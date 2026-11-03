@@ -25,6 +25,7 @@ function homeFaqLd(locale: Locale) {
     [m['home.faq_q9']({}, copy), m['home.faq_a9']({}, copy)],
     [m['home.faq_q10']({}, copy), m['home.faq_a10']({}, copy)],
     [m['home.faq_q11']({}, copy), m['home.faq_a11']({}, copy)],
+    [m['home.faq_q12']({}, copy), m['home.faq_a12']({}, copy)],
   ];
   return jsonLd({
     '@context': 'https://schema.org',

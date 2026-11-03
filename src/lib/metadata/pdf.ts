@@ -144,7 +144,11 @@ function metadataXml(doc: PDFDocument): string {
 
 export async function inspectPdf(bytes: Uint8Array): Promise<InspectResult> {
   const doc = await load(bytes);
-  const rows = [...infoEntries(doc), ...xmpEntries(metadataXml(doc))];
+  const xmp = xmpEntries(metadataXml(doc));
+  if (xmp.length === 0 && doc.catalog.has(PDFName.of('Metadata'))) {
+    xmp.push({ group: 'xmp', id: 'xmp', label: 'XMP', value: 'XMP' });
+  }
+  const rows = [...infoEntries(doc), ...xmp];
   return withRemovable('pdf', rows);
 }
 

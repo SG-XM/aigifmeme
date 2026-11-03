@@ -83,6 +83,11 @@ export const Route = createFileRoute('/llms.txt')({
         const pages = [
           ...pagesFor(locale),
           {
+            path: '/pdf-metadata-remover',
+            title: m['pdf.title']({}, { locale }),
+            description: m['pdf.meta_description']({}, { locale }),
+          },
+          {
             path: '/about',
             title: m['home.about_link']({}, { locale }),
             description: '',

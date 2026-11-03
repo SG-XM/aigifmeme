@@ -34,6 +34,7 @@ export function Footer({
       title: m['landing.footer.product'](),
       links: [
         { label: m['home.title'](), href: '/' },
+        { label: m['pdf.title'](), href: '/pdf-metadata-remover' },
         { label: m['home.nav.start'](), href: '/#wipe' },
         { label: m['home.nav.how'](), href: '/#how' },
         { label: m['home.nav.formats'](), href: '/#formats' },

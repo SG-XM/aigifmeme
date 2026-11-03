@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { trendPageMeta } from './trend-page-meta';
+import { canonicalOrigin, trendPageMeta } from './trend-page-meta';
 
 function jsonLdSiteName(siteName?: string) {
   const meta = trendPageMeta({
@@ -22,5 +22,19 @@ describe('trendPageMeta site name', () => {
     // envConfigs.app_name resolves to VITE_APP_NAME or its default in tests.
     expect(jsonLdSiteName(undefined)).toBeTruthy();
     expect(jsonLdSiteName('')).toBe(jsonLdSiteName(undefined));
+  });
+});
+
+// Public tool canonicals must not inherit a localhost preview origin.
+describe('public PDF tool origin', () => {
+  it.each([
+    '/pdf-metadata-remover',
+    '/zh/pdf-metadata-remover',
+    '/es/pdf-metadata-remover',
+    '/ar/pdf-metadata-remover/',
+  ])('pins %s to the product domain', (path) => {
+    expect(canonicalOrigin('http://localhost:3000', path)).toBe(
+      'https://filemetawipe.com'
+    );
   });
 });

@@ -166,7 +166,7 @@ type Phase =
     }
   | { name: 'error'; issue: MetadataIssue };
 
-function Dropzone() {
+function Dropzone({ pdfOnly = false }: { pdfOnly?: boolean }) {
   const inputRef = useRef<HTMLInputElement>(null);
   const request = useRef(0);
   const bytesRef = useRef<Uint8Array | null>(null);
@@ -184,18 +184,26 @@ function Dropzone() {
       setPhase({ name: 'error', issue: 'too-large' });
       return;
     }
+    if (pdfOnly && !/\.pdf$/i.test(next.name)) {
+      setPhase({ name: 'error', issue: 'unsupported' });
+      return;
+    }
     setPhase({ name: 'reading' });
-    const bytes = new Uint8Array(await next.arrayBuffer());
-    if (request.current !== id) return;
-    bytesRef.current = bytes;
-    const { inspectDocument } = await loadMetadata();
-    const report = await inspectDocument(next.name, bytes);
-    if (request.current !== id) return;
-    setPhase(
-      report.issue
-        ? { name: 'error', issue: report.issue }
-        : { name: 'ready', report }
-    );
+    try {
+      const bytes = new Uint8Array(await next.arrayBuffer());
+      if (request.current !== id) return;
+      bytesRef.current = bytes;
+      const { inspectDocument } = await loadMetadata();
+      const report = await inspectDocument(next.name, bytes);
+      if (request.current !== id) return;
+      setPhase(
+        report.issue
+          ? { name: 'error', issue: report.issue }
+          : { name: 'ready', report }
+      );
+    } catch {
+      if (request.current === id) setPhase({ name: 'error', issue: 'parse' });
+    }
   }
 
   function clear() {
@@ -242,23 +250,25 @@ function Dropzone() {
 
   return (
     <div id="wipe" className="filemeta-drop">
-      <div
-        className="filemeta-tabs"
-        role="tablist"
-        aria-label={m['home.tabs_label']()}
-      >
-        {TABS.map((item) => (
-          <button
-            key={item}
-            type="button"
-            role="tab"
-            aria-selected={tab === item}
-            onClick={() => setTab(item)}
-          >
-            {tabLabel(item)}
-          </button>
-        ))}
-      </div>
+      {!pdfOnly ? (
+        <div
+          className="filemeta-tabs"
+          role="tablist"
+          aria-label={m['home.tabs_label']()}
+        >
+          {TABS.map((item) => (
+            <button
+              key={item}
+              type="button"
+              role="tab"
+              aria-selected={tab === item}
+              onClick={() => setTab(item)}
+            >
+              {tabLabel(item)}
+            </button>
+          ))}
+        </div>
+      ) : null}
       <div
         className={
           dragOver ? 'filemeta-drop-well is-over' : 'filemeta-drop-well'
@@ -279,20 +289,22 @@ function Dropzone() {
         }}
       >
         <p className="filemeta-kicker">{m['home.drop.kicker']()}</p>
-        <h2>{m['home.drop.title']()}</h2>
-        <p>{tabHint(tab)}</p>
+        <h2>{pdfOnly ? m['pdf.tool_title']() : m['home.drop.title']()}</h2>
+        <p>{pdfOnly ? m['pdf.tool_hint']() : tabHint(tab)}</p>
         <input
           ref={inputRef}
           id="metadata-file"
           className="sr-only"
           type="file"
-          accept={ACCEPT}
+          accept={pdfOnly ? '.pdf,application/pdf' : ACCEPT}
           onChange={(event) => void take(event.target.files?.[0])}
         />
         <label htmlFor="metadata-file" className="filemeta-button">
-          {m['home.drop.choose']()}
+          {pdfOnly ? m['pdf.tool_choose']() : m['home.drop.choose']()}
         </label>
-        <p className="filemeta-formats">{m['home.drop.formats']()}</p>
+        <p className="filemeta-formats">
+          {pdfOnly ? m['pdf.tool_formats']() : m['home.drop.formats']()}
+        </p>
       </div>
 
       {file ? (
@@ -317,7 +329,11 @@ function Dropzone() {
             <p className="filemeta-status">{m['home.drop.reading']()}</p>
           ) : null}
           {phase?.name === 'error' ? (
-            <p className="filemeta-error">{issueText(phase.issue)}</p>
+            <p className="filemeta-error">
+              {pdfOnly && phase.issue === 'unsupported'
+                ? m['pdf.tool_pdf_only']()
+                : issueText(phase.issue)}
+            </p>
           ) : null}
           {report && !report.issue ? (
             <>
@@ -451,6 +467,7 @@ const FAQ = [
   ['home.faq_q9', 'home.faq_a9'],
   ['home.faq_q10', 'home.faq_a10'],
   ['home.faq_q11', 'home.faq_a11'],
+  ['home.faq_q12', 'home.faq_a12'],
 ] as const;
 
 function faqText(key: (typeof FAQ)[number][0] | (typeof FAQ)[number][1]) {
@@ -475,24 +492,28 @@ function faqText(key: (typeof FAQ)[number][0] | (typeof FAQ)[number][1]) {
   if (key === 'home.faq_q10') return m['home.faq_q10']();
   if (key === 'home.faq_a10') return m['home.faq_a10']();
   if (key === 'home.faq_q11') return m['home.faq_q11']();
-  return m['home.faq_a11']();
+  if (key === 'home.faq_a11') return m['home.faq_a11']();
+  if (key === 'home.faq_q12') return m['home.faq_q12']();
+  return m['home.faq_a12']();
 }
 
-function DropzoneShell() {
+function DropzoneShell({ pdfOnly = false }: { pdfOnly?: boolean }) {
   return (
     <div id="wipe" className="filemeta-drop">
       <div className="filemeta-drop-well">
         <p className="filemeta-kicker">{m['home.drop.kicker']()}</p>
-        <h2>{m['home.drop.title']()}</h2>
-        <p>{m['home.drop.hint']()}</p>
-        <p className="filemeta-formats">{m['home.drop.formats']()}</p>
+        <h2>{pdfOnly ? m['pdf.tool_title']() : m['home.drop.title']()}</h2>
+        <p>{pdfOnly ? m['pdf.tool_hint']() : m['home.drop.hint']()}</p>
+        <p className="filemeta-formats">
+          {pdfOnly ? m['pdf.tool_formats']() : m['home.drop.formats']()}
+        </p>
       </div>
     </div>
   );
 }
 
 class ToolBoundary extends Component<
-  { children: ReactNode },
+  { children: ReactNode; pdfOnly?: boolean },
   { failed: boolean }
 > {
   state = { failed: false };
@@ -502,9 +523,19 @@ class ToolBoundary extends Component<
   }
 
   render() {
-    if (this.state.failed) return <DropzoneShell />;
+    if (this.state.failed)
+      return <DropzoneShell pdfOnly={this.props.pdfOnly} />;
     return this.props.children;
   }
+}
+
+/** Reuses the browser-local engine without evaluating pdf-lib during SSR. */
+export function PdfMetadataTool() {
+  return (
+    <ToolBoundary pdfOnly>
+      <Dropzone pdfOnly />
+    </ToolBoundary>
+  );
 }
 
 export function MetadataRemoverHome({ siteName }: { siteName: string }) {
@@ -515,11 +546,25 @@ export function MetadataRemoverHome({ siteName }: { siteName: string }) {
         <section className="filemeta-hero">
           <p className="filemeta-kicker">{m['home.eyebrow']()}</p>
           <h1>{m['home.title']()}</h1>
-          <p className="filemeta-lead">{m['home.description']()}</p>
-          <ul className="filemeta-promises">
-            <li>{m['home.promise.screen']()}</li>
-            <li>{m['home.promise.device']()}</li>
-          </ul>
+          <div className="filemeta-home-intro">
+            <div>
+              <p className="filemeta-lead">{m['home.description']()}</p>
+              <ul className="filemeta-promises">
+                <li>{m['home.promise.screen']()}</li>
+                <li>{m['home.promise.device']()}</li>
+              </ul>
+            </div>
+            <img
+              className="filemeta-home-art"
+              src="/images/pdf-metadata/pdf-properties-eraser.webp"
+              srcSet="/images/pdf-metadata/pdf-properties-eraser-480.webp 480w, /images/pdf-metadata/pdf-properties-eraser.webp 960w"
+              sizes="(max-width: 680px) 200px, 260px"
+              width={960}
+              height={640}
+              alt={m['home.illustration_alt']()}
+              decoding="async"
+            />
+          </div>
           <ToolBoundary>
             <Dropzone />
           </ToolBoundary>
@@ -553,7 +598,9 @@ export function MetadataRemoverHome({ siteName }: { siteName: string }) {
               </thead>
               <tbody>
                 <tr>
-                  <th scope="row">PDF</th>
+                  <th scope="row">
+                    <Link href="/pdf-metadata-remover">PDF</Link>
+                  </th>
                   <td>{m['home.format.pdf']()}</td>
                   <td>{m['home.limit.pdf']()}</td>
                 </tr>

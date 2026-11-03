@@ -36,9 +36,10 @@ export function metadataFileKind(name: string): MetadataFileKind {
   return EXTENSIONS[base.slice(dot + 1).toLowerCase()] ?? 'unknown';
 }
 
+/** Decimal units match the public 10 MB input limit. */
 export function formatFileSize(bytes: number): string {
   if (!Number.isFinite(bytes) || bytes < 0) return '';
-  if (bytes < 1024) return `${bytes} B`;
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  if (bytes < 1000) return `${bytes} B`;
+  if (bytes < 1_000_000) return `${(bytes / 1000).toFixed(1)} KB`;
+  return `${(bytes / 1_000_000).toFixed(1)} MB`;
 }

@@ -9,12 +9,15 @@ export const TREND_PAGE_UPDATED_AT = '2026-10-11';
 export const PUBLIC_SITE_ORIGIN = 'https://filemetawipe.com';
 
 /**
- * Homepage canonical stays on the public domain. Other pages keep a real
+ * The homepage and public PDF tool stay on the public domain. Other pages keep a real
  * configured origin, but workers.dev and the parent Uptown hosts are rewritten.
  */
 export function canonicalOrigin(configured: string, path = '') {
   const home = path === '/' || path === '';
-  if (home) return PUBLIC_SITE_ORIGIN;
+  const publicTool = /^\/(?:(?:zh|es|ar)\/)?pdf-metadata-remover\/?$/.test(
+    path
+  );
+  if (home || publicTool) return PUBLIC_SITE_ORIGIN;
   try {
     const url = new URL(configured);
     const host = url.hostname.toLowerCase();

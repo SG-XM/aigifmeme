@@ -59,6 +59,43 @@ function samplePdf(): Uint8Array {
 }
 
 describe('pdf metadata', () => {
+  it.each([false, true])(
+    'cleans a PDF containing only custom XMP (compressed: %s)',
+    async (compressed) => {
+      const doc = await PDFDocument.create();
+      const page = doc.addPage([300, 200]);
+      page.drawText('Page content stays in this PDF');
+      const info = doc.context.trailerInfo.Info;
+      if (info) doc.context.delete(info);
+      doc.context.trailerInfo.Info = undefined;
+      const packet = new TextEncoder().encode(
+        '<x:xmpmeta xmlns:x="adobe:ns:meta/"><private:owner xmlns:private="urn:test">Internal team</private:owner></x:xmpmeta>'
+      );
+      const stream = compressed
+        ? doc.context.flateStream(packet, { Type: 'Metadata', Subtype: 'XML' })
+        : doc.context.stream(packet, { Type: 'Metadata', Subtype: 'XML' });
+      doc.catalog.set(PDFName.of('Metadata'), doc.context.register(stream));
+      const source = await doc.save({ useObjectStreams: false });
+      const before = await inspectDocument('xmp-only.pdf', source);
+      expect(before.removable).toBe(true);
+      expect(before.entries).toEqual([
+        { group: 'xmp', id: 'xmp', label: 'XMP', value: 'XMP' },
+      ]);
+      const cleaned = await stripDocument('xmp-only.pdf', source);
+      expect(cleaned.changed).toBe(true);
+      const output = await PDFDocument.load(cleaned.bytes, {
+        updateMetadata: false,
+      });
+      expect(output.getPageCount()).toBe(1);
+      expect(output.getPage(0).getSize()).toEqual({ width: 300, height: 200 });
+      expect(output.catalog.has(PDFName.of('Metadata'))).toBe(false);
+      expect(output.context.trailerInfo.Info).toBeUndefined();
+      expect(
+        (await inspectDocument('xmp-only.pdf', cleaned.bytes)).entries
+      ).toEqual([]);
+    }
+  );
+
   it('lists the author and XMP, then rewrites them out of the file', async () => {
     const source = samplePdf();
     const before = await inspectDocument('report.pdf', source);
