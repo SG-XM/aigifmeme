@@ -1,6 +1,6 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "filemeta",
+  "name": "aigifmeme",
   "workers_dev": true,
   "compatibility_date": "2026-07-25",
   "compatibility_flags": ["nodejs_compat"],
@@ -9,19 +9,19 @@
   },
   "vars": {
     "DATABASE_PROVIDER": "d1",
-    "VITE_APP_URL": "https://filemetawipe.com",
-    "VITE_APP_NAME": "FileMeta Wipe"
+    "VITE_APP_URL": "https://aigifmeme.com",
+    "VITE_APP_NAME": "AIGifMeme"
   },
   "d1_databases": [
     {
       "binding": "DB",
-      "database_name": "filemeta-db",
-      "database_id": "67be1d54-0ac7-41b2-8d7a-fa83cb55d35a",
+      "database_name": "aigifmeme-db",
+      "database_id": "c8ef31b5-747f-4fda-9aa2-a58bc58d8eba",
       "migrations_dir": "drizzle"
     }
   ],
   "routes": [
-    { "pattern": "filemetawipe.com/*", "zone_name": "filemetawipe.com" },
-    { "pattern": "www.filemetawipe.com/*", "zone_name": "filemetawipe.com" }
+    { "pattern": "aigifmeme.com/*", "zone_name": "aigifmeme.com" },
+    { "pattern": "www.aigifmeme.com/*", "zone_name": "aigifmeme.com" }
   ]
 }
