@@ -36,12 +36,12 @@ describe('retention name-your-price chips', () => {
     expect(retentionNamePriceCents('single_retention_name_450')).toBeNull();
   });
 
-  it('names the Stripe line item as FileMeta Wipe credits', () => {
+  it('names the Stripe line item as AIGifMeme credits', () => {
     for (const locale of ['en', 'zh', 'es', 'ar']) {
       const fixed = retentionCheckoutLabel('single_retention_v2', locale);
       const named = retentionCheckoutLabel('single_retention_name_599', locale);
       const text = `${fixed.productName} ${fixed.description} ${named.productName} ${named.description}`;
-      expect(text.toLowerCase()).toContain('filemeta wipe');
+      expect(text.toLowerCase()).toContain('aigifmeme');
       expect(text).not.toMatch(
         /uptown|werewolf|bulin|seedance|window peeper|换脸|face swap|face-replace/i
       );

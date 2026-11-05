@@ -16,10 +16,10 @@ const publicEnv = (key: string) => metaEnv[key] ?? procEnv[key];
 export const envConfigs: Record<string, string> = {
   // App (public)
   app_url: publicEnv('VITE_APP_URL') ?? 'http://localhost:3000',
-  app_name: publicEnv('VITE_APP_NAME') ?? 'FileMeta Wipe',
+  app_name: publicEnv('VITE_APP_NAME') ?? 'AIGifMeme',
   app_description:
     publicEnv('VITE_APP_DESCRIPTION') ??
-    'Free Metadata Remover for PDF, JPEG, PNG, WebP, Word, Excel, and CSV. Clears author, GPS, camera, and timestamps in the browser. Nothing is uploaded.',
+    'Generate AI meme stickers and animated GIF memes from ideas and prompts.',
   app_logo: publicEnv('VITE_APP_LOGO') ?? '/logo.png',
 
   // Database

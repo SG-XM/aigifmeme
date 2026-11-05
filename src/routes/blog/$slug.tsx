@@ -101,8 +101,8 @@ function BlogPostPage() {
   const { locale, post, posts } = Route.useLoaderData();
 
   return (
-    <div className="filemeta-site bg-background text-foreground flex min-h-screen flex-col">
-      <Header brandMark="filemeta" />
+    <div className="meme-site bg-background text-foreground flex min-h-screen flex-col">
+      <Header brandMark="aigifmeme" />
       <main className="flex-1 px-6 py-12 md:px-8 md:py-16">
         <article className="filemeta-article mx-auto max-w-3xl">
           <Link

@@ -16,51 +16,49 @@ type HomeDemoSource = {
 };
 
 /**
- * Homepage hero clips: four Uptown Funk AI video examples.
- * Window Peeper and Burning Bridges keep their own constants.
- * Change these in a pull request. The admin Demo videos page is gone.
- * `home_demo_video` (migration 0014) is an unused leftover table.
+ * Homepage sticker frames. These are drawn placeholders for the AI meme
+ * examples, not parent-campaign videos.
  */
 export const HOME_HERO_DEMOS: readonly HomeDemoSource[] = [
   {
-    id: 'uptown-demo-ceo-hallelujah-v1',
-    src: '/videos/showcase/home/uptown-demo-ceo-hallelujah-v1.mp4',
-    poster: '/videos/showcase/home/uptown-demo-ceo-hallelujah-v1.jpg',
-    title: 'CEO crew AI video example',
-    titleZh: 'CEO 团队 AI 视频示例',
-    titleAr: 'مثال فيديو AI لفريق الرئيس التنفيذي',
-    titleEs: 'Ejemplo de video IA del equipo CEO',
+    id: 'reaction-sticker',
+    src: '/images/stickers/reaction-sticker.png',
+    poster: '/images/stickers/reaction-sticker.png',
+    title: 'Reaction sticker',
+    titleZh: '反应贴纸',
+    titleAr: 'ملصق رد فعل',
+    titleEs: 'Sticker de reacción',
   },
   {
-    id: 'uptown-demo-ceo-dutch-v1',
-    src: '/videos/showcase/home/uptown-demo-ceo-dutch-v1.mp4',
-    poster: '/videos/showcase/home/uptown-demo-ceo-dutch-v1.jpg',
-    title: 'Street dance AI video example',
-    titleZh: '街舞 AI 视频示例',
-    titleAr: 'مثال فيديو AI لرقص الشارع',
-    titleEs: 'Ejemplo de video IA de baile callejero',
+    id: 'caption-loop',
+    src: '/images/stickers/caption-loop.gif',
+    poster: '/images/stickers/caption-loop.png',
+    title: 'Caption GIF loop',
+    titleZh: '字幕 GIF 循环',
+    titleAr: 'حلقة GIF مع تعليق',
+    titleEs: 'GIF con texto en bucle',
   },
   {
-    id: 'uptown-demo-zhaobenshan-v1',
-    src: '/videos/showcase/home/uptown-demo-zhaobenshan-v1.mp4',
-    poster: '/videos/showcase/home/uptown-demo-zhaobenshan-v1.jpg',
-    title: 'Ivory Mountain remake AI example',
-    titleZh: '象牙山重制 AI 示例',
-    titleAr: 'مثال إعادة إنتاج Ivory Mountain بالذكاء الاصطناعي',
-    titleEs: 'Ejemplo de remake IA de Ivory Mountain',
+    id: 'pet-meme',
+    src: '/images/stickers/pet-meme.png',
+    poster: '/images/stickers/pet-meme.png',
+    title: 'Pet meme sticker',
+    titleZh: '宠物梗图贴纸',
+    titleAr: 'ملصق ميم لحيوان',
+    titleEs: 'Sticker de meme con mascota',
   },
   {
-    id: 'uptown-demo-ceo-justwatch-v1',
-    src: '/videos/showcase/home/uptown-demo-ceo-justwatch-v1.mp4',
-    poster: '/videos/showcase/home/uptown-demo-ceo-justwatch-v1.jpg',
-    title: 'Just Watch AI video example',
-    titleZh: 'Just Watch AI 视频示例',
-    titleAr: 'مثال فيديو AI: Just Watch',
-    titleEs: 'Ejemplo de video IA Just Watch',
+    id: 'poster-sticker',
+    src: '/images/stickers/poster-sticker.png',
+    poster: '/images/stickers/poster-sticker.png',
+    title: 'Poster sticker',
+    titleZh: '海报贴纸',
+    titleAr: 'ملصق بوستر',
+    titleEs: 'Sticker tipo póster',
   },
 ];
 
-/** Live homepage has no gallery clips, so the examples section stays hidden. */
+/** The homepage shows the sticker row above. There is no separate video gallery. */
 export const HOME_GALLERY_DEMOS: readonly HomeDemoSource[] = [];
 
 /** Default title, with zh/ar/es overrides when those fields are filled in. */
@@ -94,7 +92,7 @@ function toClip(row: HomeDemoSource, locale: string): HomeDemoClip {
   };
 }
 
-/** Clips for `/` and `/bulin-47-ai`. Other campaigns ignore this list. */
+/** Sticker and GIF frames for the AIGifMeme homepage. */
 export function homeDemoClips(locale: string): {
   hero: HomeDemoClip[];
   gallery: HomeDemoClip[];

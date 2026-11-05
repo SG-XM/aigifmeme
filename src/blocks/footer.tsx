@@ -34,30 +34,16 @@ export function Footer({
       title: m['landing.footer.product'](),
       links: [
         { label: m['home.title'](), href: '/' },
-        { label: m['pdf.title'](), href: '/pdf-metadata-remover' },
-        { label: m['home.nav.start'](), href: '/#wipe' },
+        { label: m['home.nav.start'](), href: '/#create' },
+        { label: m['home.nav.check'](), href: '/#examples' },
+        { label: m['home.nav.formats'](), href: '/#styles' },
         { label: m['home.nav.how'](), href: '/#how' },
-        { label: m['home.nav.formats'](), href: '/#formats' },
         { label: m['landing.pricing.title'](), href: '/pricing' },
       ].filter((link) => !isHiddenPublicPath(link.href)),
-      sections: [
-        ...(posts.length
-          ? [
-              {
-                title: m['blog.title'](),
-                links: posts.map((post) => ({
-                  label: post.title,
-                  href: `/blog/${encodeURIComponent(post.slug)}`,
-                })),
-              },
-            ]
-          : []),
-      ],
     },
     {
       title: m['landing.nav.guides'](),
       links: [
-        { label: m['blog.title'](), href: '/blog' },
         { label: m['home.about_link'](), href: '/about' },
         { label: m['home.contact_link'](), href: '/contact' },
       ],

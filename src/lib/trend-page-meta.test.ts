@@ -25,16 +25,13 @@ describe('trendPageMeta site name', () => {
   });
 });
 
-// Public tool canonicals must not inherit a localhost preview origin.
-describe('public PDF tool origin', () => {
-  it.each([
-    '/pdf-metadata-remover',
-    '/zh/pdf-metadata-remover',
-    '/es/pdf-metadata-remover',
-    '/ar/pdf-metadata-remover/',
-  ])('pins %s to the product domain', (path) => {
-    expect(canonicalOrigin('http://localhost:3000', path)).toBe(
-      'https://filemetawipe.com'
+describe('public homepage origin', () => {
+  it('pins the homepage to aigifmeme.com', () => {
+    expect(canonicalOrigin('http://localhost:3000', '/')).toBe(
+      'https://aigifmeme.com'
+    );
+    expect(canonicalOrigin('https://workers.dev', '')).toBe(
+      'https://aigifmeme.com'
     );
   });
 });

@@ -78,10 +78,10 @@ export function buildTopUpProductRows(): TopUpProductRow[] {
 export function buildRetentionProductRow(): TopUpProductRow {
   return {
     productId: VIDEO_RETENTION_PRODUCT_ID,
-    name: 'FileMeta Wipe credits',
+    name: 'AIGifMeme credits',
     description:
       'One-time offer: 10 credits. Start checkout within 30 minutes. No subscription.',
-    nameEs: 'Créditos de FileMeta Wipe',
+    nameEs: 'Créditos de AIGifMeme',
     descriptionEs:
       'Oferta única: 10 créditos. Inicia el pago en 30 minutos. Sin suscripción.',
     priceInCents: 799,
@@ -97,10 +97,10 @@ export function buildRetentionProductRow(): TopUpProductRow {
 export function buildRetentionNamePriceRows(): TopUpProductRow[] {
   return RETENTION_NAME_PRICE_CENTS.map((cents, index) => ({
     productId: retentionNamePriceProductId(cents),
-    name: `FileMeta Wipe credits · $${(cents / 100).toFixed(2)}`,
+    name: `AIGifMeme credits · $${(cents / 100).toFixed(2)}`,
     description:
       'One-time offer: 10 credits. Choose this price in the 30-minute offer. No subscription.',
-    nameEs: `Créditos de FileMeta Wipe · $${(cents / 100).toFixed(2)}`,
+    nameEs: `Créditos de AIGifMeme · $${(cents / 100).toFixed(2)}`,
     descriptionEs:
       'Oferta única: 10 créditos. Elige este precio en la oferta de 30 minutos. Sin suscripción.',
     priceInCents: cents,

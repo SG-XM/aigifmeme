@@ -42,7 +42,7 @@ export function SiteFooter({
   const year = new Date().getFullYear();
 
   return (
-    <footer className="filemeta-footer text-foreground">
+    <footer className="meme-footer text-foreground">
       <div className="mx-auto max-w-6xl px-4 pt-14 pb-6 sm:px-6 sm:pt-16">
         {tagline && (
           <p className="text-foreground mb-12 max-w-2xl font-serif text-3xl leading-[1.15] tracking-tight italic sm:text-4xl">

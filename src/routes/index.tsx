@@ -1,11 +1,11 @@
 import { createFileRoute } from '@tanstack/react-router';
 
-import { FILEMETA_UPDATED_AT } from '@/lib/filemeta-content';
+import { AIGIFMEME_UPDATED_AT } from '@/lib/meme-content';
 import { getSiteNameFn } from '@/lib/site-name-server';
 import { trendPageMeta } from '@/lib/trend-page-meta';
 import { m } from '@/paraglide/messages.js';
 import { getLocale, type Locale } from '@/paraglide/runtime.js';
-import { MetadataRemoverHome } from '@/blocks/metadata-remover-home';
+import { MemeHome } from '@/blocks/meme-home';
 
 function jsonLd(data: unknown) {
   return JSON.stringify(data).replace(/</g, '\\u003c');
@@ -14,18 +14,12 @@ function jsonLd(data: unknown) {
 function homeFaqLd(locale: Locale) {
   const copy = { locale };
   const pairs = [
-    [m['home.faq_q1']({}, copy), m['home.faq_a1']({}, copy)],
-    [m['home.faq_q2']({}, copy), m['home.faq_a2']({}, copy)],
-    [m['home.faq_q3']({}, copy), m['home.faq_a3']({}, copy)],
-    [m['home.faq_q4']({}, copy), m['home.faq_a4']({}, copy)],
-    [m['home.faq_q5']({}, copy), m['home.faq_a5']({}, copy)],
-    [m['home.faq_q6']({}, copy), m['home.faq_a6']({}, copy)],
-    [m['home.faq_q7']({}, copy), m['home.faq_a7']({}, copy)],
-    [m['home.faq_q8']({}, copy), m['home.faq_a8']({}, copy)],
-    [m['home.faq_q9']({}, copy), m['home.faq_a9']({}, copy)],
-    [m['home.faq_q10']({}, copy), m['home.faq_a10']({}, copy)],
-    [m['home.faq_q11']({}, copy), m['home.faq_a11']({}, copy)],
-    [m['home.faq_q12']({}, copy), m['home.faq_a12']({}, copy)],
+    [m['meme.faq_q1']({}, copy), m['meme.faq_a1']({}, copy)],
+    [m['meme.faq_q2']({}, copy), m['meme.faq_a2']({}, copy)],
+    [m['meme.faq_q3']({}, copy), m['meme.faq_a3']({}, copy)],
+    [m['meme.faq_q4']({}, copy), m['meme.faq_a4']({}, copy)],
+    [m['meme.faq_q5']({}, copy), m['meme.faq_a5']({}, copy)],
+    [m['meme.faq_q6']({}, copy), m['meme.faq_a6']({}, copy)],
   ];
   return jsonLd({
     '@context': 'https://schema.org',
@@ -41,36 +35,6 @@ function homeFaqLd(locale: Locale) {
   });
 }
 
-function homeHowToLd(locale: Locale) {
-  const copy = { locale };
-  const steps = [
-    [
-      m['home.step_upload_title']({}, copy),
-      m['home.step_upload_body']({}, copy),
-    ],
-    [
-      m['home.step_generate_title']({}, copy),
-      m['home.step_generate_body']({}, copy),
-    ],
-    [
-      m['home.step_download_title']({}, copy),
-      m['home.step_download_body']({}, copy),
-    ],
-  ];
-  return jsonLd({
-    '@context': 'https://schema.org',
-    '@type': 'HowTo',
-    name: m['home.steps_title']({}, copy),
-    description: m['home.steps_description']({}, copy),
-    step: steps.map(([name, text], index) => ({
-      '@type': 'HowToStep',
-      position: index + 1,
-      name,
-      text,
-    })),
-  });
-}
-
 export const Route = createFileRoute('/')({
   loader: async () => {
     const locale = getLocale();
@@ -82,7 +46,6 @@ export const Route = createFileRoute('/')({
       description: m['home.meta_description']({}, { locale }),
       summary: m['home.summary']({}, { locale }),
       faqLd: homeFaqLd(locale),
-      howToLd: homeHowToLd(locale),
     };
   },
   head: ({ loaderData }) => {
@@ -90,14 +53,13 @@ export const Route = createFileRoute('/')({
     const meta = trendPageMeta({
       ...loaderData,
       path: '/',
-      dateModified: FILEMETA_UPDATED_AT,
+      dateModified: AIGIFMEME_UPDATED_AT,
     });
     return {
       ...meta,
       scripts: [
         ...(meta.scripts ?? []),
         { type: 'application/ld+json', children: loaderData.faqLd },
-        { type: 'application/ld+json', children: loaderData.howToLd },
       ],
     };
   },
@@ -105,6 +67,5 @@ export const Route = createFileRoute('/')({
 });
 
 function HomePage() {
-  const { siteName } = Route.useLoaderData();
-  return <MetadataRemoverHome siteName={siteName} />;
+  return <MemeHome />;
 }

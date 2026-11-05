@@ -67,8 +67,8 @@ export const Route = createFileRoute('/pricing')({
 function PricingPage() {
   const { posts, packs } = Route.useLoaderData();
   return (
-    <div className="trend-site filemeta-site flex min-h-screen flex-col">
-      <Header brandMark="filemeta" />
+    <div className="trend-site meme-site flex min-h-screen flex-col">
+      <Header brandMark="aigifmeme" />
       <main className="flex-1">
         <Pricing
           headingLevel={1}

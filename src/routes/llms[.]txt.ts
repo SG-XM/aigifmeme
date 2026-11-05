@@ -1,7 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router';
 
 import { envConfigs } from '@/config';
-import { isGonePath, isRetiredBlogSlug } from '@/lib/gone-paths';
+import { isGonePath } from '@/lib/gone-paths';
 import { isHiddenPublicPath } from '@/lib/public-page-visibility';
 import { getSiteNameFn } from '@/lib/site-name-server';
 import { m } from '@/paraglide/messages.js';
@@ -10,12 +10,15 @@ import { getLocale, localizeUrl, type Locale } from '@/paraglide/runtime.js';
 const STATIC_PAGES: { path: string; title: string; description: string }[] = [
   {
     path: '',
-    title: 'Metadata Remover',
+    title: 'AI meme sticker GIF generator',
     description:
-      'Remove metadata from PDF, DOCX, XLSX, CSV, JPEG, PNG, WebP, and GIF files.',
+      'Generate AI meme stickers and animated GIF memes from ideas and prompts.',
   },
-  { path: '/pricing', title: 'Pricing', description: 'Pricing plans' },
-  { path: '/blog', title: 'Blog', description: 'Blog posts and articles' },
+  {
+    path: '/pricing',
+    title: 'Pricing',
+    description: 'Credits for sticker and GIF generations',
+  },
 ];
 
 function pagesFor(locale: string) {
@@ -23,46 +26,46 @@ function pagesFor(locale: string) {
     return [
       {
         path: '',
-        title: 'Metadata Remover',
-        description:
-          '清除 PDF、DOCX、XLSX、CSV、JPEG、PNG、WebP 和 GIF 的元数据。',
+        title: 'AI meme 贴纸 GIF 生成器',
+        description: '用一句话生成 AI meme 贴纸和会动的 GIF 梗图。',
       },
-      { path: '/pricing', title: '价格', description: '价格方案' },
-      { path: '/blog', title: '博客', description: '文章与指南' },
+      {
+        path: '/pricing',
+        title: '价格',
+        description: '贴纸和 GIF 生成所用的积分',
+      },
     ];
   }
   if (locale === 'es') {
     return [
       {
         path: '',
-        title: 'Metadata Remover',
+        title: 'Generador de stickers y GIF de memes con IA',
         description:
-          'Quita metadatos de PDF, DOCX, XLSX, CSV, JPEG, PNG, WebP y GIF.',
+          'Genera stickers de memes y GIF animados a partir de una idea.',
       },
-      { path: '/pricing', title: 'Precios', description: 'Planes y precios' },
-      { path: '/blog', title: 'Blog', description: 'Artículos y guías' },
+      {
+        path: '/pricing',
+        title: 'Precios',
+        description: 'Créditos para stickers y GIF',
+      },
     ];
   }
   if (locale === 'ar') {
     return [
       {
         path: '',
-        title: 'Metadata Remover',
-        description:
-          'إزالة البيانات الوصفية من PDF وDOCX وXLSX وCSV وJPEG وPNG وWebP وGIF.',
+        title: 'مولّد ملصقات وGIF للميم بالذكاء الاصطناعي',
+        description: 'أنشئ ملصقات ميم وGIF متحركة من فكرة أو وصف.',
       },
-      { path: '/pricing', title: 'الأسعار', description: 'الخطط والأسعار' },
-      { path: '/blog', title: 'المدونة', description: 'مقالات وأدلة' },
+      {
+        path: '/pricing',
+        title: 'الأسعار',
+        description: 'أرصدة لتوليد الملصقات وGIF',
+      },
     ];
   }
   return STATIC_PAGES;
-}
-
-function postsHeading(locale: string) {
-  if (locale === 'zh') return '## 博客文章';
-  if (locale === 'es') return '## Artículos del blog';
-  if (locale === 'ar') return '## مقالات المدونة';
-  return '## Blog Posts';
 }
 
 function pagesHeading(locale: string) {
@@ -83,11 +86,6 @@ export const Route = createFileRoute('/llms.txt')({
         const pages = [
           ...pagesFor(locale),
           {
-            path: '/pdf-metadata-remover',
-            title: m['pdf.title']({}, { locale }),
-            description: m['pdf.meta_description']({}, { locale }),
-          },
-          {
             path: '/about',
             title: m['home.about_link']({}, { locale }),
             description: '',
@@ -103,22 +101,6 @@ export const Route = createFileRoute('/llms.txt')({
             !isHiddenPublicPath(page.path || '/')
         );
 
-        let posts: { slug: string; title: string; description: string }[] = [];
-        try {
-          const { listPublishedArticles } =
-            await import('@/modules/posts/service');
-          const rows = await listPublishedArticles({ locale });
-          posts = rows
-            .filter((row) => !isRetiredBlogSlug(row.slug))
-            .map((row) => ({
-              slug: row.slug,
-              title: row.title,
-              description: row.description,
-            }));
-        } catch {
-          posts = [];
-        }
-
         const lines: string[] = [
           `# ${app_name}`,
           '',
@@ -131,15 +113,6 @@ export const Route = createFileRoute('/llms.txt')({
               `- [${p.title}](${localizeUrl(`${app_url}${p.path || '/'}`, { locale }).href}): ${p.description}`
           ),
         ];
-
-        if (posts.length > 0) {
-          lines.push('', postsHeading(locale), '');
-          for (const post of posts) {
-            lines.push(
-              `- [${post.title}](${localizeUrl(`${app_url}/blog/${post.slug}`, { locale }).href}): ${post.description}`
-            );
-          }
-        }
 
         lines.push('');
 

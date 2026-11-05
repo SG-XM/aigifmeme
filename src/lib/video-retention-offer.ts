@@ -50,34 +50,28 @@ export function retentionCheckoutLabel(productId: string, locale: string) {
   const price = cents ? `$${(cents / 100).toFixed(2)}` : '';
   if (locale === 'zh') {
     return {
-      productName: price
-        ? `FileMeta Wipe 积分 · ${price}`
-        : 'FileMeta Wipe 积分',
+      productName: price ? `AIGifMeme 积分 · ${price}` : 'AIGifMeme 积分',
       description: '一次购买：10 积分。请在 30 分钟内开始付款。没有订阅。',
     };
   }
   if (locale === 'es') {
     return {
       productName: price
-        ? `Créditos de FileMeta Wipe · ${price}`
-        : 'Créditos de FileMeta Wipe',
+        ? `Créditos de AIGifMeme · ${price}`
+        : 'Créditos de AIGifMeme',
       description:
         'Oferta única: 10 créditos. Inicia el pago en 30 minutos. Sin suscripción.',
     };
   }
   if (locale === 'ar') {
     return {
-      productName: price
-        ? `أرصدة FileMeta Wipe · ${price}`
-        : 'أرصدة FileMeta Wipe',
+      productName: price ? `أرصدة AIGifMeme · ${price}` : 'أرصدة AIGifMeme',
       description:
         'شراء لمرة واحدة: 10 أرصدة. ابدأ الدفع خلال 30 دقيقة. بدون اشتراك.',
     };
   }
   return {
-    productName: price
-      ? `FileMeta Wipe credits · ${price}`
-      : 'FileMeta Wipe credits',
+    productName: price ? `AIGifMeme credits · ${price}` : 'AIGifMeme credits',
     description:
       'One-time offer: 10 credits. Start checkout within 30 minutes. No subscription.',
   };

@@ -1,7 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router';
 
 import { envConfigs } from '@/config';
-import { isGonePath, isRetiredBlogSlug } from '@/lib/gone-paths';
+import { isGonePath } from '@/lib/gone-paths';
 import { isHiddenPublicPath } from '@/lib/public-page-visibility';
 import { getSiteNameFn } from '@/lib/site-name-server';
 import { m } from '@/paraglide/messages.js';
@@ -10,12 +10,15 @@ import { getLocale, localizeUrl, type Locale } from '@/paraglide/runtime.js';
 const STATIC_PAGES: { path: string; title: string; description: string }[] = [
   {
     path: '',
-    title: 'Metadata Remover',
+    title: 'AI meme sticker GIF generator',
     description:
-      'Remove metadata from PDF, DOCX, XLSX, CSV, JPEG, PNG, WebP, and GIF files.',
+      'Generate AI meme stickers and animated GIF memes from ideas and prompts.',
   },
-  { path: '/pricing', title: 'Pricing', description: 'Pricing plans' },
-  { path: '/blog', title: 'Blog', description: 'Blog posts and articles' },
+  {
+    path: '/pricing',
+    title: 'Pricing',
+    description: 'Credits for sticker and GIF generations',
+  },
 ];
 
 function pagesFor(locale: string) {
@@ -23,36 +26,43 @@ function pagesFor(locale: string) {
     return [
       {
         path: '',
-        title: 'Metadata Remover',
-        description:
-          '清除 PDF、DOCX、XLSX、CSV、JPEG、PNG、WebP 和 GIF 的元数据。',
+        title: 'AI meme 贴纸 GIF 生成器',
+        description: '用一句话生成 AI meme 贴纸和会动的 GIF 梗图。',
       },
-      { path: '/pricing', title: '价格', description: '价格方案' },
-      { path: '/blog', title: '博客', description: '文章与指南' },
+      {
+        path: '/pricing',
+        title: '价格',
+        description: '贴纸和 GIF 生成所用的积分',
+      },
     ];
   }
   if (locale === 'es') {
     return [
       {
         path: '',
-        title: 'Metadata Remover',
+        title: 'Generador de stickers y GIF de memes con IA',
         description:
-          'Quita metadatos de PDF, DOCX, XLSX, CSV, JPEG, PNG, WebP y GIF.',
+          'Genera stickers de memes y GIF animados a partir de una idea.',
       },
-      { path: '/pricing', title: 'Precios', description: 'Planes y precios' },
-      { path: '/blog', title: 'Blog', description: 'Artículos y guías' },
+      {
+        path: '/pricing',
+        title: 'Precios',
+        description: 'Créditos para stickers y GIF',
+      },
     ];
   }
   if (locale === 'ar') {
     return [
       {
         path: '',
-        title: 'Metadata Remover',
-        description:
-          'إزالة البيانات الوصفية من PDF وDOCX وXLSX وCSV وJPEG وPNG وWebP وGIF.',
+        title: 'مولّد ملصقات وGIF للميم بالذكاء الاصطناعي',
+        description: 'أنشئ ملصقات ميم وGIF متحركة من فكرة أو وصف.',
       },
-      { path: '/pricing', title: 'الأسعار', description: 'الخطط والأسعار' },
-      { path: '/blog', title: 'المدونة', description: 'مقالات وأدلة' },
+      {
+        path: '/pricing',
+        title: 'الأسعار',
+        description: 'أرصدة لتوليد الملصقات وGIF',
+      },
     ];
   }
   return STATIC_PAGES;
@@ -120,34 +130,6 @@ export const Route = createFileRoute('/llms-full.txt')({
               `- [${p.title}](${localizeUrl(`${app_url}${p.path || '/'}`, { locale }).href}): ${p.description}`
           ),
         ];
-
-        try {
-          const { listPublishedArticles, findPublishedBySlug } =
-            await import('@/modules/posts/service');
-          const rows = (await listPublishedArticles({ locale })).filter(
-            (row) => !isRetiredBlogSlug(row.slug)
-          );
-          if (rows.length > 0) {
-            lines.push('', label(locale, 'posts'), '');
-            for (const post of rows) {
-              lines.push(`### ${post.title}`, '');
-              lines.push(
-                `URL: ${localizeUrl(`${app_url}/blog/${post.slug}`, { locale }).href}`
-              );
-              if (post.description) {
-                lines.push(
-                  `${label(locale, 'description')}: ${post.description}`
-                );
-              }
-              lines.push('');
-              const detail = await findPublishedBySlug(post.slug, locale);
-              if (detail?.content) lines.push(detail.content, '');
-              lines.push('---', '');
-            }
-          }
-        } catch {
-          // Database unreachable — pages above still describe the site.
-        }
 
         lines.push('');
 

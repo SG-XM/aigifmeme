@@ -38,12 +38,12 @@ export const MARKETING_HTML_CACHE_EPOCH = '20261102c';
 
 /**
  * Homepage HTML is worth caching only when the article actually rendered.
- * A Workers SSR crash (for example pdf-lib failing to evaluate) used to
- * store the shell — title and JSON-LD, no H1 — for a day.
+ * A Workers SSR crash used to store the shell — title and JSON-LD, no H1 —
+ * for a day.
  */
 export function marketingHtmlIsCompleteDocument(html: string): boolean {
   return (
-    html.includes('data-filemeta-home="true"') &&
+    html.includes('data-aigifmeme-home="true"') &&
     /<h1\b[^>]*>[^<]*\S[^<]*<\/h1>/.test(html) &&
     html.includes('</main>') &&
     /<\/html>/i.test(html)

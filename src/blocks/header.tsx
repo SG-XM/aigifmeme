@@ -25,7 +25,7 @@ export function Header({
   campaign?: EffectCampaign;
   /** Trend wordmark on campaign landings. Nav links stay the same either way. */
   brandMark?: string;
-  /** Product nav is the FileMeta Wipe default. Effect pages opt into chips. */
+  /** Product nav is the AIGifMeme default. Effect pages opt into chips. */
   nav?: 'effects' | 'uptown' | 'product';
   /** Overrides the Create button. Homepage and effect pages keep their own. */
   createHref?: string;
@@ -48,10 +48,9 @@ export function Header({
   const productNav = nav === 'product';
   const navLinks: NavLink[] = productNav
     ? [
-        { href: '/pdf-metadata-remover', label: m['pdf.nav']() },
-        { href: '/#check', label: m['home.nav.check']() },
+        { href: '/#examples', label: m['home.nav.check']() },
+        { href: '/#styles', label: m['home.nav.formats']() },
         { href: '/#how', label: m['home.nav.how']() },
-        { href: '/#formats', label: m['home.nav.formats']() },
         { href: '/pricing', label: m['landing.nav.pricing']() },
         { href: '/#faq', label: m['home.nav.faq']() },
       ]
@@ -92,7 +91,7 @@ export function Header({
         href:
           createHref ??
           (productNav
-            ? '/#wipe'
+            ? '/#create'
             : uptownNav
               ? '/#create'
               : effectHash(campaign, 'create')),
