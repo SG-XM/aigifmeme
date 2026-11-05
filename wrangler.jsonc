@@ -16,7 +16,7 @@
     {
       "binding": "DB",
       "database_name": "aigifmeme-db",
-      "database_id": "c8ef31b5-747f-4fda-9aa2-a58bc58d8eba",
+      "database_id": "518baea3-8584-4ae8-bef2-268c735140f7",
       "migrations_dir": "drizzle"
     }
   ],
