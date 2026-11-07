@@ -3843,6 +3843,17 @@ html[dir='rtl']
   background: #fffdf8;
   border-bottom: 3px solid #1a1024;
 }
+.brand-lockup {
+  height: 1.85rem;
+  width: auto;
+  max-width: 68vw;
+}
+@media (min-width: 640px) {
+  .brand-lockup {
+    height: 2.35rem;
+    max-width: none;
+  }
+}
 .meme-site .trend-header-create {
   background: #d6ff3c;
   color: #1a1024;

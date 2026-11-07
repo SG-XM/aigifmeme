@@ -1,16 +1,10 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 908 908" role="img" aria-label="FileMeta">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1094.0 1090.0" role="img" aria-label="AIGifMeme">
+  <title>AIGifMeme</title>
   <defs>
-    <linearGradient id="filemeta-bg" x1="0" y1="0" x2="908" y2="908" gradientUnits="userSpaceOnUse">
-      <stop offset="0" stop-color="#009DA6"/>
-      <stop offset="1" stop-color="#26DAE9"/>
+    <linearGradient id="g-mark" x1="0" y1="0" x2="0.16" y2="1">
+      <stop offset="0" stop-color="#FF4B2A"/>
+      <stop offset="1" stop-color="#FFC014"/>
     </linearGradient>
   </defs>
-  <rect width="908" height="908" rx="192" fill="url(#filemeta-bg)"/>
-  <path fill="#ffffff" fill-opacity="0.34" d="M396 192H585L706 309V619a39 39 0 0 1-39 39H396a39 39 0 0 1-39-39V231a39 39 0 0 1 39-39z"/>
-  <path fill="#ffffff" fill-opacity="0.5" d="M585 192L706 309L667 349L546 232Z"/>
-  <g fill="none" stroke="#ffffff" stroke-linecap="round">
-    <path d="M345.5 290.5V667.5" stroke-width="101"/>
-    <path d="M345.5 286H576" stroke-width="92"/>
-    <path d="M345.5 467H541" stroke-width="92"/>
-  </g>
+  <path fill="url(#g-mark)" d="M 129.0 0.0 L 961.0 0.0 L 1090.0 129.0 L 1090.0 236.0 L 330.0 236.0 L 236.0 330.0 L 236.0 760.0 L 330.0 854.0 L 760.0 854.0 L 854.0 760.0 L 854.0 671.0 L 461.0 671.0 L 461.0 479.0 L 1090.0 479.0 L 1090.0 961.0 L 961.0 1090.0 L 129.0 1090.0 L 0.0 961.0 L 0.0 129.0 Z"/>
 </svg>

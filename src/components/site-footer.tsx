@@ -44,6 +44,15 @@ export function SiteFooter({
   return (
     <footer className="meme-footer text-foreground">
       <div className="mx-auto max-w-6xl px-4 pt-14 pb-6 sm:px-6 sm:pt-16">
+        <Link href="/" aria-label="aigifmeme.com" className="mb-10 inline-flex">
+          <img
+            src="/logo-horizontal-white.png"
+            alt=""
+            width={240}
+            height={52}
+            className="h-9 w-auto sm:h-11"
+          />
+        </Link>
         {tagline && (
           <p className="text-foreground mb-12 max-w-2xl font-serif text-3xl leading-[1.15] tracking-tight italic sm:text-4xl">
             {tagline}
