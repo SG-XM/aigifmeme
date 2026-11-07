@@ -3,6 +3,7 @@ import { eq, notLike } from 'drizzle-orm';
 import { db } from '@/core/db';
 import { envConfigs } from '@/config';
 import { config } from '@/config/db/schema';
+import { decodeStoredConfigString } from '@/lib/config-value';
 import { decryptSecret, encryptSecret, isEncryptedSecret } from '@/lib/crypto';
 import {
   RECALL_DAILY_COUNTER_KEY,
@@ -54,9 +55,9 @@ export async function getDbConfigs(fresh = false): Promise<ConfigMap> {
           console.warn(`[config] failed to decrypt "${row.name}", skipping`);
           continue;
         }
-        result[row.name] = plain;
+        result[row.name] = decodeStoredConfigString(plain);
       } else {
-        result[row.name] = row.value;
+        result[row.name] = decodeStoredConfigString(row.value);
       }
     }
 
