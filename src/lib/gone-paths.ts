@@ -13,6 +13,7 @@
 const LOCALE_PREFIX = /^\/(zh|es|ar)(?=\/|$)/i;
 
 export const GONE_PATHS = [
+  '/pdf-metadata-remover',
   '/blog/im-so-sorry-filter-tiktok',
   '/blog/im-so-sorry-photo-trend',
   '/blog/im-so-sorry-photo-trend-download',

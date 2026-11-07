@@ -18,7 +18,7 @@ vi.mock('./paraglide/server.js', () => ({
 }));
 
 const complete =
-  '<html><body><main data-filemeta-home="true"><h1>Metadata Remover</h1><p>Document properties stay local.</p></main></body></html>';
+  '<html><body><main data-aigifmeme-home="true"><h1>Metadata Remover</h1><p>Document properties stay local.</p></main></body></html>';
 const fallback =
   '<html><body><!--$!--><template></template><!--/$--></body></html>';
 const document = (body: string) =>
@@ -40,7 +40,7 @@ describe('homepage cache response path', () => {
     for (const prefix of ['', '/zh', '/es', '/ar']) {
       for (const method of ['GET', 'HEAD']) {
         const response = await server.fetch(
-          new Request(`https://filemetawipe.com${prefix}/pricing`, { method })
+          new Request(`https://aigifmeme.com${prefix}/pricing`, { method })
         );
         expect(response.status).toBe(404);
         expect(response.headers.get('x-robots-tag')).toBe('noindex');
@@ -56,9 +56,7 @@ describe('homepage cache response path', () => {
   it('replaces a cached 200 fallback with complete server-rendered HTML', async () => {
     match.mockResolvedValue(document(fallback));
     render.mockResolvedValue(document(complete));
-    const response = await server.fetch(
-      new Request('https://filemetawipe.com/')
-    );
+    const response = await server.fetch(new Request('https://aigifmeme.com/'));
     expect(render).toHaveBeenCalledOnce();
     expect(await response.text()).toBe(complete);
     expect(response.headers.get('x-html-cache')).toBe('MISS');
@@ -69,9 +67,7 @@ describe('homepage cache response path', () => {
   it('keeps a failed render out of both the edge cache and downstream shared caches', async () => {
     match.mockResolvedValue(undefined);
     render.mockResolvedValue(document(fallback));
-    const response = await server.fetch(
-      new Request('https://filemetawipe.com/')
-    );
+    const response = await server.fetch(new Request('https://aigifmeme.com/'));
     expect(await response.text()).toBe(fallback);
     expect(response.headers.get('cache-control')).toBe('private, no-store');
     expect(put).not.toHaveBeenCalled();
@@ -80,7 +76,7 @@ describe('homepage cache response path', () => {
   it('serves a complete cache hit without rendering again', async () => {
     match.mockResolvedValue(document(complete));
     const response = await server.fetch(
-      new Request('https://filemetawipe.com/zh')
+      new Request('https://aigifmeme.com/zh')
     );
     expect(await response.text()).toBe(complete);
     expect(response.headers.get('x-html-cache')).toBe('HIT');
@@ -91,7 +87,7 @@ describe('homepage cache response path', () => {
   it('bypasses the shared cache for authenticated requests', async () => {
     render.mockResolvedValue(document(complete));
     const response = await server.fetch(
-      new Request('https://filemetawipe.com/', {
+      new Request('https://aigifmeme.com/', {
         headers: { cookie: 'better-auth.session_token=example' },
       })
     );

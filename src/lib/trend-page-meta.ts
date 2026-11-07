@@ -5,19 +5,16 @@ import { locales, localizeUrl, type Locale } from '@/paraglide/runtime.js';
 /** Actual content revision date, shared with the visible page update line. */
 export const TREND_PAGE_UPDATED_AT = '2026-10-11';
 
-/** Public homepage origin. Never a workers.dev host or the parent video domain. */
-export const PUBLIC_SITE_ORIGIN = 'https://filemetawipe.com';
+/** Public homepage origin. Never a workers.dev host or a parent product domain. */
+export const PUBLIC_SITE_ORIGIN = 'https://aigifmeme.com';
 
 /**
- * The homepage and public PDF tool stay on the public domain. Other pages keep a real
- * configured origin, but workers.dev and the parent Uptown hosts are rewritten.
+ * The homepage stays on the public domain. Other pages keep a real configured
+ * origin, but workers.dev and the parent video hosts are rewritten.
  */
 export function canonicalOrigin(configured: string, path = '') {
   const home = path === '/' || path === '';
-  const publicTool = /^\/(?:(?:zh|es|ar)\/)?pdf-metadata-remover\/?$/.test(
-    path
-  );
-  if (home || publicTool) return PUBLIC_SITE_ORIGIN;
+  if (home) return PUBLIC_SITE_ORIGIN;
   try {
     const url = new URL(configured);
     const host = url.hostname.toLowerCase();

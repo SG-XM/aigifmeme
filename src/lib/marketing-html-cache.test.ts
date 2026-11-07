@@ -36,7 +36,7 @@ describe('marketing homepage cache', () => {
     ).toBe(false);
     expect(
       marketingHtmlIsCompleteDocument(
-        '<html><body><main data-filemeta-home="true"><h1>Metadata Remover</h1><p>FAQ</p></main></body></html>'
+        '<html><body><main data-aigifmeme-home="true"><h1>Metadata Remover</h1><p>FAQ</p></main></body></html>'
       )
     ).toBe(true);
   });
@@ -53,12 +53,12 @@ describe('marketing homepage cache', () => {
     ).toBe(false);
     expect(
       await marketingHtmlHasContent(
-        document('<main data-filemeta-home="true"><h1>Metadata Remover</h1>')
+        document('<main data-aigifmeme-home="true"><h1>Metadata Remover</h1>')
       )
     ).toBe(false);
     expect(
       await marketingHtmlHasContent(
-        document('<main data-filemeta-home="true"><h1> </h1></main>')
+        document('<main data-aigifmeme-home="true"><h1> </h1></main>')
       )
     ).toBe(false);
   });
@@ -70,7 +70,7 @@ describe('marketing homepage cache', () => {
       'Eliminar metadatos',
       'إزالة البيانات الوصفية',
     ]) {
-      const html = `<html><body><main data-filemeta-home="true"><h1>${title}</h1><section>Supported formats</section></main></body></html>`;
+      const html = `<html><body><main data-aigifmeme-home="true"><h1>${title}</h1><section>Supported formats</section></main></body></html>`;
       const response = new Response(html, {
         headers: { 'content-type': 'text/html' },
       });
@@ -81,7 +81,7 @@ describe('marketing homepage cache', () => {
 
   it('does not cache failed or personalized documents even when the content is complete', async () => {
     const html =
-      '<main data-filemeta-home="true"><h1>Metadata Remover</h1></main>';
+      '<main data-aigifmeme-home="true"><h1>Metadata Remover</h1></main>';
     expect(
       await marketingHtmlHasContent(
         new Response(html, {

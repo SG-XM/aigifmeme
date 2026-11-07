@@ -11,9 +11,9 @@ describe('resolveSiteName', () => {
     expect(resolveSiteName('   ', 'Uptown')).toBe('Uptown');
     expect(resolveSiteName(undefined, 'Uptown')).toBe('Uptown');
   });
-  it('falls back to FileMeta Wipe when neither is set', () => {
-    expect(resolveSiteName(undefined, undefined)).toBe('FileMeta Wipe');
-    expect(resolveSiteName('', ' ')).toBe('FileMeta Wipe');
+  it('falls back to AIGifMeme when neither is set', () => {
+    expect(resolveSiteName(undefined, undefined)).toBe('AIGifMeme');
+    expect(resolveSiteName('', ' ')).toBe('AIGifMeme');
   });
   it('trims surrounding whitespace', () => {
     expect(resolveSiteName('  Dance AI  ', 'x')).toBe('Dance AI');

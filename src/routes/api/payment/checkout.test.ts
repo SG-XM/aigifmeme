@@ -233,10 +233,10 @@ describe('retention checkout guards', () => {
     expect(mocks.checkout).toHaveBeenCalledWith(
       expect.objectContaining({
         credits: 10,
-        productName: 'FileMeta Wipe credits · $5.99',
+        productName: 'AIGifMeme credits · $5.99',
         paymentOrder: expect.objectContaining({
           price: { amount: 599, currency: 'usd' },
-          productName: 'FileMeta Wipe credits · $5.99',
+          productName: 'AIGifMeme credits · $5.99',
         }),
       })
     );

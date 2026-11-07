@@ -20,13 +20,20 @@ describe('marketing playback media', () => {
       WEREWOLF_OFFER_MEDIA.src,
       WEREWOLF_OFFER_MEDIA.poster,
       WEREWOLF_OFFER_MEDIA.image,
-      ...HOME_HERO_DEMOS.flatMap((clip) =>
-        [clip.src, clip.poster].filter((url): url is string => Boolean(url))
-      ),
       ...BURNING_BRIDGES_SHOWCASE,
     ];
+    const stickers = HOME_HERO_DEMOS.flatMap((clip) =>
+      [clip.src, clip.poster].filter((url): url is string => Boolean(url))
+    );
 
-    expect(new Set(urls).size).toBeGreaterThan(8);
+    expect(new Set(urls).size).toBeGreaterThan(4);
+    for (const url of stickers) {
+      expect(url.startsWith('/images/stickers/'), url).toBe(true);
+      expect(url, url).not.toMatch(/uptown|bulin|r2\.dev|https?:/);
+      const file = resolve(ROOT, 'public', url.slice(1));
+      expect(existsSync(file), url).toBe(true);
+      expect(statSync(file).size, url).toBeGreaterThan(800);
+    }
     for (const url of urls) {
       expect(url.startsWith('/videos/'), url).toBe(true);
       expect(url, url).not.toMatch(/r2\.dev|airapduo\.io|https?:/);

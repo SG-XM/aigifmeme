@@ -22,8 +22,8 @@ function PagesLayout() {
   const { posts } = Route.useLoaderData();
 
   return (
-    <div className="filemeta-site bg-background flex min-h-screen flex-col">
-      <Header brandMark="filemeta" />
+    <div className="meme-site bg-background flex min-h-screen flex-col">
+      <Header brandMark="aigifmeme" />
       <div className="flex-1">
         <div className="mx-auto max-w-3xl px-6 pt-8 md:px-8">
           <Link

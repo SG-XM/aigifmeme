@@ -1,6 +1,6 @@
 {
-  "name": "FileMeta Wipe",
-  "short_name": "FileMeta",
+  "name": "AIGifMeme",
+  "short_name": "AIGifMeme",
   "icons": [
     {
       "src": "/icon-192.png",
@@ -21,7 +21,7 @@
       "purpose": "any"
     }
   ],
-  "theme_color": "#0E6B64",
-  "background_color": "#F4F1EA",
+  "theme_color": "#FF4B2A",
+  "background_color": "#FFF6EE",
   "display": "standalone"
 }

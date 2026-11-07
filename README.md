@@ -1,12 +1,15 @@
 #### 声明：① 注册 https://goofish.win 资源站 可以免费获取shipany docs源码; ② 只认证咸鱼上作者为「厨房清新的海蜇灯」或附属网站 https://goofish.win 购买，任何其他获取来源均为二次售卖；
 
-# Uptown
+# AIGifMeme
 
-A production-ready conversational AI video SaaS, built to rebrand and ship.
-Users describe a shot or attach source media; the agent decides how to use the
-material, chooses the right video tool, writes the cinematic prompt, renders
-the clip, and charges credits for it. Payments, subscriptions, credits, auth,
-admin, sharing, media library, and i18n are already wired.
+Public site: [https://aigifmeme.com](https://aigifmeme.com)
+
+AIGifMeme is an **ai meme** and **sticker gif generator**. Write an idea and
+the product makes a meme sticker or an animated GIF meme. Credits, auth,
+admin, and i18n come from the ShipAny chassis underneath.
+
+This is not FileMeta Wipe, and it is not the Uptown / Bulin / Burning Bridges
+video campaigns those templates shipped with.
 
 Built on [ShipAny](https://shipany.ai) (TanStack Start + Drizzle + better-auth).
 It runs on Node or Cloudflare Workers without relying on a writable filesystem.

@@ -98,7 +98,7 @@ export const Route = createRootRoute({
   },
   head: ({ matches, loaderData }) => {
     // head() runs on the SSR server AND again on the client during hydration.
-    // Homepage canonical stays on https://filemetawipe.com. Other pages use
+    // Homepage canonical stays on https://aigifmeme.com. Other pages use
     // the live origin, except workers.dev and the parent Uptown hosts.
     const pagePath = matches.at(-1)?.pathname || '/';
     const appUrl = canonicalOrigin(
@@ -129,6 +129,7 @@ export const Route = createRootRoute({
       meta: [
         { charSet: 'utf-8' },
         { name: 'viewport', content: 'width=device-width, initial-scale=1' },
+        { name: 'theme-color', content: '#FF4B2A' },
         { title: appName },
         { name: 'description', content: siteDescription },
         { property: 'og:site_name', content: appName },

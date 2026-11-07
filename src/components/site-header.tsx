@@ -3,7 +3,6 @@ import { Coins, Flame, Menu, X } from 'lucide-react';
 
 import { useSession } from '@/core/auth/client';
 import { Link, usePathname } from '@/core/i18n/navigation';
-import { envConfigs } from '@/config';
 import { cn } from '@/lib/utils';
 import { withUtmSource } from '@/lib/utm';
 import { openAuthPrompt } from '@/components/auth-prompt';
@@ -160,30 +159,24 @@ export function SiteHeader({
         <div className="flex min-w-0 items-center gap-6">
           <Link
             href="/"
-            className="flex min-w-0 items-center gap-2"
+            aria-label="aigifmeme.com"
+            className="flex min-w-0 items-center"
             onClick={() => setMobileOpen(false)}
           >
             <img
-              src={envConfigs.app_logo}
-              alt={envConfigs.app_name}
-              width={36}
-              height={36}
-              className={
-                brandMark
-                  ? 'size-8 shrink-0 rounded-lg sm:size-9'
-                  : 'size-7 shrink-0 rounded-md'
-              }
+              src="/logo-horizontal-black.png"
+              alt=""
+              width={241}
+              height={48}
+              className="brand-lockup dark:hidden"
             />
-            <span
-              aria-hidden="true"
-              className={
-                brandMark
-                  ? 'truncate font-sans text-base font-semibold tracking-tight sm:text-lg'
-                  : 'truncate font-serif text-lg italic'
-              }
-            >
-              {envConfigs.app_name}
-            </span>
+            <img
+              src="/logo-horizontal-white.png"
+              alt=""
+              width={241}
+              height={48}
+              className="brand-lockup hidden dark:block"
+            />
           </Link>
 
           <nav className="trend-header-nav hidden items-center gap-5 lg:flex">

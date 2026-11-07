@@ -27,48 +27,44 @@ describe('homeDemoTitle', () => {
 });
 
 describe('homeDemoClips', () => {
-  it('ships the live homepage hero and an empty gallery', () => {
+  it('ships sticker and GIF placeholders and an empty gallery', () => {
     const english = homeDemoClips('en');
     expect(english.gallery).toEqual([]);
     expect(english.hero.map((clip) => clip.id)).toEqual([
-      'uptown-demo-ceo-hallelujah-v1',
-      'uptown-demo-ceo-dutch-v1',
-      'uptown-demo-zhaobenshan-v1',
-      'uptown-demo-ceo-justwatch-v1',
+      'reaction-sticker',
+      'caption-loop',
+      'pet-meme',
+      'poster-sticker',
     ]);
     expect(english.hero.map((clip) => clip.title)).toEqual([
-      'CEO crew AI video example',
-      'Street dance AI video example',
-      'Ivory Mountain remake AI example',
-      'Just Watch AI video example',
+      'Reaction sticker',
+      'Caption GIF loop',
+      'Pet meme sticker',
+      'Poster sticker',
     ]);
-    expect(english.hero[0]).toEqual({
-      id: 'uptown-demo-ceo-hallelujah-v1',
-      src: '/videos/showcase/home/uptown-demo-ceo-hallelujah-v1.mp4',
-      poster: '/videos/showcase/home/uptown-demo-ceo-hallelujah-v1.jpg',
-      title: 'CEO crew AI video example',
+    expect(english.hero[1]).toEqual({
+      id: 'caption-loop',
+      src: '/images/stickers/caption-loop.gif',
+      poster: '/images/stickers/caption-loop.png',
+      title: 'Caption GIF loop',
     });
     for (const clip of HOME_HERO_DEMOS) {
-      expect(clip.src).toBe(`/videos/showcase/home/${clip.id}.mp4`);
-      expect(clip.poster).toBe(`/videos/showcase/home/${clip.id}.jpg`);
+      expect(clip.src.startsWith('/images/stickers/')).toBe(true);
+      expect(clip.src).not.toMatch(/uptown|bulin|showcase\/home|r2\.dev/i);
       for (const url of [clip.src, clip.poster]) {
         if (!url) continue;
-        expect(url.startsWith('/videos/showcase/home/')).toBe(true);
-        expect(url).not.toMatch(/r2\.dev|airapduo\.io|tiktok|demo-0[45]/i);
         expect(existsSync(resolve(ROOT, 'public', url.slice(1)))).toBe(true);
       }
     }
     expect(homeDemoClips('zh').hero.map((clip) => clip.title)).toEqual([
-      'CEO 团队 AI 视频示例',
-      '街舞 AI 视频示例',
-      '象牙山重制 AI 示例',
-      'Just Watch AI 视频示例',
+      '反应贴纸',
+      '字幕 GIF 循环',
+      '宠物梗图贴纸',
+      '海报贴纸',
     ]);
     expect(homeDemoClips('es').hero[2]?.title).toBe(
-      'Ejemplo de remake IA de Ivory Mountain'
+      'Sticker de meme con mascota'
     );
-    expect(homeDemoClips('ar').hero[3]?.title).toBe(
-      'مثال فيديو AI: Just Watch'
-    );
+    expect(homeDemoClips('ar').hero[3]?.title).toBe('ملصق بوستر');
   });
 });

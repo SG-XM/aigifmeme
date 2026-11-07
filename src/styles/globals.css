@@ -3501,6 +3501,7 @@ html[dir='rtl']
 }
 
 /* Shared public, authentication and application presentation. */
+.meme-footer,
 .filemeta-footer {
   --foreground: #f4f1ea;
   --muted-foreground: #c2d1c7;
@@ -3819,5 +3820,264 @@ html[dir='rtl']
   .filemeta-home-art {
     width: 200px;
     margin-bottom: 1rem;
+  }
+}
+
+/* AIGifMeme sticker sheet. Scoped so admin and settings keep the app theme. */
+.meme-site {
+  --background: #fff6ee;
+  --foreground: #1a1024;
+  --card: #fffdf8;
+  --card-foreground: #1a1024;
+  --primary: #ff2f86;
+  --primary-foreground: #1a1024;
+  --muted-foreground: #5c5168;
+  --border: #1a1024;
+  --font-display: 'Anton', 'Arial Narrow', Impact, sans-serif;
+  background-color: #fff6ee;
+  background-image: radial-gradient(#1a1024 0.7px, transparent 0.8px);
+  background-size: 16px 16px;
+  color: #1a1024;
+}
+.meme-site header {
+  background: #fffdf8;
+  border-bottom: 3px solid #1a1024;
+}
+.brand-lockup {
+  height: 1.85rem;
+  width: auto;
+  max-width: 68vw;
+}
+@media (min-width: 640px) {
+  .brand-lockup {
+    height: 2.35rem;
+    max-width: none;
+  }
+}
+.meme-site .trend-header-create {
+  background: #d6ff3c;
+  color: #1a1024;
+  border: 2px solid #1a1024;
+  border-radius: 999px;
+  box-shadow: 3px 3px 0 #1a1024;
+}
+.meme-hero,
+.meme-section {
+  width: min(1080px, calc(100% - 2rem));
+  margin: 0 auto;
+}
+.meme-hero {
+  padding: 3.5rem 0 2rem;
+}
+.meme-kicker {
+  display: inline-block;
+  margin: 0 0 0.75rem;
+  padding: 0.2rem 0.7rem;
+  border: 2px solid #1a1024;
+  border-radius: 999px;
+  background: #ffe14a;
+  font-size: 0.8rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.meme-hero h1,
+.meme-section h2 {
+  font-family: var(--font-display);
+  font-weight: 400;
+  letter-spacing: 0.01em;
+  line-height: 0.95;
+  text-transform: uppercase;
+}
+.meme-hero h1 {
+  max-width: 14ch;
+  margin: 0;
+  font-size: clamp(3.2rem, 8vw, 6.4rem);
+}
+.meme-lede {
+  max-width: 38rem;
+  margin: 1rem 0 0;
+  font-size: 1.2rem;
+  line-height: 1.45;
+}
+.meme-prompt {
+  margin-top: 1.5rem;
+  padding: 1rem;
+  border: 3px solid #1a1024;
+  border-radius: 1.4rem;
+  background: #fffdf8;
+  box-shadow: 8px 8px 0 #2f5bff;
+}
+.meme-prompt label {
+  font-size: 0.8rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.meme-prompt textarea {
+  display: block;
+  width: 100%;
+  margin-top: 0.4rem;
+  padding: 0.8rem 0.9rem;
+  border: 2px solid #1a1024;
+  border-radius: 0.9rem;
+  background: #fff;
+  color: #1a1024;
+  font: inherit;
+  resize: vertical;
+}
+.meme-ideas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+}
+.meme-ideas button {
+  border: 2px solid #1a1024;
+  border-radius: 999px;
+  background: #fff;
+  padding: 0.35rem 0.75rem;
+  font: inherit;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+.meme-ideas button:hover {
+  background: #ffe14a;
+}
+.meme-prompt-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.8rem 1rem;
+  margin-top: 0.9rem;
+}
+.meme-prompt-actions p {
+  margin: 0;
+  max-width: 36rem;
+  color: #5c5168;
+  font-size: 0.92rem;
+}
+.meme-cta {
+  display: inline-flex;
+  align-items: center;
+  border: 2px solid #1a1024;
+  border-radius: 999px;
+  background: #ff2f86;
+  color: #fffdf8;
+  padding: 0.7rem 1.1rem;
+  font-weight: 800;
+  box-shadow: 3px 3px 0 #1a1024;
+}
+.meme-section {
+  padding: 2.2rem 0 0.5rem;
+}
+.meme-section h2 {
+  margin: 0;
+  font-size: clamp(2rem, 4vw, 3.2rem);
+}
+.meme-section > p {
+  max-width: 40rem;
+}
+.meme-stickers,
+.meme-styles,
+.meme-steps {
+  display: grid;
+  gap: 0.9rem;
+  margin: 1rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+.meme-stickers,
+.meme-styles {
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+}
+.meme-stickers figure {
+  margin: 0;
+  overflow: hidden;
+  border: 3px solid #1a1024;
+  border-radius: 1.2rem;
+  background: #fff;
+  box-shadow: 5px 5px 0 #ff2f86;
+}
+.meme-stickers img {
+  display: block;
+  width: 100%;
+  height: auto;
+  background: #fff6ee;
+}
+.meme-stickers figcaption,
+.meme-styles h3,
+.meme-steps h3 {
+  margin: 0;
+  padding: 0.65rem 0.8rem 0.8rem;
+  font-weight: 800;
+}
+.meme-styles li {
+  border: 3px solid #1a1024;
+  border-radius: 1.1rem;
+  background: #fffdf8;
+  padding: 0.2rem 0.9rem 0.8rem;
+}
+.meme-styles p,
+.meme-steps p,
+.meme-faq p {
+  margin: 0.3rem 0 0;
+}
+.meme-styles li:nth-child(2) {
+  background: #d6ff3c;
+}
+.meme-styles li:nth-child(3) {
+  background: #c9d4ff;
+}
+.meme-styles li:nth-child(4) {
+  background: #ffe14a;
+}
+.meme-steps {
+  grid-template-columns: 1fr;
+}
+.meme-steps li {
+  display: flex;
+  gap: 0.8rem;
+  align-items: flex-start;
+}
+.meme-steps span {
+  display: grid;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  border: 2px solid #1a1024;
+  border-radius: 999px;
+  background: #1a1024;
+  color: #d6ff3c;
+  font-weight: 800;
+}
+.meme-faq {
+  display: grid;
+  gap: 0.55rem;
+  margin-top: 1rem;
+}
+.meme-faq details {
+  border: 2px solid #1a1024;
+  border-radius: 0.9rem;
+  background: #fffdf8;
+  padding: 0.7rem 0.9rem;
+}
+.meme-faq summary {
+  cursor: pointer;
+  font-weight: 800;
+}
+.meme-site .meme-footer {
+  margin-top: 3rem;
+  background: #1a1024;
+  color: #fff6ee;
+  border-top: 8px solid #ff2f86;
+  --foreground: #fff6ee;
+  --muted-foreground: #eadff0;
+  --border: rgb(255 246 238 / 18%);
+  --primary: #d6ff3c;
+}
+@media (min-width: 800px) {
+  .meme-steps {
+    grid-template-columns: repeat(3, 1fr);
   }
 }

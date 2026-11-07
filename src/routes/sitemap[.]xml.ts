@@ -1,12 +1,8 @@
 import { createFileRoute } from '@tanstack/react-router';
 
 import { envConfigs } from '@/config';
-import { FILEMETA_UPDATED_AT } from '@/lib/filemeta-content';
 import { isGonePath } from '@/lib/gone-paths';
-import {
-  PDF_METADATA_PATH,
-  PDF_METADATA_UPDATED_AT,
-} from '@/lib/pdf-metadata-content';
+import { AIGIFMEME_UPDATED_AT } from '@/lib/meme-content';
 import { isHiddenPublicPath } from '@/lib/public-page-visibility';
 import {
   baseLocale,
@@ -17,9 +13,7 @@ import {
 
 const STATIC_PATHS = [
   '',
-  PDF_METADATA_PATH,
   '/pricing',
-  '/blog',
   '/privacy-policy',
   '/terms-of-service',
   '/about',
@@ -122,12 +116,9 @@ export const Route = createFileRoute('/sitemap.xml')({
                 path,
                 {
                   path,
-                  lastModified:
-                    path === PDF_METADATA_PATH
-                      ? PDF_METADATA_UPDATED_AT
-                      : ['', '/about', '/contact'].includes(path)
-                        ? FILEMETA_UPDATED_AT
-                        : undefined,
+                  lastModified: ['', '/about', '/contact'].includes(path)
+                    ? AIGIFMEME_UPDATED_AT
+                    : undefined,
                 },
               ]
             )

@@ -26,9 +26,8 @@ describe('retention compare original still', () => {
     );
 
     const hero = HOME_HERO_DEMOS[0];
-    expect(hero?.poster).toBe(
-      '/videos/showcase/home/uptown-demo-ceo-hallelujah-v1.jpg'
-    );
+    expect(hero?.poster).toBe('/images/stickers/reaction-sticker.png');
+    expect(hero?.src).not.toMatch(/uptown|showcase\/home/i);
     expect(ORIGINAL_PUBLIC_PATH).not.toBe(hero?.poster);
     expect(ORIGINAL_PUBLIC_PATH).not.toBe(hero?.src);
 
