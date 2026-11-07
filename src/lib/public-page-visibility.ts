@@ -1,7 +1,10 @@
 import { normalizePublicPath } from './gone-paths';
 
-/** Temporarily hidden pages. Remove an entry to restore its route and links. */
-const HIDDEN_PUBLIC_PATHS = new Set(['/pricing']);
+/**
+ * Pages omitted from the public site. Pricing stays published: the live
+ * catalog is the enabled plans and top-ups already in the database.
+ */
+const HIDDEN_PUBLIC_PATHS = new Set<string>();
 
 export function isHiddenPublicPath(path: string): boolean {
   return HIDDEN_PUBLIC_PATHS.has(normalizePublicPath(path));

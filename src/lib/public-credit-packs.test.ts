@@ -114,9 +114,11 @@ describe('loadPublicCreditPacks', () => {
     });
   });
 
-  it('returns null when the pricing gate refuses to serve the catalog', async () => {
+  it('loads enabled packs even when the checkout pricing gate would refuse', async () => {
     mocks.requireCurrentCreditPricing.mockRejectedValue(new Error('migration'));
-    await expect(loadPublicCreditPacks('en', request())).resolves.toBeNull();
-    expect(mocks.listEnabledTopUpProducts).not.toHaveBeenCalled();
+    const packs = await loadPublicCreditPacks('en', request());
+    expect(packs?.map((pack) => pack.productId)).toContain('single_v2');
+    expect(mocks.requireCurrentCreditPricing).not.toHaveBeenCalled();
+    expect(mocks.listEnabledTopUpProducts).toHaveBeenCalledWith('en');
   });
 });
