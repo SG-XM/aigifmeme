@@ -9,6 +9,7 @@ import {
 } from '@/core/db/atomic-batch';
 import { envConfigs } from '@/config';
 import { config, credit } from '@/config/db/schema';
+import { decodeStoredConfigString } from '@/lib/config-value';
 import { getSnowId, getUuid } from '@/lib/hash';
 import {
   VIDEO_PRICING_VERSION,
@@ -38,14 +39,21 @@ export enum CreditTransactionScene {
 
 type NewCredit = typeof credit.$inferInsert;
 
-/** Read directly: a cached admin config must never hide a billing cutover. */
+/**
+ * Read the pricing marker directly. A cached admin config must never hide a
+ * billing cutover. The stored text is decoded with the same config-string
+ * rule as other settings, then compared to the current version. A missing
+ * row, a different version, or a value that only looks similar still throws.
+ */
 export async function requireCurrentCreditPricing() {
   const [row] = await db()
     .select({ value: config.value })
     .from(config)
     .where(eq(config.name, VIDEO_PRICING_VERSION_KEY))
     .limit(1);
-  if (row?.value !== VIDEO_PRICING_VERSION)
+  const stored =
+    row?.value == null ? undefined : decodeStoredConfigString(row.value);
+  if (stored !== VIDEO_PRICING_VERSION)
     throw new Error(
       'Credit pricing migration is required before checkout or generation'
     );
