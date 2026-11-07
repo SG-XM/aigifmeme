@@ -36,19 +36,23 @@ describe('homepage cache response path', () => {
   });
   afterEach(() => vi.unstubAllGlobals());
 
-  it('hides localized pricing URLs before rendering or accessing the cache', async () => {
+  it('lets pricing through to the app instead of hiding it', async () => {
+    render.mockResolvedValue(
+      new Response('pricing', {
+        status: 200,
+        headers: { 'content-type': 'text/html' },
+      })
+    );
     for (const prefix of ['', '/zh', '/es', '/ar']) {
       for (const method of ['GET', 'HEAD']) {
         const response = await server.fetch(
           new Request(`https://aigifmeme.com${prefix}/pricing`, { method })
         );
-        expect(response.status).toBe(404);
-        expect(response.headers.get('x-robots-tag')).toBe('noindex');
-        expect(response.headers.get('cache-control')).toBe('private, no-store');
-        if (method === 'HEAD') expect(response.body).toBeNull();
+        expect(response.status).toBe(200);
+        expect(response.headers.get('x-robots-tag')).toBeNull();
       }
     }
-    expect(render).not.toHaveBeenCalled();
+    expect(render).toHaveBeenCalledTimes(8);
     expect(match).not.toHaveBeenCalled();
     expect(put).not.toHaveBeenCalled();
   });

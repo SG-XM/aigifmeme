@@ -5,20 +5,22 @@ import type {
 
 /**
  * Enabled one-time packs from the same catalog `/api/top-up-products` serves.
- * Returns null when the pricing gate or the database read fails, so the page
- * can still render and the client query can try again.
+ * Returns null only when the database read fails, so the page can still
+ * render and the client query can try again.
+ *
+ * The checkout pricing-version gate is intentionally not applied here. That
+ * gate blocks generation and payment when `video_credit_pricing_version` is
+ * not the current marker. A public catalog read must still return the enabled
+ * rows that are already stored.
  */
 export async function loadPublicCreditPacks(
   locale: CatalogLocale,
   request: Request
 ): Promise<PublicCreditPack[] | null> {
   try {
-    const { requireCurrentCreditPricing } =
-      await import('@/modules/credits/service');
     const { listEnabledTopUpProducts } =
       await import('@/modules/top-up-products/service');
     const { regionalPrice } = await import('@/lib/regional-pricing');
-    await requireCurrentCreditPricing();
     const products = await listEnabledTopUpProducts(locale);
     return products.map((product: PublicCreditPack) => {
       const priced = regionalPrice(product, request);
