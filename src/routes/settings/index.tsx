@@ -43,7 +43,7 @@ function DashboardPage() {
 
   const actions = [
     {
-      href: '/settings/billing',
+      href: '/pricing',
       icon: TrendingUp,
       label: m['settings.overview.action_upgrade'](),
     },

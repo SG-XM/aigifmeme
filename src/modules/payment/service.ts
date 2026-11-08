@@ -413,7 +413,7 @@ export async function createCheckout(params: {
   }
 
   const finalSuccessUrl =
-    paymentOrder.successUrl || `${appUrl}/settings/billing?success=1`;
+    paymentOrder.successUrl || `${appUrl}/settings?success=1`;
   const callbackSuccessUrl = `${appUrl}/api/payment/callback?order_no=${orderNo}&redirect=${encodeURIComponent(finalSuccessUrl)}`;
 
   if (paymentOrder.applePayPaymentMethodId) {
@@ -441,8 +441,7 @@ export async function createCheckout(params: {
       productId: resolvedProductId,
       orderNo,
       successUrl: callbackSuccessUrl,
-      cancelUrl:
-        paymentOrder.cancelUrl || `${appUrl}/settings/billing?canceled=1`,
+      cancelUrl: paymentOrder.cancelUrl || `${appUrl}/settings?canceled=1`,
     },
     provider: resolvedProvider,
   });

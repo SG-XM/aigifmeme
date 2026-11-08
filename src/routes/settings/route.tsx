@@ -2,11 +2,9 @@ import { createFileRoute, Outlet } from '@tanstack/react-router';
 import {
   ArrowLeft,
   Coins,
-  CreditCard,
   Home,
   LayoutDashboard,
   LifeBuoy,
-  Receipt,
   User,
 } from 'lucide-react';
 
@@ -29,18 +27,6 @@ function SettingsLayout() {
       href: '/settings',
       label: m['settings.nav.overview'](),
       icon: LayoutDashboard,
-      group,
-    },
-    {
-      href: '/settings/billing',
-      label: m['settings.nav.billing'](),
-      icon: CreditCard,
-      group,
-    },
-    {
-      href: '/settings/payments',
-      label: m['settings.nav.payments'](),
-      icon: Receipt,
       group,
     },
     {

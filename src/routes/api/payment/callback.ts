@@ -35,7 +35,7 @@ async function GET({ request }: { request: Request }) {
   const configs = await getAllConfigs(true);
   const appUrl =
     configs.app_url || envConfigs.app_url || 'http://localhost:3000';
-  const fallback = `${appUrl}/settings/billing`;
+  const fallback = `${appUrl}/settings`;
 
   try {
     if (orderNo) {

@@ -22,6 +22,7 @@ import { envConfigs } from '@/config';
 import { apiPost } from '@/lib/api-client';
 import { isGonePath } from '@/lib/gone-paths';
 import { sanitizeGoogleAnalyticsId } from '@/lib/google-analytics-id';
+import { isHiddenPublicPath } from '@/lib/public-page-visibility';
 import { getQueryClient } from '@/lib/query-client';
 import { canonicalOrigin } from '@/lib/trend-page-meta';
 import { m } from '@/paraglide/messages.js';
@@ -89,7 +90,10 @@ export const Route = createRootRoute({
   beforeLoad: async ({ location }) => {
     // Document requests already 410 in src/server.ts. This stops a client
     // navigation from painting the retired page without a new document.
-    if (!import.meta.env.SSR && isGonePath(location.pathname)) {
+    if (
+      !import.meta.env.SSR &&
+      (isGonePath(location.pathname) || isHiddenPublicPath(location.pathname))
+    ) {
       throw notFound();
     }
     if (import.meta.env.SSR) return;
