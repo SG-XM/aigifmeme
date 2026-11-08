@@ -51,10 +51,9 @@ export function Footer({
     {
       title: m['landing.footer.account'](),
       links: [
-        { label: m['settings.nav.payments'](), href: '/settings/payments' },
-        { label: m['settings.nav.billing'](), href: '/settings/billing' },
+        { label: m['settings.nav.credits'](), href: '/settings/credits' },
         { label: m['settings.tickets.title'](), href: '/settings/tickets' },
-      ],
+      ].filter((link) => !isHiddenPublicPath(link.href)),
     },
     {
       title: m['landing.footer.legal'](),

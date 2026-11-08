@@ -5,13 +5,14 @@ import {
   useQuery,
   useQueryClient,
 } from '@tanstack/react-query';
-import { createFileRoute } from '@tanstack/react-router';
+import { createFileRoute, notFound } from '@tanstack/react-router';
 import { Eye, MoreHorizontal, Pencil, XCircle } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { tDynamic } from '@/core/i18n/dynamic';
 import { Link } from '@/core/i18n/navigation';
 import { ApiError, apiGet, apiPost, type PageResult } from '@/lib/api-client';
+import { isHiddenPublicPath } from '@/lib/public-page-visibility';
 import { cn } from '@/lib/utils';
 import { m } from '@/paraglide/messages.js';
 import { DataTable, type Column } from '@/components/data-table';
@@ -478,5 +479,8 @@ function DetailRow({
 }
 
 export const Route = createFileRoute('/settings/billing')({
+  beforeLoad: () => {
+    if (isHiddenPublicPath('/settings/billing')) throw notFound();
+  },
   component: BillingPage,
 });

@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react';
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
-import { createFileRoute } from '@tanstack/react-router';
+import { createFileRoute, notFound } from '@tanstack/react-router';
 import { ExternalLink } from 'lucide-react';
 
 import { tDynamic } from '@/core/i18n/dynamic';
 import { apiGet, type PageResult } from '@/lib/api-client';
+import { isHiddenPublicPath } from '@/lib/public-page-visibility';
 import { cn } from '@/lib/utils';
 import { m } from '@/paraglide/messages.js';
 import { DataTable, type Column } from '@/components/data-table';
@@ -185,5 +186,8 @@ function PaymentsPage() {
 }
 
 export const Route = createFileRoute('/settings/payments')({
+  beforeLoad: () => {
+    if (isHiddenPublicPath('/settings/payments')) throw notFound();
+  },
   component: PaymentsPage,
 });

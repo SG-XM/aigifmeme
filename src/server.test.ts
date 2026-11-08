@@ -36,6 +36,32 @@ describe('homepage cache response path', () => {
   });
   afterEach(() => vi.unstubAllGlobals());
 
+  it('returns 404 for removed settings pages without redirecting', async () => {
+    for (const path of [
+      '/settings/payments',
+      '/settings/billing',
+      '/zh/settings/payments',
+      '/es/settings/billing/',
+      '/ar/settings/payments?success=1',
+      '/settings/billing?canceled=1',
+    ]) {
+      for (const method of ['GET', 'HEAD']) {
+        const response = await server.fetch(
+          new Request(`https://aigifmeme.com${path}`, { method })
+        );
+        expect(response.status, path).toBe(404);
+        expect(response.headers.get('location'), path).toBeNull();
+        expect(response.headers.get('x-robots-tag'), path).toBe('noindex');
+        expect(response.headers.get('cache-control'), path).toBe(
+          'private, no-store'
+        );
+        if (method === 'HEAD') expect(response.body).toBeNull();
+        else expect(await response.text()).toBe('Not Found\n');
+      }
+    }
+    expect(render).not.toHaveBeenCalled();
+  });
+
   it('lets pricing through to the app instead of hiding it', async () => {
     render.mockResolvedValue(
       new Response('pricing', {
