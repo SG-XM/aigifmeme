@@ -98,7 +98,7 @@ Two themes (daily replies and mood), eight motions each, are inserted on first u
 
 Existing Worker `aigifmeme`, D1 `aigifmeme-db`, and the current R2 settings stay in place. Do not deploy or edit the `chatgpt2api` worker.
 
-R2 is required for phone-sized originals. Without `r2_access_key`, `r2_secret_key`, and `r2_bucket_name`, only small files fit in D1 and generation stops with a storage error. Pack files are stored under `private/gif-packs/` and are downloaded through `/api/gif-packs/:id/files/:fileId` after a session check. The API does not return a public object URL.
+Pack files use the Worker R2 binding `GIF_PACK_BUCKET` on the existing bucket `aigifmeme`. Objects stay under `private/gif-packs/`. The API does not return a public URL. Download and delete still require the owning session, or an admin. This does not create a bucket, mint S3 keys, or read `r2_access_key`. Other product uploads keep their existing storage provider.
 
 ```sh
 pnpm install --frozen-lockfile
@@ -106,7 +106,7 @@ pnpm cf:build
 pnpm cf:deploy
 ```
 
-A minute cron resumes packs whose isolate died. Creating a pack also continues with `waitUntil`, so closing the browser does not cancel the job.
+Creating a pack only writes the job. It does not start an image call. Cloudflare cancels HTTP `waitUntil` 30 seconds after the response, and a live `gpt-image-2` edit takes 43–46 seconds, so a call started there would be killed after it had already been billed. The every-minute scheduled task is the worker. One invocation has 15 minutes of wall clock, which covers nine 46-second calls (about 7 minutes) plus local GIF assembly. Each PNG is stored before the next call. A call starts only when at least 90 seconds of budget remain. A lease stops a second cron from starting the same call. If the isolate dies mid-call, the next run waits out that 90 seconds, counts the lost call as one of three system attempts, and does not call again for that stage once the three are used. Closing the browser does not cancel the job.
 
 ## Product limits
 

@@ -905,6 +905,8 @@ export const gifPack = table(
     phase: varchar('phase', { length: 32 }).notNull(),
     userRegens: int('user_regens').notNull().default(0),
     anchorAttempts: int('anchor_attempts').notNull().default(0),
+    inflightStage: varchar('inflight_stage', { length: 32 }),
+    inflightAt: timestamp('inflight_at'),
     errorCode: varchar('error_code', { length: 64 }),
     errorMessage: text('error_message'),
     lockToken: varchar191('lock_token'),

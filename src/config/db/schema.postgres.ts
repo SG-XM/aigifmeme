@@ -977,6 +977,8 @@ export const gifPack = table(
     phase: text('phase').notNull(),
     userRegens: integer('user_regens').notNull().default(0),
     anchorAttempts: integer('anchor_attempts').notNull().default(0),
+    inflightStage: text('inflight_stage'),
+    inflightAt: timestamp('inflight_at'),
     errorCode: text('error_code'),
     errorMessage: text('error_message'),
     lockToken: text('lock_token'),

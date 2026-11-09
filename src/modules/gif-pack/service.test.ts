@@ -1,6 +1,6 @@
 import { rmSync } from 'node:fs';
 import { createClient } from '@libsql/client';
-import { is, SQL } from 'drizzle-orm';
+import { eq, is, SQL } from 'drizzle-orm';
 import { drizzle } from 'drizzle-orm/libsql';
 import {
   getTableConfig,
@@ -11,16 +11,24 @@ import { encode as encodePng } from 'fast-png';
 import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import * as schema from '@/config/db/schema';
+import { gifPack } from '@/config/db/schema';
 import { saveConfigs } from '@/modules/config/service';
 import { setGifPackFetch } from '@/lib/gif-pack/provider';
+import {
+  CRON_WALL_MS,
+  OBSERVED_PROVIDER_CALL_MS,
+  PROVIDER_CALL_GUARD_MS,
+} from '@/lib/gif-pack/runtime';
 
 import {
+  continueGifPack,
   createGifPack,
   deleteGifPack,
   drainGifPack,
   GifPackError,
   readPackFile,
   regenerateSticker,
+  runScheduledGifPacks,
   saveUpload,
 } from './service';
 import { memoryByteStore, setGifPackByteStore } from './storage';
@@ -255,5 +263,120 @@ describe('pack quota and private jobs', () => {
     expect(
       await readPackFile(created.id, gif!.gifFileId!, 'user-a')
     ).toBeNull();
+  });
+
+  it('finishes nine provider calls from one 15 minute cron after the browser returns', async () => {
+    const sheet = movingSheet();
+    let binary = '';
+    for (const byte of sheet) binary += String.fromCharCode(byte);
+    const names: string[] = [];
+    let clock = Date.parse('2026-11-12T00:00:00.000Z');
+    setGifPackFetch(async (_url, init) => {
+      const body = JSON.parse(String(init?.body)) as {
+        images: { filename: string }[];
+      };
+      names.push(body.images[0].filename);
+      clock += OBSERVED_PROVIDER_CALL_MS;
+      return new Response(
+        JSON.stringify({ data: [{ b64_json: btoa(binary) }] }),
+        { status: 200 }
+      );
+    });
+    const upload = await saveUpload('user-clock', subjectPng(), 'image/png');
+    const themes = await (await import('./service')).listThemes();
+    const created = await createGifPack({
+      userId: 'user-clock',
+      uploadId: upload.uploadId,
+      themeId: themes[0].id,
+      style: 'q-cartoon',
+      motionMode: 'medium',
+      background: 'transparent',
+      language: 'en',
+      idempotencyKey: 'idem-clock-pack',
+      now: new Date(clock),
+    });
+    if (!created) throw new Error('pack was not created');
+    continueGifPack(created.id);
+    expect(names).toEqual([]);
+    await runScheduledGifPacks({
+      budgetMs: OBSERVED_PROVIDER_CALL_MS * 2 + PROVIDER_CALL_GUARD_MS - 1,
+      now: () => clock,
+      store,
+      packIds: [created.id],
+    });
+    expect(names).toEqual(['anchor.png', 'sheet-1.png']);
+    await runScheduledGifPacks({
+      budgetMs: CRON_WALL_MS,
+      now: () => clock,
+      store,
+      packIds: [created.id],
+    });
+    expect(names.filter((name) => name === 'anchor.png')).toEqual([
+      'anchor.png',
+    ]);
+    expect(names.filter((name) => name === 'sheet-1.png')).toEqual([
+      'sheet-1.png',
+    ]);
+    expect(names).toHaveLength(9);
+    const elapsed = clock - Date.parse('2026-11-12T00:00:00.000Z');
+    expect(elapsed).toBe(OBSERVED_PROVIDER_CALL_MS * 9);
+    expect(elapsed).toBeLessThan(CRON_WALL_MS);
+    const { packView } = await import('./service');
+    expect((await packView(created.id, 'user-clock'))?.status).toBe('ready');
+  });
+
+  it('does not repeat a paid call while an interrupted one is still inside the lease', async () => {
+    const sheet = movingSheet();
+    let binary = '';
+    for (const byte of sheet) binary += String.fromCharCode(byte);
+    let calls = 0;
+    let clock = Date.parse('2026-11-13T00:00:00.000Z');
+    setGifPackFetch(async () => {
+      calls += 1;
+      clock += OBSERVED_PROVIDER_CALL_MS;
+      return new Response(
+        JSON.stringify({ data: [{ b64_json: btoa(binary) }] }),
+        { status: 200 }
+      );
+    });
+    const upload = await saveUpload('user-lease', subjectPng(), 'image/png');
+    const themes = await (await import('./service')).listThemes();
+    const created = await createGifPack({
+      userId: 'user-lease',
+      uploadId: upload.uploadId,
+      themeId: themes[0].id,
+      style: 'original',
+      motionMode: 'medium',
+      background: 'transparent',
+      language: 'en',
+      idempotencyKey: 'idem-lease-pack',
+      now: new Date(clock),
+    });
+    if (!created) throw new Error('pack was not created');
+    await state
+      .database!.update(gifPack)
+      .set({
+        status: 'running',
+        inflightStage: 'anchor',
+        inflightAt: new Date(clock - 10_000),
+        heartbeatAt: new Date(clock - 10_000),
+        lockToken: null,
+      })
+      .where(eq(gifPack.id, created.id));
+    await runScheduledGifPacks({
+      budgetMs: CRON_WALL_MS,
+      now: () => clock,
+      store,
+      packIds: [created.id],
+    });
+    expect(calls).toBe(0);
+    clock += PROVIDER_CALL_GUARD_MS + 1_000;
+    await runScheduledGifPacks({
+      budgetMs: CRON_WALL_MS,
+      now: () => clock,
+      store,
+      packIds: [created.id],
+    });
+    expect(calls).toBe(9);
   });
 });

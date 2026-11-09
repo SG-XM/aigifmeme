@@ -32,6 +32,12 @@ import {
   requestImageEdit,
   resolveGifPackProvider,
 } from '@/lib/gif-pack/provider';
+import {
+  canStartProviderCall,
+  CRON_WALL_MS,
+  LOCAL_STEP_GUARD_MS,
+  PROVIDER_CALL_GUARD_MS,
+} from '@/lib/gif-pack/runtime';
 import { inspectSubject, isFlatImage } from '@/lib/gif-pack/subject';
 import {
   DEFAULT_GIF_PACK_THEMES,
@@ -731,17 +737,82 @@ export async function listAdminDemos() {
     .orderBy(gifPackDemo.referenceId, gifPackDemo.themeSlug);
 }
 
-export async function advanceGifPack(packId: string, store?: ByteStore) {
+type PackClock = {
+  now: () => number;
+  deadline: number;
+};
+
+export async function runScheduledGifPacks(options?: {
+  budgetMs?: number;
+  now?: () => number;
+  store?: ByteStore;
+  packIds?: string[];
+}) {
+  const now = options?.now ?? Date.now;
+  const deadline = now() + (options?.budgetMs ?? CRON_WALL_MS);
+  const store = options?.store ?? (await gifPackByteStore());
+  const ids = options?.packIds ?? (await dueGifPackIds(now()));
+  const finished: string[] = [];
+  for (const packId of ids) {
+    if (!canStartProviderCall(now(), deadline) && now() >= deadline) break;
+    await runPackWithinBudget(packId, store, { now, deadline });
+    finished.push(packId);
+  }
+  return { packIds: finished, deadline };
+}
+
+async function dueGifPackIds(nowMs: number) {
+  const stale = new Date(nowMs - PROVIDER_CALL_GUARD_MS);
+  const rows: { id: string }[] = await db()
+    .select({ id: gifPack.id })
+    .from(gifPack)
+    .where(
+      and(
+        isNull(gifPack.deletedAt),
+        inArray(gifPack.status, ['queued', 'running']),
+        or(isNull(gifPack.heartbeatAt), lt(gifPack.heartbeatAt, stale))
+      )
+    )
+    .limit(2);
+  return rows.map((row) => row.id);
+}
+
+async function runPackWithinBudget(
+  packId: string,
+  store: ByteStore,
+  clock: PackClock
+) {
   const token = id();
-  const now = new Date();
-  const stale = new Date(now.getTime() - 90_000);
+  const claimed = await claimGifPack(packId, token, clock.now());
+  if (!claimed) return;
+  try {
+    while (clock.now() < clock.deadline) {
+      const pack = await loadPack(packId);
+      if (!pack || pack.lockToken !== token || pack.deletedAt) return;
+      const step = await oneStep(pack, store, clock);
+      if (step === 'done' || step === 'budget' || step === 'held') return;
+    }
+  } finally {
+    await db()
+      .update(gifPack)
+      .set({
+        lockToken: null,
+        heartbeatAt: new Date(clock.now()),
+        updatedAt: new Date(clock.now()),
+      })
+      .where(and(eq(gifPack.id, packId), eq(gifPack.lockToken, token)));
+  }
+}
+
+async function claimGifPack(packId: string, token: string, nowMs: number) {
+  const stale = new Date(nowMs - PROVIDER_CALL_GUARD_MS);
   await db()
     .update(gifPack)
     .set({
       lockToken: token,
-      heartbeatAt: now,
+      heartbeatAt: new Date(nowMs),
       status: 'running',
-      updatedAt: now,
+      updatedAt: new Date(nowMs),
     })
     .where(
       and(
@@ -755,34 +826,31 @@ export async function advanceGifPack(packId: string, store?: ByteStore) {
         )
       )
     );
-  const [locked] = await db()
+  const pack = await loadPack(packId);
+  return Boolean(pack && pack.lockToken === token && !pack.deletedAt);
+}
+
+async function loadPack(packId: string) {
+  const [pack] = await db()
     .select()
     .from(gifPack)
     .where(eq(gifPack.id, packId))
     .limit(1);
-  if (!locked || locked.lockToken !== token || locked.deletedAt)
-    return 'idle' as const;
-  const bytes = store ?? (await gifPackByteStore());
-  try {
-    const step = await oneStep(locked, bytes);
-    await db()
-      .update(gifPack)
-      .set({ lockToken: null, heartbeatAt: new Date(), updatedAt: new Date() })
-      .where(and(eq(gifPack.id, packId), eq(gifPack.lockToken, token)));
-    return step;
-  } catch (error) {
-    await db()
-      .update(gifPack)
-      .set({ lockToken: null, heartbeatAt: new Date(), updatedAt: new Date() })
-      .where(and(eq(gifPack.id, packId), eq(gifPack.lockToken, token)));
-    throw error;
-  }
+  return pack ?? null;
 }
 
 async function oneStep(
   pack: typeof gifPack.$inferSelect,
-  store: ByteStore
-): Promise<'progress' | 'done'> {
+  store: ByteStore,
+  clock: PackClock
+): Promise<'progress' | 'done' | 'budget' | 'held'> {
+  const nowMs = clock.now();
+  if (pack.inflightStage && pack.inflightAt) {
+    const age = nowMs - pack.inflightAt.getTime();
+    if (age < PROVIDER_CALL_GUARD_MS) return 'held';
+    await countLostProviderCall(pack, nowMs);
+    return 'progress';
+  }
   const files: FileRow[] = await db()
     .select()
     .from(gifPackFile)
@@ -831,6 +899,7 @@ async function oneStep(
       );
       return 'done';
     }
+    if (!(await beginProviderCall(pack.id, 'anchor', clock))) return 'budget';
     try {
       const png = await editImage(
         source.bytes,
@@ -854,15 +923,17 @@ async function oneStep(
         png,
         'image/png'
       );
+      await endProviderCall(pack.id, clock.now());
       await touch(pack.id, 'sheet:0');
     } catch (error) {
+      await endProviderCall(pack.id, clock.now());
       await db()
         .update(gifPack)
         .set({
           anchorAttempts: pack.anchorAttempts + 1,
           errorCode: 'anchor_failed',
           errorMessage: messageOf(error),
-          updatedAt: new Date(),
+          updatedAt: new Date(clock.now()),
         })
         .where(eq(gifPack.id, pack.id));
     }
@@ -897,6 +968,11 @@ async function oneStep(
       );
       return 'done';
     }
+    if (
+      !(await beginProviderCall(pack.id, `sheet:${sticker.position}`, clock))
+    ) {
+      return 'budget';
+    }
     try {
       const png = await editImage(
         anchorBytes.bytes,
@@ -912,9 +988,11 @@ async function oneStep(
         png,
         'image/png'
       );
+      await endProviderCall(pack.id, clock.now());
       await markSticker(sticker.id, 'generating', null, null);
       await touch(pack.id, `encode:${sticker.position}`);
     } catch (error) {
+      await endProviderCall(pack.id, clock.now());
       await db()
         .update(gifPackSticker)
         .set({
@@ -936,6 +1014,7 @@ async function oneStep(
     );
     return 'progress';
   }
+  if (clock.deadline - clock.now() < LOCAL_STEP_GUARD_MS) return 'budget';
   const sheetBytes = await store.get(sheet.storageKey);
   if (!sheetBytes) {
     await markSticker(
@@ -1118,53 +1197,108 @@ function messageOf(error: unknown) {
   return message.slice(0, 240);
 }
 
-export async function drainGifPack(packId: string, store?: ByteStore) {
-  for (let step = 0; step < 40; step += 1) {
-    const result = await advanceGifPack(packId, store);
-    if (result === 'done' || result === 'idle') return result;
-  }
-  return 'progress' as const;
+async function beginProviderCall(
+  packId: string,
+  stage: string,
+  clock: PackClock
+) {
+  if (!canStartProviderCall(clock.now(), clock.deadline)) return false;
+  const nowMs = clock.now();
+  await db()
+    .update(gifPack)
+    .set({
+      inflightStage: stage,
+      inflightAt: new Date(nowMs),
+      heartbeatAt: new Date(nowMs),
+      phase: stage,
+      updatedAt: new Date(nowMs),
+    })
+    .where(eq(gifPack.id, packId));
+  return true;
 }
 
-export async function resumeStaleGifPacks(now = Date.now()) {
-  const stale = new Date(now - 90_000);
-  const rows: { id: string }[] = await db()
-    .select({ id: gifPack.id })
-    .from(gifPack)
+async function endProviderCall(packId: string, nowMs: number) {
+  await db()
+    .update(gifPack)
+    .set({
+      inflightStage: null,
+      inflightAt: null,
+      heartbeatAt: new Date(nowMs),
+      updatedAt: new Date(nowMs),
+    })
+    .where(eq(gifPack.id, packId));
+}
+
+async function countLostProviderCall(
+  pack: typeof gifPack.$inferSelect,
+  nowMs: number
+) {
+  const stage = pack.inflightStage || '';
+  if (stage === 'anchor') {
+    const attempts = pack.anchorAttempts + 1;
+    await db()
+      .update(gifPack)
+      .set({
+        anchorAttempts: attempts,
+        inflightStage: null,
+        inflightAt: null,
+        heartbeatAt: new Date(nowMs),
+        updatedAt: new Date(nowMs),
+        ...(attempts >= GIF_PACK_SYSTEM_ATTEMPTS
+          ? {
+              status: 'failed',
+              phase: 'done',
+              errorCode: 'anchor_failed',
+              errorMessage:
+                'The character anchor was interrupted 3 times. No further paid calls will be made.',
+            }
+          : {}),
+      })
+      .where(eq(gifPack.id, pack.id));
+    return;
+  }
+  const position = Number(stage.slice('sheet:'.length));
+  const [sticker] = await db()
+    .select()
+    .from(gifPackSticker)
     .where(
       and(
-        isNull(gifPack.deletedAt),
-        inArray(gifPack.status, ['queued', 'running']),
-        or(isNull(gifPack.heartbeatAt), lt(gifPack.heartbeatAt, stale))
+        eq(gifPackSticker.packId, pack.id),
+        eq(gifPackSticker.position, position)
       )
     )
-    .limit(2);
-  const ids = [];
-  for (const row of rows) {
-    await drainGifPack(row.id);
-    ids.push(row.id);
+    .limit(1);
+  if (sticker) {
+    const attempts = sticker.systemAttempts + 1;
+    await db()
+      .update(gifPackSticker)
+      .set({
+        systemAttempts: attempts,
+        status: attempts >= GIF_PACK_SYSTEM_ATTEMPTS ? 'failed' : 'pending',
+        errorCode: 'provider_interrupted',
+        errorMessage:
+          attempts >= GIF_PACK_SYSTEM_ATTEMPTS
+            ? 'This sticker was interrupted 3 times. No further paid calls will be made.'
+            : 'The previous provider call was interrupted and will be retried once.',
+      })
+      .where(eq(gifPackSticker.id, sticker.id));
   }
-  return ids;
+  await endProviderCall(pack.id, nowMs);
 }
 
-export async function continueGifPack(packId: string) {
-  const work = drainGifPack(packId).catch((error) => {
-    console.error(
-      '[gif-pack] background step failed',
-      error instanceof Error ? error.name : 'error'
-    );
+export async function drainGifPack(packId: string, store?: ByteStore) {
+  return runScheduledGifPacks({
+    budgetMs: CRON_WALL_MS,
+    store,
+    packIds: [packId],
   });
-  try {
-    const moduleName = 'cloudflare:workers';
-    const mod = (await import(/* @vite-ignore */ moduleName)) as {
-      waitUntil?: (promise: Promise<unknown>) => void;
-    };
-    if (typeof mod.waitUntil === 'function') {
-      mod.waitUntil(work);
-      return;
-    }
-  } catch {
-    /* Node and tests keep the promise on the server process. */
-  }
-  void work;
+}
+
+export async function resumeStaleGifPacks() {
+  return runScheduledGifPacks({ budgetMs: CRON_WALL_MS });
+}
+
+/** Queues nothing extra. A provider call does not fit in the 30s HTTP waitUntil window. */
+export function continueGifPack(_packId: string) {
+  return;
 }

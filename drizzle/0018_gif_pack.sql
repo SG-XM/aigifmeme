@@ -35,6 +35,8 @@ CREATE TABLE `gif_pack` (
   `phase` text NOT NULL,
   `user_regens` integer DEFAULT 0 NOT NULL,
   `anchor_attempts` integer DEFAULT 0 NOT NULL,
+  `inflight_stage` text,
+  `inflight_at` integer,
   `error_code` text,
   `error_message` text,
   `lock_token` text,

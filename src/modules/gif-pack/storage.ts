@@ -1,9 +1,3 @@
-import { eq } from 'drizzle-orm';
-
-import { db } from '@/core/db';
-import { gifPackBlob } from '@/config/db/schema';
-import { getAllConfigs } from '@/modules/config/service';
-
 export type StoredBytes = { bytes: Uint8Array; contentType: string };
 
 export interface ByteStore {
@@ -11,6 +5,22 @@ export interface ByteStore {
   get(key: string): Promise<StoredBytes | null>;
   delete(key: string): Promise<void>;
 }
+
+/** Existing private bucket. Objects never leave this prefix. */
+export const GIF_PACK_OBJECT_PREFIX = 'private/gif-packs/';
+
+export type GifPackR2Bucket = {
+  put: (
+    key: string,
+    value: ArrayBuffer | ArrayBufferView,
+    options?: { httpMetadata?: { contentType?: string } }
+  ) => Promise<unknown>;
+  get: (key: string) => Promise<{
+    arrayBuffer: () => Promise<ArrayBuffer>;
+    httpMetadata?: { contentType?: string };
+  } | null>;
+  delete: (key: string) => Promise<void>;
+};
 
 const LOCAL_LIMIT = 700_000;
 let override: ByteStore | null = null;
@@ -23,39 +33,93 @@ export function memoryByteStore(): ByteStore {
   const files = new Map<string, StoredBytes>();
   return {
     async put(key, bytes, contentType) {
-      files.set(key, { bytes: new Uint8Array(bytes), contentType });
+      const objectKey = privateGifPackKey(key);
+      files.set(objectKey, { bytes: new Uint8Array(bytes), contentType });
     },
     async get(key) {
-      const found = files.get(key);
+      const found = files.get(privateGifPackKey(key));
       return found
         ? { bytes: new Uint8Array(found.bytes), contentType: found.contentType }
         : null;
     },
     async delete(key) {
-      files.delete(key);
+      files.delete(privateGifPackKey(key));
     },
   };
 }
 
-export async function gifPackByteStore(): Promise<ByteStore> {
-  if (override) return override;
-  const configs = await getAllConfigs();
+export function gifPackR2Binding(): GifPackR2Bucket | null {
+  const host = globalThis as {
+    __CF_ENV__?: { GIF_PACK_BUCKET?: GifPackR2Bucket };
+    __env__?: { GIF_PACK_BUCKET?: GifPackR2Bucket };
+  };
+  const bucket =
+    host.__CF_ENV__?.GIF_PACK_BUCKET ?? host.__env__?.GIF_PACK_BUCKET;
   if (
-    configs.r2_access_key &&
-    configs.r2_secret_key &&
-    configs.r2_bucket_name
+    !bucket ||
+    typeof bucket.put !== 'function' ||
+    typeof bucket.get !== 'function'
   ) {
-    return r2Store(configs);
+    return null;
   }
-  return sqliteStore();
+  return bucket;
 }
 
-function sqliteStore(): ByteStore {
+export async function gifPackByteStore(): Promise<ByteStore> {
+  if (override) return override;
+  const bucket = gifPackR2Binding();
+  if (bucket) return bindingStore(bucket);
+  return sqliteFallbackStore();
+}
+
+function bindingStore(bucket: GifPackR2Bucket): ByteStore {
   return {
     async put(key, bytes, contentType) {
+      const objectKey = privateGifPackKey(key);
+      await bucket.put(objectKey, bytes, {
+        httpMetadata: { contentType },
+      });
+    },
+    async get(key) {
+      const object = await bucket.get(privateGifPackKey(key));
+      if (!object) return null;
+      return {
+        bytes: new Uint8Array(await object.arrayBuffer()),
+        contentType:
+          object.httpMetadata?.contentType || 'application/octet-stream',
+      };
+    },
+    async delete(key) {
+      await bucket.delete(privateGifPackKey(key));
+    },
+  };
+}
+
+export function privateGifPackKey(key: string) {
+  const normalized = key.replace(/^\/+/, '');
+  if (normalized.includes('..') || normalized.includes('\\')) {
+    throw new Error('Invalid GIF pack object key');
+  }
+  if (!normalized.startsWith(GIF_PACK_OBJECT_PREFIX)) {
+    throw new Error('GIF pack objects must stay under private/gif-packs/');
+  }
+  return normalized;
+}
+
+/**
+ * Local sqlite only when the Worker binding is absent. Production packs use
+ * GIF_PACK_BUCKET. Files above the row limit fail instead of using S3 keys.
+ */
+async function sqliteFallbackStore(): Promise<ByteStore> {
+  const { eq } = await import('drizzle-orm');
+  const { db } = await import('@/core/db');
+  const { gifPackBlob } = await import('@/config/db/schema');
+  return {
+    async put(key, bytes, contentType) {
+      const objectKey = privateGifPackKey(key);
       if (bytes.byteLength > LOCAL_LIMIT) {
         throw new Error(
-          'Object storage is not configured. Set Cloudflare R2 in admin settings before generating packs.'
+          'GIF_PACK_BUCKET is not bound. Pack files are not stored with admin S3 keys.'
         );
       }
       let binary = '';
@@ -64,24 +128,25 @@ function sqliteStore(): ByteStore {
       const [existing] = await db()
         .select({ storageKey: gifPackBlob.storageKey })
         .from(gifPackBlob)
-        .where(eq(gifPackBlob.storageKey, key))
+        .where(eq(gifPackBlob.storageKey, objectKey))
         .limit(1);
       if (existing) {
         await db()
           .update(gifPackBlob)
           .set({ bytes: encoded, contentType })
-          .where(eq(gifPackBlob.storageKey, key));
+          .where(eq(gifPackBlob.storageKey, objectKey));
       } else {
         await db()
           .insert(gifPackBlob)
-          .values({ storageKey: key, bytes: encoded, contentType });
+          .values({ storageKey: objectKey, bytes: encoded, contentType });
       }
     },
     async get(key) {
+      const objectKey = privateGifPackKey(key);
       const [row] = await db()
         .select()
         .from(gifPackBlob)
-        .where(eq(gifPackBlob.storageKey, key))
+        .where(eq(gifPackBlob.storageKey, objectKey))
         .limit(1);
       if (!row) return null;
       const binary = atob(row.bytes);
@@ -91,63 +156,10 @@ function sqliteStore(): ByteStore {
       return { bytes, contentType: row.contentType };
     },
     async delete(key) {
-      await db().delete(gifPackBlob).where(eq(gifPackBlob.storageKey, key));
-    },
-  };
-}
-
-function r2Store(configs: Record<string, string>): ByteStore {
-  const bucket = configs.r2_bucket_name;
-  const uploadPath = (configs.r2_upload_path || 'uploads').replace(
-    /^\/+|\/+$/g,
-    ''
-  );
-  const endpoint = (
-    configs.r2_endpoint ||
-    `https://${configs.r2_account_id}.r2.cloudflarestorage.com`
-  ).replace(/\/+$/, '');
-  const objectUrl = (key: string) =>
-    `${endpoint}/${bucket}/${uploadPath}/${key.replace(/^\/+/, '')}`;
-  const clientPromise = import('aws4fetch').then(
-    ({ AwsClient }) =>
-      new AwsClient({
-        accessKeyId: configs.r2_access_key,
-        secretAccessKey: configs.r2_secret_key,
-        region: 'auto',
-      })
-  );
-  return {
-    async put(key, bytes, contentType) {
-      const client = await clientPromise;
-      const response = await client.fetch(objectUrl(key), {
-        method: 'PUT',
-        headers: {
-          'Content-Type': contentType,
-          'Content-Length': String(bytes.byteLength),
-        },
-        body: bytes as unknown as BodyInit,
-      });
-      if (!response.ok)
-        throw new Error(`Private upload failed with HTTP ${response.status}`);
-    },
-    async get(key) {
-      const client = await clientPromise;
-      const response = await client.fetch(objectUrl(key), { method: 'GET' });
-      if (response.status === 404) return null;
-      if (!response.ok)
-        throw new Error(`Private read failed with HTTP ${response.status}`);
-      return {
-        bytes: new Uint8Array(await response.arrayBuffer()),
-        contentType:
-          response.headers.get('content-type') || 'application/octet-stream',
-      };
-    },
-    async delete(key) {
-      const client = await clientPromise;
-      const response = await client.fetch(objectUrl(key), { method: 'DELETE' });
-      if (!response.ok && response.status !== 404) {
-        throw new Error(`Private delete failed with HTTP ${response.status}`);
-      }
+      const objectKey = privateGifPackKey(key);
+      await db()
+        .delete(gifPackBlob)
+        .where(eq(gifPackBlob.storageKey, objectKey));
     },
   };
 }
