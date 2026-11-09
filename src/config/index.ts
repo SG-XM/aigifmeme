@@ -80,6 +80,11 @@ export const envConfigs: Record<string, string> = {
   // to them would let the admin "Test" silently pass on the machine's own key.
   replicate_api_token: procEnv.REPLICATE_API_TOKEN ?? '',
 
+  // GIF packs. Server-only. Admin DB values override these. Never VITE_.
+  gif_pack_base_url: procEnv.GIF_PACK_BASE_URL ?? '',
+  gif_pack_api_key: procEnv.GIF_PACK_API_KEY ?? '',
+  gif_pack_image_model: procEnv.GIF_PACK_IMAGE_MODEL ?? '',
+
   // The agent is configured entirely from Admin Settings: the chat model
   // under AI → Chat Model, the image model from the composer's catalog, and
   // the credit price with it. Nothing about it belongs in env.

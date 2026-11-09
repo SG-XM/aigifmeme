@@ -128,8 +128,14 @@ export default defineConfig({
           handler: new URL('./src/tasks/email-recall.ts', import.meta.url)
             .pathname,
         },
+        'gif-pack': {
+          handler: new URL('./src/tasks/gif-pack.ts', import.meta.url).pathname,
+        },
       },
-      scheduledTasks: { '*/5 * * * *': ['email-recall'] },
+      scheduledTasks: {
+        '*/5 * * * *': ['email-recall'],
+        '* * * * *': ['gif-pack'],
+      },
     }),
   ],
 });

@@ -859,3 +859,125 @@ export const homeDemoVideo = table(
 
 export type HomeDemoVideo = typeof homeDemoVideo.$inferSelect;
 export type NewHomeDemoVideo = typeof homeDemoVideo.$inferInsert;
+
+export const gifPackTheme = table(
+  'gif_pack_theme',
+  {
+    id: varchar191('id').primaryKey(),
+    slug: varchar191('slug').notNull(),
+    version: int('version').notNull(),
+    nameEn: varchar191('name_en').notNull(),
+    nameZh: varchar191('name_zh').notNull(),
+    backgroundColor: varchar('background_color', { length: 7 }).notNull(),
+    status: varchar('status', { length: 16 }).notNull().default('active'),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+  },
+  (t) => [uniqueIndex('gif_pack_theme_slug_version').on(t.slug, t.version)]
+);
+
+export const gifPackMotion = table(
+  'gif_pack_motion',
+  {
+    id: varchar191('id').primaryKey(),
+    themeId: varchar191('theme_id').notNull(),
+    position: int('position').notNull(),
+    intent: text('intent').notNull(),
+    captionEn: varchar191('caption_en').notNull(),
+    captionZh: varchar191('caption_zh').notNull(),
+  },
+  (t) => [uniqueIndex('gif_pack_motion_theme_pos').on(t.themeId, t.position)]
+);
+
+export const gifPack = table(
+  'gif_pack',
+  {
+    id: varchar191('id').primaryKey(),
+    userId: varchar191('user_id').notNull(),
+    idempotencyKey: varchar191('idempotency_key').notNull(),
+    dayKey: varchar('day_key', { length: 10 }).notNull(),
+    themeId: varchar191('theme_id').notNull(),
+    themeVersion: int('theme_version').notNull(),
+    style: varchar('style', { length: 32 }).notNull(),
+    motionMode: varchar('motion_mode', { length: 16 }).notNull(),
+    background: varchar('background', { length: 16 }).notNull(),
+    language: varchar('language', { length: 8 }).notNull(),
+    status: varchar('status', { length: 16 }).notNull(),
+    phase: varchar('phase', { length: 32 }).notNull(),
+    userRegens: int('user_regens').notNull().default(0),
+    anchorAttempts: int('anchor_attempts').notNull().default(0),
+    errorCode: varchar('error_code', { length: 64 }),
+    errorMessage: text('error_message'),
+    lockToken: varchar191('lock_token'),
+    heartbeatAt: timestamp('heartbeat_at'),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+    updatedAt: timestamp('updated_at').defaultNow().notNull(),
+    deletedAt: timestamp('deleted_at'),
+  },
+  (t) => [
+    uniqueIndex('gif_pack_user_idempotency').on(t.userId, t.idempotencyKey),
+    uniqueIndex('gif_pack_user_day').on(t.userId, t.dayKey),
+    index('gif_pack_status_heartbeat').on(t.status, t.heartbeatAt),
+  ]
+);
+
+export const gifPackSticker = table(
+  'gif_pack_sticker',
+  {
+    id: varchar191('id').primaryKey(),
+    packId: varchar191('pack_id').notNull(),
+    position: int('position').notNull(),
+    intent: text('intent').notNull(),
+    caption: varchar191('caption').notNull(),
+    status: varchar('status', { length: 16 }).notNull(),
+    systemAttempts: int('system_attempts').notNull().default(0),
+    errorCode: varchar('error_code', { length: 64 }),
+    errorMessage: text('error_message'),
+  },
+  (t) => [uniqueIndex('gif_pack_sticker_pack_pos').on(t.packId, t.position)]
+);
+
+export const gifPackFile = table(
+  'gif_pack_file',
+  {
+    id: varchar191('id').primaryKey(),
+    packId: varchar191('pack_id').notNull(),
+    stickerId: varchar191('sticker_id'),
+    kind: varchar('kind', { length: 16 }).notNull(),
+    storageKey: text('storage_key').notNull(),
+    contentType: varchar191('content_type').notNull(),
+    byteSize: int('byte_size').notNull().default(0),
+    frameCount: int('frame_count'),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+  },
+  (t) => [index('gif_pack_file_pack').on(t.packId, t.kind)]
+);
+
+export const gifPackUpload = table('gif_pack_upload', {
+  id: varchar191('id').primaryKey(),
+  userId: varchar191('user_id').notNull(),
+  originalKey: text('original_key').notNull(),
+  cropKey: text('crop_key').notNull(),
+  width: int('width').notNull(),
+  height: int('height').notNull(),
+  packId: varchar191('pack_id'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+});
+
+export const gifPackBlob = table('gif_pack_blob', {
+  storageKey: varchar('storage_key', { length: 255 }).primaryKey(),
+  contentType: varchar191('content_type').notNull(),
+  bytes: longtext('bytes').notNull(),
+});
+
+export const gifPackDemo = table(
+  'gif_pack_demo',
+  {
+    id: varchar191('id').primaryKey(),
+    referenceId: varchar('reference_id', { length: 32 }).notNull(),
+    themeSlug: varchar191('theme_slug').notNull(),
+    title: varchar191('title').notNull(),
+    assetStatus: varchar('asset_status', { length: 32 }).notNull(),
+    note: text('note').notNull(),
+  },
+  (t) => [uniqueIndex('gif_pack_demo_ref_theme').on(t.referenceId, t.themeSlug)]
+);

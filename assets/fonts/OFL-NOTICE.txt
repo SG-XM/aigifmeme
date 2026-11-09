@@ -1,0 +1,4 @@
+Noto Sans (latin) and Noto Sans SC (simplified Chinese) subsets used for
+deterministic sticker captions are embedded in src/lib/gif-pack/font-data.ts.
+They come from the fontsource distribution of the Noto fonts and are used
+under the SIL Open Font License 1.1. Do not sell the font bytes by themselves.

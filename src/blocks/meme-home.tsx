@@ -1,5 +1,3 @@
-import { useState } from 'react';
-
 import { Link } from '@/core/i18n/navigation';
 import { homeDemoClips } from '@/lib/home-demos';
 import { m } from '@/paraglide/messages.js';
@@ -7,18 +5,8 @@ import { getLocale } from '@/paraglide/runtime.js';
 import { Footer } from '@/blocks/footer';
 import { Header } from '@/blocks/header';
 
-const PROMPT_KEY = 'aigifmeme-prompt';
-
-const ideas = [
-  () => m['meme.idea_1'](),
-  () => m['meme.idea_2'](),
-  () => m['meme.idea_3'](),
-  () => m['meme.idea_4'](),
-];
-
 export function MemeHome() {
   const clips = homeDemoClips(getLocale());
-  const [prompt, setPrompt] = useState('');
   const styles = [
     [m['meme.style_1_title'](), m['meme.style_1_body']()],
     [m['meme.style_2_title'](), m['meme.style_2_body']()],
@@ -41,58 +29,31 @@ export function MemeHome() {
 
   return (
     <div className="meme-site min-h-screen">
-      <Header nav="product" brandMark="aigifmeme" createHref="/#create" />
+      <Header nav="product" brandMark="aigifmeme" createHref="/packs" />
       <main data-aigifmeme-home="true">
         <section className="meme-hero">
           <p className="meme-kicker">{m['meme.kicker']()}</p>
           <h1>{m['meme.h1']()}</h1>
           <p className="meme-lede">{m['meme.lede']()}</p>
-          <form
-            id="create"
-            className="meme-prompt"
-            onSubmit={(event) => {
-              event.preventDefault();
-              const text = prompt.trim();
-              if (text) sessionStorage.setItem(PROMPT_KEY, text);
-            }}
-          >
-            <label htmlFor="meme-prompt">{m['meme.prompt_label']()}</label>
-            <textarea
-              id="meme-prompt"
-              name="prompt"
-              rows={3}
-              value={prompt}
-              placeholder={m['meme.prompt_placeholder']()}
-              onChange={(event) => setPrompt(event.target.value)}
-            />
-            <div className="meme-ideas">
-              {ideas.map((idea) => {
-                const label = idea();
-                return (
-                  <button
-                    key={label}
-                    type="button"
-                    onClick={() => setPrompt(label)}
-                  >
-                    {label}
-                  </button>
-                );
-              })}
-            </div>
+          <div id="create" className="meme-prompt">
+            <ol className="meme-steps">
+              {steps.map(([title, body], index) => (
+                <li key={title}>
+                  <span>{index + 1}</span>
+                  <div>
+                    <h3>{title}</h3>
+                    <p>{body}</p>
+                  </div>
+                </li>
+              ))}
+            </ol>
             <div className="meme-prompt-actions">
-              <Link
-                href="/sign-up"
-                className="meme-cta"
-                onClick={() => {
-                  const text = prompt.trim();
-                  if (text) sessionStorage.setItem(PROMPT_KEY, text);
-                }}
-              >
+              <Link href="/packs" className="meme-cta">
                 {m['meme.cta']()}
               </Link>
               <p>{m['meme.prompt_note']()}</p>
             </div>
-          </form>
+          </div>
         </section>
 
         <section id="examples" className="meme-section">
