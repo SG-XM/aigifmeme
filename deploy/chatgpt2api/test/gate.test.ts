@@ -19,13 +19,9 @@ function env(overrides: Partial<GateEnv> = {}): GateEnv {
   return {
     GATE_TOKEN: SECRET,
     UPSTREAM_AUTH_KEY: UPSTREAM,
-    R2_ACCESS_KEY_ID: "r2-access-key-id",
-    R2_SECRET_ACCESS_KEY: "r2-secret-access-key",
-    R2_ACCOUNT_ID: "29a44cf6b1d2c5d00f51960def5bb48d",
-    R2_BUCKET_NAME: "chatgpt2api-state",
-    R2_PREFIX: "state",
+    STATE_BRIDGE_SECRET: "bridge-secret-value-0123456789abcdef",
     PUBLIC_ORIGIN: "https://api.aigifmeme.com",
-    CONTAINER_INSTANCE: "standard-1",
+    CONTAINER_INSTANCE: "basic",
     ...overrides,
   };
 }
@@ -153,33 +149,55 @@ test("a short gate token is treated as not configured", async () => {
   assert.equal(calls.length, 0);
 });
 
-test("incomplete persistence config does not wake the container", async () => {
+test("the public bridge path does not wake the container", async () => {
+  const { wake, calls } = recorder();
+  const response = await handleRequest(
+    new Request("https://api.aigifmeme.com/_state/v1/manifest", {
+      headers: { authorization: `Bearer ${SECRET}` },
+    }),
+    env(),
+    wake,
+  );
+  assert.equal(response.status, 404);
+  const internal = await handleRequest(
+    new Request("http://state-bridge.internal/v1/manifest", {
+      headers: { authorization: "Bearer bridge-secret-value-0123456789abcdef" },
+    }),
+    env(),
+    wake,
+  );
+  assert.equal(internal.status, 404);
+  assert.equal(calls.length, 0);
+});
+
+test("incomplete bridge config does not wake the container", async () => {
   const { wake, calls } = recorder();
   const response = await handleRequest(
     new Request("https://api.aigifmeme.com/v1/models", {
       headers: { authorization: `Bearer ${SECRET}` },
     }),
-    env({ R2_SECRET_ACCESS_KEY: "" }),
+    env({ STATE_BRIDGE_SECRET: "" }),
     wake,
   );
   assert.equal(response.status, 503);
   assert.equal(calls.length, 0);
 });
 
-test("instance pin rejects the placeholder image and forces the singleton size", () => {
-  assert.equal(instanceType(undefined), "standard-1");
-  assert.throws(() => instanceType("basic"), /unsupported/);
+test("instance pin uses basic and rejects the placeholder image", () => {
+  assert.equal(instanceType(undefined), "basic");
+  assert.equal(instanceType("basic"), "basic");
+  assert.throws(() => instanceType("dev"), /unsupported/);
   const seen: Record<string, unknown>[] = [];
   const wrapped = pinContainerStart(
     (options) => {
       seen.push(options ?? {});
     },
     () => "registry.cloudflare.com/29a44cf6b1d2c5d00f51960def5bb48d/chatgpt2api@sha256:abc",
-    () => "standard-1",
+    () => "basic",
   );
   wrapped({ env: { STORAGE_BACKEND: "json" }, enableInternet: false });
   assert.equal(seen[0].image, "registry.cloudflare.com/29a44cf6b1d2c5d00f51960def5bb48d/chatgpt2api@sha256:abc");
-  assert.equal(seen[0].instance, "standard-1");
+  assert.equal(seen[0].instance, "basic");
   assert.equal(seen[0].enableInternet, true);
   assert.deepEqual(seen[0].env, { STORAGE_BACKEND: "json" });
   assert.throws(
@@ -187,7 +205,7 @@ test("instance pin rejects the placeholder image and forces the singleton size",
       pinContainerStart(
         () => undefined,
         () => "registry.cloudflare.com/acct/chatgpt2api@sha256:REPLACE_AFTER_REGISTRY_PUSH",
-        () => "standard-1",
+        () => "basic",
       )(),
     /not pinned/,
   );

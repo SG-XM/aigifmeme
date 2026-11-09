@@ -39,9 +39,18 @@ export function evaluate(files: PreflightFiles): string[] {
   if (!files.wrangler.includes("api.aigifmeme.com")) {
     errors.push("custom domain api.aigifmeme.com is missing");
   }
+  if (!files.wrangler.includes('"CONTAINER_INSTANCE": "basic"')) {
+    errors.push("container instance must stay basic unless a runtime rejects it");
+  }
+  if (files.wrangler.includes("R2_ACCESS_KEY_ID") || files.wrangler.includes("R2_SECRET_ACCESS_KEY")) {
+    errors.push("do not require R2 S3 credentials; state uses the Worker R2 binding");
+  }
+  if (!files.wrangler.includes("STATE_BRIDGE_SECRET")) {
+    errors.push("STATE_BRIDGE_SECRET must be a required Worker secret");
+  }
   if (pin.cloudflare_image.includes("REPLACE_AFTER_REGISTRY_PUSH") || !IMAGE_RE.test(pin.cloudflare_image)) {
     errors.push(
-      "Cloudflare image digest is not pinned yet. Build and push from a Docker host, then replace REPLACE_AFTER_REGISTRY_PUSH.",
+      "Cloudflare image digest is not pinned yet. On the parent box run sh ops/push-image.sh, then replace REPLACE_AFTER_REGISTRY_PUSH.",
     );
   }
   return errors;

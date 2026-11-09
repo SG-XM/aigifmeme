@@ -1,32 +1,37 @@
-"""Whole-file sync between the upstream data directory and an R2 bucket.
+"""Snapshot chatgpt2api files through the Worker R2 bridge.
 
-Cloudflare Containers can mount R2 with FUSE. The Containers docs describe that
-mount as object storage, not a POSIX disk: renames, locks, and crash behavior
-do not match a local filesystem. chatgpt2api v1.7.0 stores config and the
-account pool with Path.write_text, so this adapter uploads finished file bytes
-and restores them before the process starts.
+This is not a per-write backend. Upstream v1.7.0 writes config.json and the
+JSON account files locally. A snapshot runs every 15 seconds and on SIGTERM.
+Writes after the last successful snapshot are not durable. The manifest is
+updated only after every changed object upload succeeds, and old objects are
+deleted only after that manifest write. A failed upload leaves the previous
+snapshot in place.
 """
 
 from __future__ import annotations
 
 import hashlib
-import hmac
 import json
 import os
-from dataclasses import dataclass
-from datetime import datetime, timezone
 from pathlib import Path
 from typing import Callable, Iterable, Protocol
-from urllib.parse import quote
-from xml.etree import ElementTree
+from urllib.parse import quote, urlsplit
+from urllib.request import Request
 
 MAX_OBJECT_BYTES = 64 * 1024 * 1024
 SKIP_DIR_NAMES = {"git_cache", "__pycache__", ".git"}
+MANIFEST_NAME = "_manifest.json"
+
+
+class MissingObject(Exception):
+    pass
+
+
+class SyncFailed(Exception):
+    pass
 
 
 class ObjectStore(Protocol):
-    def list(self, prefix: str) -> list[tuple[str, str]]: ...
-
     def get(self, key: str) -> bytes: ...
 
     def put(self, key: str, body: bytes) -> None: ...
@@ -36,178 +41,6 @@ class ObjectStore(Protocol):
 
 def _sha256(body: bytes) -> str:
     return hashlib.sha256(body).hexdigest()
-
-
-def _sign(key: bytes, message: str) -> bytes:
-    return hmac.new(key, message.encode("utf-8"), hashlib.sha256).digest()
-
-
-def signing_key(secret: str, datestamp: str, region: str, service: str) -> bytes:
-    key = _sign(("AWS4" + secret).encode("utf-8"), datestamp)
-    key = _sign(key, region)
-    key = _sign(key, service)
-    return _sign(key, "aws4_request")
-
-
-def _aws_encode(value: str, safe: str = "") -> str:
-    return quote(value, safe=safe)
-
-
-def authorization_header(
-    *,
-    method: str,
-    host: str,
-    canonical_uri: str,
-    canonical_query: str,
-    payload: bytes,
-    access_key: str,
-    secret_key: str,
-    region: str,
-    service: str,
-    amz_date: str,
-    content_type: str | None = None,
-    include_content_hash_header: bool = True,
-) -> tuple[str, str]:
-    payload_hash = _sha256(payload)
-    header_map = {
-        "host": host,
-        "x-amz-date": amz_date,
-    }
-    if include_content_hash_header:
-        header_map["x-amz-content-sha256"] = payload_hash
-    if content_type:
-        header_map["content-type"] = content_type
-    signed_names = sorted(header_map)
-    canonical_headers = "".join(f"{name}:{header_map[name].strip()}\n" for name in signed_names)
-    signed_headers = ";".join(signed_names)
-    canonical_request = "\n".join(
-        [
-            method,
-            canonical_uri,
-            canonical_query,
-            canonical_headers,
-            signed_headers,
-            payload_hash,
-        ]
-    )
-    datestamp = amz_date[:8]
-    scope = f"{datestamp}/{region}/{service}/aws4_request"
-    string_to_sign = "\n".join(
-        [
-            "AWS4-HMAC-SHA256",
-            amz_date,
-            scope,
-            _sha256(canonical_request.encode("utf-8")),
-        ]
-    )
-    signature = hmac.new(
-        signing_key(secret_key, datestamp, region, service),
-        string_to_sign.encode("utf-8"),
-        hashlib.sha256,
-    ).hexdigest()
-    header = (
-        "AWS4-HMAC-SHA256 "
-        f"Credential={access_key}/{scope}, "
-        f"SignedHeaders={signed_headers}, "
-        f"Signature={signature}"
-    )
-    return header, payload_hash
-
-
-@dataclass
-class R2Client:
-    account_id: str
-    bucket: str
-    access_key: str
-    secret_key: str
-    opener: Callable[..., object] | None = None
-
-    @classmethod
-    def from_env(cls) -> "R2Client":
-        return cls(
-            account_id=os.environ["R2_ACCOUNT_ID"],
-            bucket=os.environ["R2_BUCKET_NAME"],
-            access_key=os.environ["R2_ACCESS_KEY_ID"],
-            secret_key=os.environ["R2_SECRET_ACCESS_KEY"],
-        )
-
-    @property
-    def host(self) -> str:
-        return f"{self.account_id}.r2.cloudflarestorage.com"
-
-    def _request(self, method: str, key: str, query: str, body: bytes) -> bytes:
-        import urllib.error
-        import urllib.request
-
-        canonical_uri = "/" + _aws_encode(key, safe="/") if key else "/"
-        amz_date = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
-        content_type = "application/octet-stream" if method == "PUT" else None
-        authorization, payload_hash = authorization_header(
-            method=method,
-            host=self.host,
-            canonical_uri=canonical_uri,
-            canonical_query=query,
-            payload=body,
-            access_key=self.access_key,
-            secret_key=self.secret_key,
-            region="auto",
-            service="s3",
-            amz_date=amz_date,
-            content_type=content_type,
-        )
-        url = f"https://{self.host}{canonical_uri}"
-        if query:
-            url = f"{url}?{query}"
-        headers = {
-            "Host": self.host,
-            "Authorization": authorization,
-            "x-amz-date": amz_date,
-            "x-amz-content-sha256": payload_hash,
-        }
-        if content_type:
-            headers["Content-Type"] = content_type
-        request = urllib.request.Request(url, data=body if method != "GET" else None, headers=headers, method=method)
-        opener = self.opener or urllib.request.urlopen
-        try:
-            with opener(request, timeout=60) as response:
-                return response.read()
-        except urllib.error.HTTPError as exc:
-            detail = exc.read().decode("utf-8", "replace")
-            lowered = detail.lower()
-            if any(word in lowered for word in ("signature", "secret", "aws4", "authorization")):
-                detail = "response omitted"
-            raise RuntimeError(f"r2 {method} failed status={exc.code} key={key or '/'} detail={detail[:180]}") from None
-
-    def list(self, prefix: str) -> list[tuple[str, str]]:
-        items: list[tuple[str, str]] = []
-        token = ""
-        while True:
-            query = f"list-type=2&prefix={_aws_encode(prefix)}"
-            if token:
-                query += f"&continuation-token={_aws_encode(token)}"
-            payload = self._request("GET", "", query, b"")
-            root = ElementTree.fromstring(payload)
-            ns = ""
-            if root.tag.startswith("{"):
-                ns = root.tag.split("}", 1)[0] + "}"
-            for node in root.findall(f"{ns}Contents"):
-                key = node.findtext(f"{ns}Key") or ""
-                etag = (node.findtext(f"{ns}ETag") or "").strip('"')
-                if key:
-                    items.append((key, etag))
-            truncated = (root.findtext(f"{ns}IsTruncated") or "").lower() == "true"
-            token = root.findtext(f"{ns}NextContinuationToken") or ""
-            if not truncated or not token:
-                return items
-
-    def get(self, key: str) -> bytes:
-        return self._request("GET", key, "", b"")
-
-    def put(self, key: str, body: bytes) -> None:
-        self._request("PUT", key, "", body)
-
-    def delete(self, key: str) -> None:
-        self._request("DELETE", key, "", b"")
 
 
 def object_key(prefix: str, relative: str) -> str:
@@ -236,16 +69,21 @@ def iter_files(roots: Iterable[Path]) -> list[tuple[str, Path]]:
     return found
 
 
-MANIFEST_NAME = "_manifest.json"
+def _manifest_key(prefix: str) -> str:
+    return object_key(prefix, MANIFEST_NAME)
 
 
-def _load_manifest(store: ObjectStore, manifest_key: str) -> dict[str, str]:
+def load_manifest(store: ObjectStore, prefix: str) -> dict[str, str] | None:
     try:
-        loaded = json.loads(store.get(manifest_key))
-    except Exception:
-        return {}
+        raw = store.get(_manifest_key(prefix))
+    except MissingObject:
+        return None
+    try:
+        loaded = json.loads(raw)
+    except json.JSONDecodeError as exc:
+        raise SyncFailed("manifest is not json") from exc
     if not isinstance(loaded, dict):
-        return {}
+        raise SyncFailed("manifest is not an object")
     return {str(key): str(value) for key, value in loaded.items()}
 
 
@@ -255,14 +93,11 @@ def sync_up(
     prefix: str,
     log: Callable[[str], None] = print,
 ) -> dict[str, int]:
-    local = iter_files(roots)
-    local_keys = {object_key(prefix, relative): path for relative, path in local}
-    manifest_key = object_key(prefix, MANIFEST_NAME)
-    previous = _load_manifest(store, manifest_key)
+    local_keys = {object_key(prefix, relative): path for relative, path in iter_files(roots)}
+    previous = load_manifest(store, prefix) or {}
     current: dict[str, str] = {}
-    uploaded = 0
+    pending: list[tuple[str, bytes]] = []
     skipped = 0
-    deleted = 0
     for key, path in local_keys.items():
         size = path.stat().st_size
         if size > MAX_OBJECT_BYTES:
@@ -282,32 +117,49 @@ def sync_up(
         current[key] = digest
         if previous.get(key) == digest:
             continue
+        pending.append((key, body))
+    for key, body in pending:
         store.put(key, body)
-        uploaded += 1
+    uploaded = len(pending)
+    encoded = json.dumps(current, sort_keys=True).encode("utf-8")
+    previous_encoded = json.dumps(previous, sort_keys=True).encode("utf-8")
+    if encoded != previous_encoded or uploaded:
+        store.put(_manifest_key(prefix), encoded)
+    deleted = 0
     for key in previous:
-        if key not in current and key != manifest_key:
-            store.delete(key)
-            deleted += 1
-    if uploaded or deleted or current != previous:
-        store.put(manifest_key, json.dumps(current, sort_keys=True).encode("utf-8"))
+        if key not in current and key != _manifest_key(prefix):
+            try:
+                store.delete(key)
+                deleted += 1
+            except Exception:
+                log("delete failed after manifest commit")
     log(f"sync up uploaded={uploaded} deleted={deleted} skipped={skipped}")
     return {"uploaded": uploaded, "deleted": deleted, "skipped": skipped}
 
 
+def _safe_relative(relative: str) -> bool:
+    return relative != "" and not relative.startswith("../") and "/../" not in f"/{relative}" and relative != ".."
+
+
 def sync_down(destination: Path, store: ObjectStore, prefix: str) -> int:
+    manifest = load_manifest(store, prefix)
+    if manifest is None:
+        return 0
     destination.mkdir(parents=True, exist_ok=True)
-    count = 0
     base = prefix.strip("/") + "/"
-    for key, _etag in store.list(base):
-        if not key.startswith(base):
-            continue
-        relative = key[len(base) :]
-        if relative == "" or relative == MANIFEST_NAME or relative.startswith("../") or "/../" in f"/{relative}":
-            continue
-        target = destination / relative
+    count = 0
+    for key, digest in manifest.items():
+        if not key.startswith(base) or not _safe_relative(key[len(base) :]):
+            raise SyncFailed("manifest key is outside the snapshot")
+        try:
+            body = store.get(key)
+        except MissingObject as exc:
+            raise SyncFailed("snapshot object missing") from exc
+        if _sha256(body) != digest:
+            raise SyncFailed("snapshot hash mismatch")
+        target = destination / key[len(base) :]
         target.parent.mkdir(parents=True, exist_ok=True)
-        body = store.get(key)
-        temporary = target.with_suffix(target.suffix + ".tmp")
+        temporary = target.with_name(target.name + ".partial")
         temporary.write_bytes(body)
         os.replace(temporary, target)
         count += 1
@@ -315,7 +167,7 @@ def sync_down(destination: Path, store: ObjectStore, prefix: str) -> int:
 
 
 def seed_config(path: Path) -> None:
-    """First-boot config: empty account pool, no clearance, no upstream backup secrets."""
+    """First-boot config: empty auth key, clearance off, upstream backup off."""
     raw: dict[str, object] = {}
     if path.is_file():
         try:
@@ -349,3 +201,63 @@ def seed_config(path: Path) -> None:
     raw["backup"] = backup
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(raw, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+
+
+def prepare_state(app_dir: Path, store: ObjectStore, prefix: str) -> None:
+    config_path = app_dir / "config.json"
+    data_dir = app_dir / "data"
+    data_dir.mkdir(parents=True, exist_ok=True)
+    if load_manifest(store, prefix) is None:
+        seed_config(config_path)
+        sync_up([config_path, data_dir], store, prefix)
+        return
+    sync_down(app_dir, store, prefix)
+
+
+class BridgeClient:
+    def __init__(self, base_url: str, secret: str, opener: Callable[..., object] | None = None) -> None:
+        parts = urlsplit(base_url)
+        if parts.scheme not in {"http", "https"} or not parts.netloc:
+            raise SyncFailed("bridge url is invalid")
+        if secret and secret in base_url:
+            raise SyncFailed("bridge url contains the secret")
+        if len(secret) < 32:
+            raise SyncFailed("bridge secret is too short")
+        self.base_url = base_url.rstrip("/")
+        self.secret = secret
+        self.opener = opener
+
+    def _call(self, method: str, path: str, body: bytes | None = None) -> bytes:
+        import urllib.error
+        import urllib.request
+
+        request = Request(
+            self.base_url + path,
+            data=body if method != "GET" else None,
+            method=method,
+            headers={"Authorization": f"Bearer {self.secret}"},
+        )
+        opener = self.opener or urllib.request.urlopen
+        try:
+            with opener(request, timeout=30) as response:
+                return response.read()
+        except urllib.error.HTTPError as exc:
+            if exc.code == 404:
+                raise MissingObject(path) from None
+            if exc.code == 401:
+                raise SyncFailed("bridge rejected authentication") from None
+            raise SyncFailed(f"bridge {method} status={exc.code}") from None
+
+    def get(self, key: str) -> bytes:
+        if key.endswith("/" + MANIFEST_NAME):
+            return self._call("GET", "/v1/manifest")
+        return self._call("GET", "/v1/object?key=" + quote(key, safe=""))
+
+    def put(self, key: str, body: bytes) -> None:
+        if key.endswith("/" + MANIFEST_NAME):
+            self._call("PUT", "/v1/manifest", body)
+            return
+        self._call("PUT", "/v1/object?key=" + quote(key, safe=""), body)
+
+    def delete(self, key: str) -> None:
+        self._call("DELETE", "/v1/object?key=" + quote(key, safe=""))

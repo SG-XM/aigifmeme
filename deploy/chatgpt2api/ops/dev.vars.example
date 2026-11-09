@@ -2,5 +2,4 @@
 # Generate values at deploy time. These placeholders are not credentials.
 GATE_TOKEN=replace-with-generated-gate-token
 UPSTREAM_AUTH_KEY=replace-with-generated-upstream-auth-key
-R2_ACCESS_KEY_ID=replace-with-r2-access-key-id
-R2_SECRET_ACCESS_KEY=replace-with-r2-secret-access-key
+STATE_BRIDGE_SECRET=replace-with-generated-bridge-secret

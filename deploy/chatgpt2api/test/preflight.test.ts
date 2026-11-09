@@ -10,7 +10,7 @@ function files(image: string) {
   return {
     dockerfile: `git ${git}\nFROM ghcr.io/basketikun/chatgpt2api@${digest}\n`,
     wrangler:
-      '{\n  "name": "chatgpt2api",\n  "routes": [{ "pattern": "api.aigifmeme.com", "custom_domain": true }],\n  "image": "' +
+      '{\n  "name": "chatgpt2api",\n  "vars": { "CONTAINER_INSTANCE": "basic" },\n  "secrets": { "required": ["STATE_BRIDGE_SECRET"] },\n  "routes": [{ "pattern": "api.aigifmeme.com", "custom_domain": true }],\n  "image": "' +
       image +
       '"\n}\n',
     pin: JSON.stringify({

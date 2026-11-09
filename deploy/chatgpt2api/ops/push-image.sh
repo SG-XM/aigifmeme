@@ -1,12 +1,14 @@
 #!/bin/sh
 # Build the thin wrapper and push it to the Cloudflare registry.
-# This must run on a machine with Docker. The parent deploy host does not have one.
+# Run this on the parent box. Docker Engine is already installed there.
+# Wrangler uses the Cloudflare token already present in that environment.
+# This script does not print the token and does not copy it anywhere.
 set -eu
 cd "$(dirname "$0")/.."
 
 if ! command -v docker >/dev/null 2>&1; then
-  echo "docker is not on this machine. Run ops/push-image.sh on GitHub Actions or another Docker host." >&2
-  echo "After the push, put the printed digest into image-pin.json and wrangler.jsonc, then run npm run deploy on the parent host." >&2
+  echo "docker is not on PATH. On the parent box, start dockerd and run this script there." >&2
+  echo "Do not copy the Cloudflare token to another machine or to GitHub Actions." >&2
   exit 1
 fi
 

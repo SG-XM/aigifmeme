@@ -15,18 +15,15 @@
     }
   ],
   "vars": {
-    "R2_ACCOUNT_ID": "29a44cf6b1d2c5d00f51960def5bb48d",
-    "R2_BUCKET_NAME": "chatgpt2api-state",
-    "R2_PREFIX": "state",
     "PUBLIC_ORIGIN": "https://api.aigifmeme.com",
-    "CONTAINER_INSTANCE": "standard-1"
+    "CONTAINER_INSTANCE": "basic",
+    "STATE_BRIDGE_URL": "http://state-bridge.internal"
   },
   "secrets": {
     "required": [
       "GATE_TOKEN",
       "UPSTREAM_AUTH_KEY",
-      "R2_ACCESS_KEY_ID",
-      "R2_SECRET_ACCESS_KEY"
+      "STATE_BRIDGE_SECRET"
     ]
   },
   "r2_buckets": [

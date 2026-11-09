@@ -6,10 +6,7 @@ import { handleRequest, type GateEnv } from "../src/gate.ts";
 const env: GateEnv = {
   GATE_TOKEN: "gate-secret-value-0123456789abcdef",
   UPSTREAM_AUTH_KEY: "upstream-secret-value-0123456789abcd",
-  R2_ACCESS_KEY_ID: "r2-access-key-id",
-  R2_SECRET_ACCESS_KEY: "r2-secret-access-key",
-  R2_ACCOUNT_ID: "29a44cf6b1d2c5d00f51960def5bb48d",
-  R2_BUCKET_NAME: "chatgpt2api-state",
+  STATE_BRIDGE_SECRET: "bridge-secret-value-0123456789abcdef",
 };
 
 test("SSE bytes are returned before the upstream stream finishes", async () => {

@@ -17,13 +17,10 @@ const QUERY_SECRET_NAMES = new Set([
 export interface GateEnv {
   GATE_TOKEN?: string;
   UPSTREAM_AUTH_KEY?: string;
-  R2_ACCESS_KEY_ID?: string;
-  R2_SECRET_ACCESS_KEY?: string;
-  R2_ACCOUNT_ID?: string;
-  R2_BUCKET_NAME?: string;
-  R2_PREFIX?: string;
+  STATE_BRIDGE_SECRET?: string;
   PUBLIC_ORIGIN?: string;
   CONTAINER_INSTANCE?: string;
+  STATE_BUCKET?: R2Bucket;
 }
 
 export interface ContainerWake {
@@ -54,6 +51,8 @@ export function healthBody(): Record<string, unknown> {
     probe: "worker",
     model_e2e: false,
     accounts: "not_checked",
+    persistence: "r2_snapshot",
+    snapshot_interval_seconds: 15,
   };
 }
 
@@ -109,14 +108,20 @@ export function secretStrong(value: string | undefined): boolean {
   return Boolean(value && value.trim().length >= 32);
 }
 
+export function isPrivateBridgeRequest(request: Request): boolean {
+  const url = new URL(request.url);
+  return (
+    url.hostname === "state-bridge.internal" ||
+    url.pathname === "/_state" ||
+    url.pathname.startsWith("/_state/")
+  );
+}
+
 export function serviceConfigured(env: GateEnv): boolean {
   return Boolean(
     secretStrong(env.GATE_TOKEN) &&
       secretStrong(env.UPSTREAM_AUTH_KEY) &&
-      env.R2_ACCESS_KEY_ID &&
-      env.R2_SECRET_ACCESS_KEY &&
-      env.R2_ACCOUNT_ID &&
-      env.R2_BUCKET_NAME,
+      secretStrong(env.STATE_BRIDGE_SECRET),
   );
 }
 
@@ -241,6 +246,10 @@ export async function handleRequest(
   env: GateEnv,
   wake: ContainerWake,
 ): Promise<Response> {
+  if (isPrivateBridgeRequest(request)) {
+    return json({ ok: false, error: "not_found", probe: "worker" }, 404);
+  }
+
   if (isPublicHealth(request)) {
     if (request.method === "HEAD") return new Response(null, { status: 200, headers: json(healthBody(), 200).headers });
     return json(healthBody(), 200);

@@ -1,7 +1,10 @@
-import { Container } from "@cloudflare/containers";
+import { Container, ContainerProxy } from "@cloudflare/containers";
 
 import { buildContainerEnv, instanceType, pinContainerStart } from "./container-env";
 import { handleRequest, serviceConfigured, type GateEnv } from "./gate";
+import { BRIDGE_HOST, handleStateBridge } from "./state-bridge";
+
+export { ContainerProxy };
 
 export interface Env extends GateEnv {
   CHATGPT2API: DurableObjectNamespace<Chatgpt2ApiContainer>;
@@ -52,6 +55,10 @@ export class Chatgpt2ApiContainer extends Container<Env> {
     console.error("container error", message);
   }
 }
+
+Chatgpt2ApiContainer.outboundByHost = {
+  [BRIDGE_HOST]: (request: Request, env: Env) => handleStateBridge(request, env.STATE_BUCKET, env.STATE_BRIDGE_SECRET),
+};
 
 const wakeHolder = {
   fetch(env: Env, request: Request): Promise<Response> {

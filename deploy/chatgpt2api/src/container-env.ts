@@ -1,12 +1,18 @@
 import type { GateEnv } from "./gate";
 
-export const INSTANCE_TYPES = ["lite", "standard-1", "standard-2", "standard-3", "standard-4"] as const;
+// workers-types 5.20261109.1 includes "basic" on ContainerStartupOptions.instance.
+// The scheduling-policy page still says ctx.container.start() does not accept
+// "basic". The limits table defines basic as 1 GiB, which is the smallest
+// practical size above lite. Custom sizes cannot be 1 GiB: they require at
+// least 1 vCPU and 3 GiB of memory per vCPU. Default is basic. If a runtime
+// rejects it, set CONTAINER_INSTANCE to lite or standard-1.
+export const INSTANCE_TYPES = ["lite", "basic", "standard-1", "standard-2", "standard-3", "standard-4"] as const;
 export type InstanceType = (typeof INSTANCE_TYPES)[number];
 
 const ALLOWED = new Set<string>(INSTANCE_TYPES);
 
 export function instanceType(value: string | undefined): InstanceType {
-  const name = value?.trim() || "standard-1";
+  const name = value?.trim() || "basic";
   if (!ALLOWED.has(name)) {
     throw new Error("unsupported container instance");
   }
@@ -15,14 +21,12 @@ export function instanceType(value: string | undefined): InstanceType {
 
 export function buildContainerEnv(env: GateEnv): Record<string, string> {
   return {
-    R2_ACCESS_KEY_ID: env.R2_ACCESS_KEY_ID ?? "",
-    R2_SECRET_ACCESS_KEY: env.R2_SECRET_ACCESS_KEY ?? "",
-    R2_ACCOUNT_ID: env.R2_ACCOUNT_ID ?? "",
-    R2_BUCKET_NAME: env.R2_BUCKET_NAME ?? "",
-    R2_PREFIX: env.R2_PREFIX?.trim() || "state",
+    STATE_BRIDGE_SECRET: env.STATE_BRIDGE_SECRET ?? "",
+    STATE_BRIDGE_URL: "http://state-bridge.internal",
     CHATGPT2API_AUTH_KEY: env.UPSTREAM_AUTH_KEY ?? "",
     CHATGPT2API_BASE_URL: env.PUBLIC_ORIGIN?.trim() || "https://api.aigifmeme.com",
     STORAGE_BACKEND: "json",
+    STATE_SYNC_INTERVAL_SECONDS: "15",
   };
 }
 
@@ -36,10 +40,12 @@ export function pinContainerStart(
     if (!imageRef || imageRef.includes("REPLACE_AFTER_REGISTRY_PUSH")) {
       throw new Error("container image is not pinned");
     }
+    const selected = instance();
+    if (!ALLOWED.has(selected)) throw new Error("unsupported container instance");
     return start({
       ...options,
       image: imageRef,
-      instance: instance(),
+      instance: selected,
       enableInternet: true,
     });
   };
