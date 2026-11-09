@@ -1,0 +1,16 @@
+node_modules
+.wrangler
+.git
+test
+ops
+*.md
+.dev.vars
+Dockerfile
+.gitignore
+tsconfig.json
+package.json
+package-lock.json
+wrangler.jsonc
+image-pin.json
+src
+container/test_r2sync.py

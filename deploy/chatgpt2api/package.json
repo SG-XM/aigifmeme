@@ -1,0 +1,23 @@
+{
+  "name": "chatgpt2api-cf-wrapper",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "test": "node --experimental-strip-types --test test/*.test.ts && python3 -m unittest container/test_r2sync.py",
+    "check": "tsc --noEmit",
+    "preflight": "node --experimental-strip-types ops/preflight.ts",
+    "deploy": "node --experimental-strip-types ops/preflight.ts && wrangler deploy"
+  },
+  "dependencies": {
+    "@cloudflare/containers": "0.3.7"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "5.20261109.1",
+    "typescript": "5.9.3",
+    "wrangler": "4.158.0"
+  }
+}

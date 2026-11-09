@@ -1,0 +1,64 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "chatgpt2api",
+  "account_id": "29a44cf6b1d2c5d00f51960def5bb48d",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-11-09",
+  "workers_dev": true,
+  "observability": {
+    "enabled": true
+  },
+  "routes": [
+    {
+      "pattern": "api.aigifmeme.com",
+      "custom_domain": true
+    }
+  ],
+  "vars": {
+    "PUBLIC_ORIGIN": "https://api.aigifmeme.com",
+    "CONTAINER_INSTANCE": "basic",
+    "STATE_BRIDGE_URL": "http://state-bridge.internal"
+  },
+  "secrets": {
+    "required": [
+      "GATE_TOKEN",
+      "UPSTREAM_AUTH_KEY",
+      "STATE_BRIDGE_SECRET"
+    ]
+  },
+  "r2_buckets": [
+    {
+      "binding": "STATE_BUCKET",
+      "bucket_name": "chatgpt2api-state"
+    }
+  ],
+  "containers": [
+    {
+      "name": "chatgpt2api-runtime",
+      "class_name": "Chatgpt2ApiContainer",
+      "scheduling_policy": "durable_object",
+      "observability": {
+        "enabled": true
+      },
+      "images": {
+        "base": {
+          "image": "registry.cloudflare.com/29a44cf6b1d2c5d00f51960def5bb48d/chatgpt2api@sha256:REPLACE_AFTER_REGISTRY_PUSH"
+        }
+      }
+    }
+  ],
+  "durable_objects": {
+    "bindings": [
+      {
+        "name": "CHATGPT2API",
+        "class_name": "Chatgpt2ApiContainer"
+      }
+    ]
+  },
+  "exports": {
+    "Chatgpt2ApiContainer": {
+      "type": "durable-object",
+      "storage": "sqlite"
+    }
+  }
+}
