@@ -3972,6 +3972,7 @@ html[dir='rtl']
 }
 .meme-section {
   padding: 2.2rem 0 0.5rem;
+  scroll-margin-top: 5.5rem;
 }
 .meme-section h2 {
   margin: 0;
@@ -4006,6 +4007,54 @@ html[dir='rtl']
   width: 100%;
   height: auto;
   background: #fff6ee;
+}
+.meme-example-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.35rem 1.25rem;
+  margin: 1.35rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+.meme-example-card {
+  margin: 0;
+}
+.meme-example-frame {
+  display: grid;
+  place-items: center;
+  aspect-ratio: 1;
+  padding: 0.7rem;
+  overflow: visible;
+  border: 3px solid #1a1024;
+  border-radius: 1.25rem;
+  background: #fff;
+  box-shadow: 6px 6px 0 #1a1024;
+}
+.meme-example-frame img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center;
+}
+.meme-example-card figcaption {
+  margin: 0.55rem 0 0;
+  color: #1a1024;
+  font-size: 0.95rem;
+  font-weight: 800;
+  line-height: 1.35;
+  text-align: center;
+}
+@media (min-width: 640px) {
+  .meme-example-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1.5rem;
+  }
+}
+@media (min-width: 1024px) {
+  .meme-example-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
 }
 .meme-stickers figcaption,
 .meme-styles h3,

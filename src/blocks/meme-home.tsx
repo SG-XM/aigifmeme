@@ -1,12 +1,12 @@
 import { Link } from '@/core/i18n/navigation';
-import { homeDemoClips } from '@/lib/home-demos';
+import { ownerPackExamples } from '@/lib/owner-pack-examples';
 import { m } from '@/paraglide/messages.js';
 import { getLocale } from '@/paraglide/runtime.js';
 import { Footer } from '@/blocks/footer';
 import { Header } from '@/blocks/header';
 
 export function MemeHome() {
-  const clips = homeDemoClips(getLocale());
+  const examples = ownerPackExamples(getLocale());
   const styles = [
     [m['meme.style_1_title'](), m['meme.style_1_body']()],
     [m['meme.style_2_title'](), m['meme.style_2_body']()],
@@ -59,21 +59,25 @@ export function MemeHome() {
         <section id="examples" className="meme-section">
           <h2>{m['meme.examples_title']()}</h2>
           <p>{m['meme.examples_body']()}</p>
-          <ul className="meme-stickers">
-            {clips.hero.map((clip) => (
-              <li key={clip.id}>
-                <figure>
-                  <img
-                    src={clip.src}
-                    alt={clip.title}
-                    width={320}
-                    height={320}
-                  />
-                  <figcaption>{clip.title}</figcaption>
-                </figure>
-              </li>
-            ))}
-          </ul>
+          {examples.length > 0 ? (
+            <ul className="meme-example-grid">
+              {examples.map((clip) => (
+                <li key={clip.id}>
+                  <figure className="meme-example-card">
+                    <div className="meme-example-frame">
+                      <img
+                        src={clip.src}
+                        alt={clip.alt}
+                        width={240}
+                        height={240}
+                      />
+                    </div>
+                    <figcaption>{clip.label}</figcaption>
+                  </figure>
+                </li>
+              ))}
+            </ul>
+          ) : null}
         </section>
 
         <section id="styles" className="meme-section">
