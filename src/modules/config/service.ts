@@ -10,6 +10,7 @@ import {
   RECALL_MONTHLY_COUNTER_KEY,
   RECALL_PAUSE_CONFIG_KEY,
 } from '@/lib/email-recall';
+import { assertGifPackSetting } from '@/lib/gif-pack/provider';
 import {
   isCreateReferenceVideoConfigKey,
   probeReferenceVideoUrl,
@@ -150,10 +151,14 @@ export async function saveConfigs(configs: ConfigMap) {
         ([name, value]) =>
           !PROTECTED_CONFIG_KEYS.has(name) &&
           !name.startsWith(VIDEO_RETENTION_CONFIG_PREFIX) &&
-          !isMaskedConfigValue(value)
+          !isMaskedConfigValue(value) &&
+          !(name === 'gif_pack_api_key' && !value.trim())
       )
       .map(async ([name, value]): Promise<[string, string]> => {
         let next = value;
+        if (name === 'gif_pack_base_url' || name === 'gif_pack_image_model') {
+          assertGifPackSetting(name, value);
+        }
         if (isCreateReferenceVideoConfigKey(name)) {
           next = value.trim();
           if (next) {
@@ -341,7 +346,13 @@ export function filterPublicConfigs(
 ): ConfigMap {
   const result: ConfigMap = {};
   for (const key of publicKeys) {
-    if (PROTECTED_CONFIG_KEYS.has(key) || isSecretConfigKey(key)) continue;
+    if (
+      PROTECTED_CONFIG_KEYS.has(key) ||
+      isSecretConfigKey(key) ||
+      key.startsWith('gif_pack_')
+    ) {
+      continue;
+    }
     if (key in configs) {
       result[key] = configs[key];
     }

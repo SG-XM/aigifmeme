@@ -185,6 +185,13 @@ export function getSettingGroups(): SettingGroup[] {
       tab: 'ai',
     },
     {
+      name: 'gif_pack',
+      title: 'GIF pack provider',
+      description:
+        'OpenAI-compatible image API for sticker packs. Requests use gpt-image-2 only.',
+      tab: 'ai',
+    },
+    {
       name: 'anthropic',
       title: 'Anthropic',
       description: 'Anthropic Claude API',
@@ -856,6 +863,34 @@ export function getSettings(): Setting[] {
       placeholder: 'sk-xxx',
       group: 'openai',
       tab: 'ai',
+    },
+    {
+      name: 'gif_pack_base_url',
+      title: 'GIF pack base URL',
+      type: 'text',
+      placeholder: 'https://api.aigifmeme.com/v1',
+      tip: 'HTTPS only. Admin-only. The pack client POSTs /images/edits with inline image bytes. Private, link-local, and metadata hosts are rejected. Leave empty to use https://api.aigifmeme.com/v1.',
+      group: 'gif_pack',
+      tab: 'ai',
+    },
+    {
+      name: 'gif_pack_api_key',
+      title: 'GIF pack API key',
+      type: 'password',
+      placeholder: 'Bearer token, stored encrypted',
+      tip: 'Shown masked. The full key is never returned to the browser. Worker secret GIF_PACK_API_KEY is the fallback when this is empty.',
+      group: 'gif_pack',
+      tab: 'ai',
+    },
+    {
+      name: 'gif_pack_image_model',
+      title: 'GIF pack image model',
+      type: 'text',
+      placeholder: 'gpt-image-2',
+      tip: 'Must be gpt-image-2. Any other value is rejected and there is no fallback model.',
+      group: 'gif_pack',
+      tab: 'ai',
+      defaultValue: 'gpt-image-2',
     },
 
     // ─── AI / Anthropic ──────────────────────────────────────────────

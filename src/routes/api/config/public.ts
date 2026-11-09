@@ -1,6 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router';
 
 import { filterPublicConfigs, getAllConfigs } from '@/modules/config/service';
+import { PUBLIC_CONFIG_KEYS } from '@/lib/public-config-keys';
 import { respData } from '@/lib/resp';
 
 const noStore = {
@@ -9,28 +10,7 @@ const noStore = {
   },
 };
 
-const publicKeys = [
-  'app_name',
-  'app_description',
-  'app_logo',
-  'email_auth_enabled',
-  'google_auth_enabled',
-  'google_one_tap_enabled',
-  'google_client_id',
-  'github_auth_enabled',
-  'invite_code_required',
-  'select_payment_enabled',
-  'default_payment_provider',
-  'stripe_enabled',
-  'stripe_publishable_key',
-  'creem_enabled',
-  'paypal_enabled',
-  'alipay_enabled',
-  'wechat_enabled',
-  'google_analytics_id',
-  'plausible_domain',
-  'plausible_src',
-];
+const publicKeys: string[] = [...PUBLIC_CONFIG_KEYS];
 
 function isEmailSendingConfigured(configs: Record<string, string>): boolean {
   const provider = configs.email_provider || 'resend';

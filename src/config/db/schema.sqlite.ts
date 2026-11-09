@@ -1019,3 +1019,137 @@ export const homeDemoVideo = table(
 
 export type HomeDemoVideo = typeof homeDemoVideo.$inferSelect;
 export type NewHomeDemoVideo = typeof homeDemoVideo.$inferInsert;
+
+export const gifPackTheme = table(
+  'gif_pack_theme',
+  {
+    id: text('id').primaryKey(),
+    slug: text('slug').notNull(),
+    version: integer('version').notNull(),
+    nameEn: text('name_en').notNull(),
+    nameZh: text('name_zh').notNull(),
+    backgroundColor: text('background_color').notNull(),
+    status: text('status').notNull().default('active'),
+    createdAt: integer('created_at', { mode: 'timestamp_ms' })
+      .default(sqliteNowMs)
+      .notNull(),
+  },
+  (t) => [uniqueIndex('gif_pack_theme_slug_version').on(t.slug, t.version)]
+);
+
+export const gifPackMotion = table(
+  'gif_pack_motion',
+  {
+    id: text('id').primaryKey(),
+    themeId: text('theme_id').notNull(),
+    position: integer('position').notNull(),
+    intent: text('intent').notNull(),
+    captionEn: text('caption_en').notNull(),
+    captionZh: text('caption_zh').notNull(),
+  },
+  (t) => [uniqueIndex('gif_pack_motion_theme_pos').on(t.themeId, t.position)]
+);
+
+export const gifPack = table(
+  'gif_pack',
+  {
+    id: text('id').primaryKey(),
+    userId: text('user_id').notNull(),
+    idempotencyKey: text('idempotency_key').notNull(),
+    dayKey: text('day_key').notNull(),
+    themeId: text('theme_id').notNull(),
+    themeVersion: integer('theme_version').notNull(),
+    style: text('style').notNull(),
+    motionMode: text('motion_mode').notNull(),
+    background: text('background').notNull(),
+    language: text('language').notNull(),
+    status: text('status').notNull(),
+    phase: text('phase').notNull(),
+    userRegens: integer('user_regens').notNull().default(0),
+    anchorAttempts: integer('anchor_attempts').notNull().default(0),
+    inflightStage: text('inflight_stage'),
+    inflightAt: integer('inflight_at', { mode: 'timestamp_ms' }),
+    errorCode: text('error_code'),
+    errorMessage: text('error_message'),
+    lockToken: text('lock_token'),
+    heartbeatAt: integer('heartbeat_at', { mode: 'timestamp_ms' }),
+    createdAt: integer('created_at', { mode: 'timestamp_ms' })
+      .default(sqliteNowMs)
+      .notNull(),
+    updatedAt: integer('updated_at', { mode: 'timestamp_ms' })
+      .default(sqliteNowMs)
+      .notNull(),
+    deletedAt: integer('deleted_at', { mode: 'timestamp_ms' }),
+  },
+  (t) => [
+    uniqueIndex('gif_pack_user_idempotency').on(t.userId, t.idempotencyKey),
+    uniqueIndex('gif_pack_user_day').on(t.userId, t.dayKey),
+    index('gif_pack_status_heartbeat').on(t.status, t.heartbeatAt),
+  ]
+);
+
+export const gifPackSticker = table(
+  'gif_pack_sticker',
+  {
+    id: text('id').primaryKey(),
+    packId: text('pack_id').notNull(),
+    position: integer('position').notNull(),
+    intent: text('intent').notNull(),
+    caption: text('caption').notNull(),
+    status: text('status').notNull(),
+    systemAttempts: integer('system_attempts').notNull().default(0),
+    errorCode: text('error_code'),
+    errorMessage: text('error_message'),
+  },
+  (t) => [uniqueIndex('gif_pack_sticker_pack_pos').on(t.packId, t.position)]
+);
+
+export const gifPackFile = table(
+  'gif_pack_file',
+  {
+    id: text('id').primaryKey(),
+    packId: text('pack_id').notNull(),
+    stickerId: text('sticker_id'),
+    kind: text('kind').notNull(),
+    storageKey: text('storage_key').notNull(),
+    contentType: text('content_type').notNull(),
+    byteSize: integer('byte_size').notNull().default(0),
+    frameCount: integer('frame_count'),
+    createdAt: integer('created_at', { mode: 'timestamp_ms' })
+      .default(sqliteNowMs)
+      .notNull(),
+  },
+  (t) => [index('gif_pack_file_pack').on(t.packId, t.kind)]
+);
+
+export const gifPackUpload = table('gif_pack_upload', {
+  id: text('id').primaryKey(),
+  userId: text('user_id').notNull(),
+  originalKey: text('original_key').notNull(),
+  cropKey: text('crop_key').notNull(),
+  width: integer('width').notNull(),
+  height: integer('height').notNull(),
+  packId: text('pack_id'),
+  createdAt: integer('created_at', { mode: 'timestamp_ms' })
+    .default(sqliteNowMs)
+    .notNull(),
+});
+
+export const gifPackBlob = table('gif_pack_blob', {
+  storageKey: text('storage_key').primaryKey(),
+  contentType: text('content_type').notNull(),
+  bytes: text('bytes').notNull(),
+});
+
+export const gifPackDemo = table(
+  'gif_pack_demo',
+  {
+    id: text('id').primaryKey(),
+    referenceId: text('reference_id').notNull(),
+    themeSlug: text('theme_slug').notNull(),
+    title: text('title').notNull(),
+    assetStatus: text('asset_status').notNull(),
+    note: text('note').notNull(),
+  },
+  (t) => [uniqueIndex('gif_pack_demo_ref_theme').on(t.referenceId, t.themeSlug)]
+);

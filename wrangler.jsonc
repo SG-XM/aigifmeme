@@ -20,6 +20,12 @@
       "migrations_dir": "drizzle"
     }
   ],
+  "r2_buckets": [
+    {
+      "binding": "GIF_PACK_BUCKET",
+      "bucket_name": "aigifmeme"
+    }
+  ],
   "routes": [
     { "pattern": "aigifmeme.com/*", "zone_name": "aigifmeme.com" },
     { "pattern": "www.aigifmeme.com/*", "zone_name": "aigifmeme.com" }
