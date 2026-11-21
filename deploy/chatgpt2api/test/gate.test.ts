@@ -238,3 +238,25 @@ test("buildProxiedRequest keeps a streaming body", async () => {
   const second = await reader.read();
   assert.match(new TextDecoder().decode(second.value), /data: two/);
 });
+
+test("container restart endpoint requires gate authentication", async () => {
+  const { wake, calls } = recorder();
+  const unauth = await handleRequest(
+    new Request("https://api.aigifmeme.com/_admin/container/restart", { method: "POST" }),
+    env(),
+    wake,
+  );
+  assert.equal(unauth.status, 401);
+  assert.equal(calls.length, 0);
+
+  const auth = await handleRequest(
+    new Request("https://api.aigifmeme.com/_admin/container/restart", {
+      method: "POST",
+      headers: { authorization: `Bearer ${SECRET}` },
+    }),
+    env(),
+    wake,
+  );
+  assert.equal(auth.status, 200);
+  assert.equal(calls.length, 1);
+});

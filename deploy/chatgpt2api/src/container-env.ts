@@ -25,7 +25,7 @@ export function buildContainerEnv(env: GateEnv): Record<string, string> {
     STATE_BRIDGE_URL: "http://state-bridge.internal",
     CHATGPT2API_AUTH_KEY: env.UPSTREAM_AUTH_KEY ?? "",
     CHATGPT2API_BASE_URL: env.PUBLIC_ORIGIN?.trim() || "https://api.aigifmeme.com",
-    STORAGE_BACKEND: "json",
+    PORT: "80",
     STATE_SYNC_INTERVAL_SECONDS: "15",
   };
 }

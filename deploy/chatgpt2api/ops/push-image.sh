@@ -1,26 +1,27 @@
 #!/bin/sh
-# Build the thin wrapper and push it to the Cloudflare registry.
-# Run this on the parent box. Docker Engine is already installed there.
-# Wrangler uses the Cloudflare token already present in that environment.
-# This script does not print the token and does not copy it anywhere.
+# Build the thin Go wrapper and push it to the Cloudflare registry.
+# Uses docker + wrangler containers push if docker is available, or Go OCI push (ops/oci-push) otherwise.
+# Wrangler / oci-push uses CLOUDFLARE_API_TOKEN already present in the environment.
 set -eu
 cd "$(dirname "$0")/.."
 
-if ! command -v docker >/dev/null 2>&1; then
-  echo "docker is not on PATH. On the parent box, start dockerd and run this script there." >&2
-  echo "Do not copy the Cloudflare token to another machine or to GitHub Actions." >&2
+ACCOUNT_ID="${CLOUDFLARE_ACCOUNT_ID:-29a44cf6b1d2c5d00f51960def5bb48d}"
+TAG="2.0.0-cf1"
+BASE_IMAGE="ghcr.io/basketikun/chatgpt2api@sha256:dfa33c149fded5bf65cbbe301f72d1a7bac414691a5df00a7b24a5acad6a5dc0"
+REMOTE="registry.cloudflare.com/${ACCOUNT_ID}/chatgpt2api:${TAG}"
+
+if command -v docker >/dev/null 2>&1; then
+  LOCAL_IMAGE="chatgpt2api:${TAG}"
+  docker build --platform linux/amd64 -t "${LOCAL_IMAGE}" .
+  npx wrangler containers push "${LOCAL_IMAGE}"
+  DIGEST="$(docker image inspect --format '{{index .RepoDigests 0}}' "${REMOTE}")"
+elif command -v go >/dev/null 2>&1; then
+  DIGEST="$(cd ops/oci-push && go run . --base "${BASE_IMAGE}" --target "${REMOTE}" --account "${ACCOUNT_ID}" --root "../..")"
+else
+  echo "Neither docker nor go is available on PATH." >&2
   exit 1
 fi
 
-ACCOUNT_ID="${CLOUDFLARE_ACCOUNT_ID:-29a44cf6b1d2c5d00f51960def5bb48d}"
-TAG="1.7.0-cf1"
-LOCAL_IMAGE="chatgpt2api:${TAG}"
-
-docker build --platform linux/amd64 -t "${LOCAL_IMAGE}" .
-npx wrangler containers push "${LOCAL_IMAGE}"
-
-REMOTE="registry.cloudflare.com/${ACCOUNT_ID}/chatgpt2api:${TAG}"
-DIGEST="$(docker image inspect --format '{{index .RepoDigests 0}}' "${REMOTE}")"
 echo "pinned image: ${DIGEST}"
 echo "Write that value to image-pin.json cloudflare_image and the wrangler images.base.image field."
 

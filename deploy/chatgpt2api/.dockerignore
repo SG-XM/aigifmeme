@@ -13,4 +13,4 @@ package-lock.json
 wrangler.jsonc
 image-pin.json
 src
-container/test_r2sync.py
+container/*_test.go

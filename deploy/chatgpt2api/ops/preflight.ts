@@ -24,8 +24,8 @@ export function evaluate(files: PreflightFiles): string[] {
   if (!files.dockerfile.includes(pin.upstream.git)) {
     errors.push("Dockerfile does not record the upstream git revision");
   }
-  if (pin.upstream.tag !== "v1.7.0") {
-    errors.push("image pin is not upstream tag v1.7.0");
+  if (pin.upstream.tag !== "v2.0.0") {
+    errors.push("image pin is not upstream tag v2.0.0");
   }
   if (!files.wrangler.includes(pin.cloudflare_image)) {
     errors.push("wrangler.jsonc image does not match image-pin.json");
@@ -50,7 +50,7 @@ export function evaluate(files: PreflightFiles): string[] {
   }
   if (pin.cloudflare_image.includes("REPLACE_AFTER_REGISTRY_PUSH") || !IMAGE_RE.test(pin.cloudflare_image)) {
     errors.push(
-      "Cloudflare image digest is not pinned yet. On the parent box run sh ops/push-image.sh, then replace REPLACE_AFTER_REGISTRY_PUSH.",
+      "Cloudflare image digest is not pinned yet. Run sh ops/push-image.sh, then replace REPLACE_AFTER_REGISTRY_PUSH.",
     );
   }
   return errors;

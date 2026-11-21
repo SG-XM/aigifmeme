@@ -12,6 +12,7 @@ export interface Env extends GateEnv {
 }
 
 const pinnedStarts = new WeakSet<object>();
+const ACTIVE_IMAGE_KEY = "activeImage";
 
 export class Chatgpt2ApiContainer extends Container<Env> {
   defaultPort = 80;
@@ -33,6 +34,20 @@ export class Chatgpt2ApiContainer extends Container<Env> {
     }
   }
 
+  private async stopAndReset(timeoutMs = 12_000): Promise<void> {
+    const runtime = this.ctx.container;
+    if (!runtime?.running) return;
+    await this.stop("SIGTERM");
+    const deadline = Date.now() + timeoutMs;
+    while (runtime.running && Date.now() < deadline) {
+      await new Promise((resolve) => setTimeout(resolve, 250));
+    }
+    if (runtime.running) {
+      await this.destroy();
+    }
+    await this.stop("SIGTERM");
+  }
+
   override async fetch(request: Request): Promise<Response> {
     if (!serviceConfigured(this.env)) {
       return Response.json(
@@ -40,6 +55,35 @@ export class Chatgpt2ApiContainer extends Container<Env> {
         { status: 503, headers: { "cache-control": "no-store" } },
       );
     }
+    const url = new URL(request.url);
+    const desiredImage = this.ctx.container?.images?.base ?? "";
+    const activeImage = await this.ctx.storage.get<string>(ACTIVE_IMAGE_KEY);
+
+    if (url.pathname === "/_admin/container/restart" && request.method === "POST") {
+      await this.stopAndReset();
+      if (desiredImage) {
+        await this.ctx.storage.put(ACTIVE_IMAGE_KEY, desiredImage);
+      }
+      await this.startAndWaitForPorts({
+        ports: 80,
+        cancellationOptions: {
+          instanceGetTimeoutMS: 180_000,
+          portReadyTimeoutMS: 180_000,
+        },
+      });
+      return Response.json(
+        { ok: true, restarted: true, image: desiredImage },
+        { status: 200, headers: { "cache-control": "no-store" } },
+      );
+    }
+
+    if (this.ctx.container?.running && desiredImage && activeImage !== desiredImage) {
+      await this.stopAndReset();
+    }
+    if (desiredImage && activeImage !== desiredImage) {
+      await this.ctx.storage.put(ACTIVE_IMAGE_KEY, desiredImage);
+    }
+
     await this.startAndWaitForPorts({
       ports: 80,
       cancellationOptions: {

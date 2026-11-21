@@ -3,8 +3,8 @@ import { test } from "node:test";
 
 import { evaluate } from "../ops/preflight.ts";
 
-const digest = "sha256:fb6bf418e8f281552a756f65df5d10cae1fe29bc9044a5e9326a32923bd225a9";
-const git = "1f96b49b2bf35e607a2c587e3fb9d40c5acb475d";
+const digest = "sha256:dfa33c149fded5bf65cbbe301f72d1a7bac414691a5df00a7b24a5acad6a5dc0";
+const git = "aad8b4c4ac51cc73d210580298e018c471602581";
 
 function files(image: string) {
   return {
@@ -14,7 +14,7 @@ function files(image: string) {
       image +
       '"\n}\n',
     pin: JSON.stringify({
-      upstream: { linux_amd64_digest: digest, git, tag: "v1.7.0" },
+      upstream: { linux_amd64_digest: digest, git, tag: "v2.0.0" },
       cloudflare_image: image,
     }),
   };
