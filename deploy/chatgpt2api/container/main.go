@@ -1,7 +1,11 @@
 package main
 
 import (
+	"context"
+	"errors"
 	"fmt"
+	"net"
+	"net/http"
 	"os"
 	"os/exec"
 	"os/signal"
@@ -21,6 +25,26 @@ func logMsg(msg string) {
 
 func main() {
 	os.Exit(run())
+}
+
+func withEnvOverride(env []string, key, value string) []string {
+	prefix := key + "="
+	out := make([]string, 0, len(env)+1)
+	replaced := false
+	for _, entry := range env {
+		if strings.HasPrefix(entry, prefix) {
+			if !replaced {
+				out = append(out, prefix+value)
+				replaced = true
+			}
+			continue
+		}
+		out = append(out, entry)
+	}
+	if !replaced {
+		out = append(out, prefix+value)
+	}
+	return out
 }
 
 func run() int {
@@ -51,20 +75,57 @@ func run() int {
 		}
 	}
 
+	externalPort := strings.TrimSpace(os.Getenv("PORT"))
+	if externalPort == "" {
+		externalPort = "80"
+	}
+	upstreamPort := "18080"
+	if externalPort == "18080" {
+		upstreamPort = "18081"
+	}
+
 	tracker := &DBTracker{}
 	if err := PrepareState(appDir, store, defaultPrefix, baseURL, tracker, logMsg); err != nil {
 		logMsg(fmt.Sprintf("state restore failed; not starting: %v", err))
 		return 3
 	}
 
+	vault, err := NewCredentialVault(filepath.Join(appDir, "data"), secret)
+	if err != nil {
+		logMsg(fmt.Sprintf("failed to initialize credential vault: %v", err))
+		return 2
+	}
+
+	wrapper, err := NewWrapperServer("http://127.0.0.1:"+upstreamPort, authKey, appDir, vault, nil, nil, logMsg)
+	if err != nil {
+		logMsg(fmt.Sprintf("failed to initialize wrapper server: %v", err))
+		return 2
+	}
+
+	ln, err := net.Listen("tcp", ":"+externalPort)
+	if err != nil {
+		logMsg(fmt.Sprintf("failed to listen on port %s: %v", externalPort, err))
+		return 4
+	}
+	httpServer := &http.Server{
+		Handler:           wrapper,
+		ReadHeaderTimeout: 30 * time.Second,
+	}
+	go func() {
+		if err := httpServer.Serve(ln); err != nil && !errors.Is(err, http.ErrServerClosed) {
+			logMsg(fmt.Sprintf("wrapper http server error: %v", err))
+		}
+	}()
+
 	binPath := filepath.Join(appDir, "chatgpt2api")
 	cmd := exec.Command(binPath)
 	cmd.Dir = appDir
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
-	cmd.Env = os.Environ()
+	cmd.Env = withEnvOverride(os.Environ(), "PORT", upstreamPort)
 	if err := cmd.Start(); err != nil {
 		logMsg(fmt.Sprintf("failed to start chatgpt2api: %v", err))
+		_ = httpServer.Close()
 		return 4
 	}
 
@@ -93,6 +154,9 @@ func run() int {
 	for {
 		select {
 		case err := <-doneCh:
+			shutCtx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+			_ = httpServer.Shutdown(shutCtx)
+			cancel()
 			ok := flush(true)
 			if !ok {
 				return 1
@@ -108,6 +172,9 @@ func run() int {
 			flush(false)
 		case sig := <-sigCh:
 			logMsg(fmt.Sprintf("received signal %v; stopping chatgpt2api", sig))
+			shutCtx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+			_ = httpServer.Shutdown(shutCtx)
+			cancel()
 			if cmd.Process != nil {
 				_ = cmd.Process.Signal(syscall.SIGTERM)
 			}

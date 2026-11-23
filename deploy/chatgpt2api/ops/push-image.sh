@@ -6,7 +6,7 @@ set -eu
 cd "$(dirname "$0")/.."
 
 ACCOUNT_ID="${CLOUDFLARE_ACCOUNT_ID:-29a44cf6b1d2c5d00f51960def5bb48d}"
-TAG="2.0.0-cf1"
+TAG="2.0.0-cf2"
 BASE_IMAGE="ghcr.io/basketikun/chatgpt2api@sha256:dfa33c149fded5bf65cbbe301f72d1a7bac414691a5df00a7b24a5acad6a5dc0"
 REMOTE="registry.cloudflare.com/${ACCOUNT_ID}/chatgpt2api:${TAG}"
 

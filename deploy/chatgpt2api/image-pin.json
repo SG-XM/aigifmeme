@@ -9,5 +9,5 @@
     "oci_version_label": "2.0.0"
   },
   "cloudflare_repository": "registry.cloudflare.com/29a44cf6b1d2c5d00f51960def5bb48d/chatgpt2api",
-  "cloudflare_image": "registry.cloudflare.com/29a44cf6b1d2c5d00f51960def5bb48d/chatgpt2api@sha256:847146865d49496043cbfbd4c046f70890178aa19af7ce84209ee7e42ec985f6"
+  "cloudflare_image": "registry.cloudflare.com/29a44cf6b1d2c5d00f51960def5bb48d/chatgpt2api@sha256:622889b64c1eaaa40a2c005eea045fdab5d6070c31bdaf2b03c9de003ab3ef2c"
 }
