@@ -1,0 +1,13 @@
+{
+  "upstream": {
+    "repository": "ghcr.io/basketikun/chatgpt2api",
+    "tag": "v2.0.0",
+    "git": "aad8b4c4ac51cc73d210580298e018c471602581",
+    "index_digest": "sha256:c5ae8737309ef2245d367eddd4aebdc46e8ae2114ab134c2857bec4ef795920f",
+    "linux_amd64_digest": "sha256:dfa33c149fded5bf65cbbe301f72d1a7bac414691a5df00a7b24a5acad6a5dc0",
+    "license": "MIT",
+    "oci_version_label": "2.0.0"
+  },
+  "cloudflare_repository": "registry.cloudflare.com/29a44cf6b1d2c5d00f51960def5bb48d/chatgpt2api",
+  "cloudflare_image": "registry.cloudflare.com/29a44cf6b1d2c5d00f51960def5bb48d/chatgpt2api@sha256:622889b64c1eaaa40a2c005eea045fdab5d6070c31bdaf2b03c9de003ab3ef2c"
+}

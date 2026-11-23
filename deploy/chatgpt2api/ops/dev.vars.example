@@ -1,0 +1,5 @@
+# Copy to .dev.vars for wrangler dev. Do not commit .dev.vars.
+# Generate values at deploy time. These placeholders are not credentials.
+GATE_TOKEN=replace-with-generated-gate-token
+UPSTREAM_AUTH_KEY=replace-with-generated-upstream-auth-key
+STATE_BRIDGE_SECRET=replace-with-generated-bridge-secret
